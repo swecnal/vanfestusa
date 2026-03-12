@@ -219,7 +219,7 @@ export default function Home() {
                       href="https://vanfest.fieldpass.app"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="bg-teal hover:bg-teal-dark text-white font-bold px-5 py-2 rounded-xl text-sm transition-colors"
+                      className="bg-teal hover:bg-teal-dark text-white font-bold px-5 py-2 rounded-xl text-sm transition-colors animate-bounce-attention"
                     >
                       Get Tickets
                     </a>

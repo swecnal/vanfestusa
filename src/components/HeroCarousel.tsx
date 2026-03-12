@@ -77,7 +77,7 @@ export default function HeroCarousel() {
 
       {/* Event overlay content */}
       <div className="absolute inset-0 flex items-center justify-center">
-        <div className="text-center text-white px-4 max-w-4xl">
+        <div className="text-center text-white px-6 sm:px-10 md:px-14 py-10 md:py-14 max-w-4xl bg-black/25 backdrop-blur-[2px] rounded-3xl border border-white/10">
           <p
             className="font-display font-semibold tracking-[0.3em] uppercase text-sm md:text-base mb-4"
             style={{ textShadow, color: "#09B593" }}
@@ -133,7 +133,7 @@ export default function HeroCarousel() {
               href="https://vanfest.fieldpass.app"
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-teal hover:bg-teal-dark text-white font-bold px-10 py-4 rounded-xl text-xl shadow-[0_0_30px_rgba(9,181,147,0.5)] hover:shadow-[0_0_50px_rgba(9,181,147,0.7)] transition-all hover:scale-105 animate-pulse-subtle"
+              className="bg-teal hover:bg-teal-dark text-white font-bold px-10 py-4 rounded-xl text-xl shadow-[0_0_30px_rgba(9,181,147,0.5)] hover:shadow-[0_0_50px_rgba(9,181,147,0.7)] transition-all hover:scale-105 animate-pulse-subtle animate-bounce-attention"
             >
               Get Tickets
             </a>

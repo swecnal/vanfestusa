@@ -187,7 +187,7 @@ export default function EventsPage() {
           </div>
 
           {/* Schedule Accordion */}
-          <div className="mt-14">
+          <div id="escape-schedule" className="mt-14 scroll-mt-20">
             <div className="flex items-center justify-between mb-6">
               <h3 className="font-display font-bold text-2xl text-charcoal">
                 Event Schedule

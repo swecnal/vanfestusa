@@ -33,16 +33,6 @@
   animation: pulse-subtle 3s ease-in-out infinite;
 }
 
-@keyframes convoy-drive {
-  from { transform: translateX(-700px); }
-  to { transform: translateX(calc(100vw + 100px)); }
-}
-
-@keyframes convoy-drive-reverse {
-  from { transform: translateX(calc(100vw + 100px)); }
-  to { transform: translateX(-900px); }
-}
-
 @keyframes bounce-attention {
   0%, 100% { transform: translateY(0); }
   15% { transform: translateY(-6px); }
