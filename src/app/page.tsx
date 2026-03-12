@@ -72,6 +72,7 @@ const upcomingEvents = [
     color: "from-blue-600 to-teal",
     tag: "Early Bird Tickets On Sale!",
     image: "/images/image127.jpg",
+    href: "/events/escape",
   },
   {
     name: "LIFTOFF!",
@@ -82,6 +83,7 @@ const upcomingEvents = [
     color: "from-purple-600 to-pink-500",
     tag: "Coming Soon",
     image: "/images/image157.jpg",
+    href: "/events/liftoff",
   },
 ];
 
@@ -210,7 +212,7 @@ export default function Home() {
                   </p>
                   <div className="flex items-center justify-between">
                     <Link
-                      href="/events"
+                      href={ev.href}
                       className="text-teal hover:text-teal-dark font-semibold text-sm transition-colors"
                     >
                       Event Details &rarr;

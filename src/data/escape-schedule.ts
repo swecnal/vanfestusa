@@ -1,0 +1,66 @@
+export const escapeSchedule = [
+  {
+    day: "Thursday, August 20",
+    tag: "Camping Only",
+    color: "bg-teal/10 text-teal-dark",
+    items: [
+      { time: "10:00 AM", location: "Main Gate", activity: "Camping Check-In Opens", desc: "Show your ticket, get wristbands, site map, and raffle tickets" },
+      { time: "12:00 PM", location: "Campground", activity: "Welcome & Setup", desc: "Get settled in, meet your neighbors, explore the grounds" },
+      { time: "5:00 PM", location: "Communal Area", activity: "Community Potluck", desc: "Bring a dish to share! Grills and communal tables provided" },
+      { time: "7:00 PM", location: "Campground", activity: "Bonfire & Games", desc: "Campfire hangout with lawn games, cornhole tournament, and good vibes" },
+      { time: "9:00 PM", location: "Campground", activity: "Acoustic Jam Session", desc: "Bring your instruments for an informal music circle" },
+    ],
+  },
+  {
+    day: "Friday, August 21",
+    tag: "Camping Only",
+    color: "bg-blue-50 text-blue-700",
+    items: [
+      { time: "8:00 AM", location: "Main Lawn", activity: "Morning Yoga & Stretch", desc: "Start the day with a group yoga session on the lawn" },
+      { time: "10:00 AM", location: "Workshop Tent", activity: "Workshops & Classes", desc: "Solar 101, electrical systems, van build Q&A, and more" },
+      { time: "12:00 PM", location: "Food Court", activity: "Food Trucks Open", desc: "Local food vendors serving lunch through the afternoon" },
+      { time: "2:00 PM", location: "Exhibit Row", activity: "Van Build Showcase Setup", desc: "Exhibitors prep their rigs for Saturday's expo" },
+      { time: "4:00 PM", location: "Main Lawn", activity: "Field Day Games", desc: "Kickball, tug-of-war, relay races \u2014 get competitive!" },
+      { time: "6:00 PM", location: "Communal Area", activity: "Community Potluck #2", desc: "Another epic shared meal with your new vanlife family" },
+      { time: "8:00 PM", location: "Main Stage", activity: "Live Music & Dance Party", desc: "Live performances on the main stage" },
+    ],
+  },
+  {
+    day: "Saturday, August 22",
+    tag: "Expo Day \u2014 11AM to 5PM",
+    color: "bg-amber-50 text-amber-700",
+    items: [
+      { time: "8:00 AM", location: "Main Lawn", activity: "Morning Fitness", desc: "Group workout or yoga for campers" },
+      { time: "10:00 AM", location: "Exhibit Row", activity: "Exhibitor Setup", desc: "Final prep before the public arrives" },
+      { time: "11:00 AM", location: "Main Gate", activity: "Public Expo Opens", desc: "Gates open for general admission \u2014 van tours, vendors, workshops" },
+      { time: "12:00 PM", location: "Workshop Tent", activity: "Workshops & Panels", desc: "Expert-led sessions on vanlife topics, Q&A panels" },
+      { time: "1:00 PM", location: "Main Stage", activity: "Live Music Begins", desc: "Performances on the main stage throughout the afternoon" },
+      { time: "3:00 PM", location: "Exhibit Row", activity: "Best in Show Judging", desc: "Judges tour exhibiting rigs for awards" },
+      { time: "5:00 PM", location: "Main Gate", activity: "Expo Closes to Public", desc: "GA visitors head out, campers continue the fun" },
+      { time: "7:00 PM", location: "Main Stage", activity: "Saturday Night Live Music", desc: "Headliner performance and dance party under the stars" },
+    ],
+  },
+  {
+    day: "Sunday, August 23",
+    tag: "Expo Day \u2014 11AM to 5PM",
+    color: "bg-amber-50 text-amber-700",
+    items: [
+      { time: "8:00 AM", location: "Main Lawn", activity: "Morning Yoga", desc: "Relaxed stretch session to start the day" },
+      { time: "11:00 AM", location: "Main Gate", activity: "Public Expo Opens", desc: "Day two of tours, vendors, food trucks, and workshops" },
+      { time: "12:00 PM", location: "Workshop Tent", activity: "Workshops & Panels", desc: "More expert sessions \u2014 vanlife for beginners, nomad finances, and more" },
+      { time: "2:00 PM", location: "Main Stage", activity: "Raffle & Giveaways", desc: "Prize drawings from our amazing sponsors" },
+      { time: "3:00 PM", location: "Main Stage", activity: "Best in Show Awards", desc: "Winners announced on the main stage" },
+      { time: "5:00 PM", location: "Main Gate", activity: "Expo Closes to Public", desc: "Last call for GA visitors" },
+      { time: "7:00 PM", location: "Main Stage", activity: "Closing Night Celebration", desc: "Final night of live music, dancing, and memories" },
+    ],
+  },
+  {
+    day: "Monday, August 24",
+    tag: "Departure",
+    color: "bg-gray-100 text-gray-600",
+    items: [
+      { time: "8:00 AM", location: "Communal Area", activity: "Farewell Breakfast", desc: "Coffee and light bites before hitting the road" },
+      { time: "11:00 AM", location: "Main Gate", activity: "Check-Out", desc: "Pack up and head out \u2014 see you at the next VanFest!" },
+    ],
+  },
+];
