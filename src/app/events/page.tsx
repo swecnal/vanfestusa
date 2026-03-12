@@ -25,7 +25,7 @@ const events = [
     tag: "Coming Soon",
     image: "/images/image157.jpg",
     href: "/events/liftoff",
-    ticketUrl: "https://vanfest.fieldpass.app",
+    ticketUrl: "https://tickets.vanfestusa.com",
     fontOverride: "Orbitron, sans-serif",
   },
 ];

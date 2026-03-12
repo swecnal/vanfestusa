@@ -72,7 +72,7 @@ export default function LiftoffPage() {
               on Instagram for announcements.
             </p>
             <BounceCTA
-              href="https://vanfest.fieldpass.app"
+              href="https://tickets.vanfestusa.com"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-block bg-purple-600 hover:bg-purple-700 text-white font-bold px-10 py-4 rounded-xl text-lg shadow-lg hover:shadow-xl transition-all hover:scale-105"
@@ -257,7 +257,7 @@ export default function LiftoffPage() {
           </div>
 
           <a
-            href="https://vanfest.fieldpass.app"
+            href="https://tickets.vanfestusa.com"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-block bg-teal hover:bg-teal-dark text-white font-bold px-8 py-3 rounded-xl transition-colors"
@@ -389,7 +389,7 @@ export default function LiftoffPage() {
             Join us in Melbourne, FL this February for an unforgettable experience!
           </p>
           <BounceCTA
-            href="https://vanfest.fieldpass.app"
+            href="https://tickets.vanfestusa.com"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-block bg-purple-600 hover:bg-purple-700 text-white font-bold px-10 py-4 rounded-xl text-lg shadow-lg hover:shadow-xl transition-all hover:scale-105"

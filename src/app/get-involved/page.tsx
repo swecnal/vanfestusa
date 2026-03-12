@@ -118,7 +118,7 @@ export default function GetInvolvedPage() {
           </div>
 
           <a
-            href="https://vanfest.fieldpass.app"
+            href="https://tickets.vanfestusa.com"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-block bg-teal hover:bg-teal-dark text-white font-bold px-8 py-3 rounded-xl transition-colors"
