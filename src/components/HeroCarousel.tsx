@@ -8,11 +8,11 @@ interface HeroSlide {
 }
 
 const slides: HeroSlide[] = [
-  { image: "https://vanfestusa.com/assets/images/slideshow01.jpg", alt: "VanFest gathering" },
-  { image: "https://vanfestusa.com/assets/images/slideshow02.jpg", alt: "VanFest community" },
-  { image: "https://vanfestusa.com/assets/images/slideshow03.jpg", alt: "VanFest sunset" },
-  { image: "https://vanfestusa.com/assets/images/slideshow04.jpg", alt: "VanFest vans" },
-  { image: "https://vanfestusa.com/assets/images/slideshow05.jpg", alt: "VanFest event" },
+  { image: "https://vanfestusa.com/assets/images/image127.jpg?v=89623a00", alt: "VanFest gathering at Cape Cod" },
+  { image: "https://vanfestusa.com/assets/images/image153.jpg?v=89623a00", alt: "VanFest community event" },
+  { image: "https://vanfestusa.com/assets/images/image154.jpg?v=89623a00", alt: "VanFest vans lined up" },
+  { image: "https://vanfestusa.com/assets/images/image155.jpg?v=89623a00", alt: "VanFest sunset gathering" },
+  { image: "https://vanfestusa.com/assets/images/image156.jpg?v=89623a00", alt: "VanFest festival scene" },
 ];
 
 interface EventOverlay {
@@ -77,7 +77,7 @@ export default function HeroCarousel() {
           <p className="text-teal-light font-display font-semibold tracking-[0.3em] uppercase text-sm md:text-base mb-4 animate-fade-in">
             Next Event
           </p>
-          <h1 className="font-display font-black text-5xl md:text-7xl lg:text-8xl mb-4 leading-tight drop-shadow-2xl">
+          <h1 className="font-display font-black text-4xl sm:text-5xl md:text-7xl lg:text-8xl mb-4 leading-tight drop-shadow-2xl whitespace-nowrap">
             {nextEvent.eventName}
           </h1>
           <p className="font-accent text-xl md:text-2xl text-white/90 mb-6 italic">

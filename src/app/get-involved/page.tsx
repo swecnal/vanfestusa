@@ -8,8 +8,13 @@ export const metadata = {
 export default function GetInvolvedPage() {
   return (
     <>
-      <section className="relative pt-32 pb-20 px-4 bg-charcoal">
-        <div className="mx-auto max-w-6xl">
+      <section className="relative pt-32 pb-20 px-4 bg-charcoal overflow-hidden">
+        <img
+          src="https://vanfestusa.com/assets/images/image25.jpg?v=c74940d3"
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover opacity-15"
+        />
+        <div className="relative mx-auto max-w-6xl">
           <SectionHeading
             title="Get Involved!"
             subtitle="Want to be a part of the ultimate vanlife experience? There are many ways to contribute."
@@ -21,6 +26,13 @@ export default function GetInvolvedPage() {
       {/* Exhibit Your Rig */}
       <section id="exhibit" className="py-20 px-4 bg-white scroll-mt-20">
         <div className="mx-auto max-w-3xl">
+          <div className="rounded-2xl overflow-hidden mb-8">
+            <img
+              src="https://vanfestusa.com/assets/images/image12.jpg?v=c74940d3"
+              alt="Van builds on display at VanFest"
+              className="w-full h-48 md:h-64 object-cover"
+            />
+          </div>
           <h2 className="font-display font-black text-3xl md:text-4xl text-charcoal mb-6">
             Exhibit Your Rig
           </h2>

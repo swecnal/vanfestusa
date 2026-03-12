@@ -9,8 +9,13 @@ export default function EventsPage() {
   return (
     <>
       {/* Hero */}
-      <section className="relative pt-32 pb-20 px-4 bg-charcoal">
-        <div className="mx-auto max-w-6xl">
+      <section className="relative pt-32 pb-20 px-4 bg-charcoal overflow-hidden">
+        <img
+          src="https://vanfestusa.com/assets/images/image01.jpg?v=c74940d3"
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover opacity-15"
+        />
+        <div className="relative mx-auto max-w-6xl">
           <SectionHeading
             title="VanFest Events"
             subtitle="From coast to coast, VanFest brings the nomadic community together."
@@ -18,6 +23,14 @@ export default function EventsPage() {
           />
         </div>
       </section>
+
+      {/* Event photo strip */}
+      <div className="grid grid-cols-4 h-48 overflow-hidden">
+        <img src="https://vanfestusa.com/assets/images/image08.jpg?v=c74940d3" alt="VanFest" className="w-full h-full object-cover" />
+        <img src="https://vanfestusa.com/assets/images/image09.jpg?v=c74940d3" alt="VanFest" className="w-full h-full object-cover" />
+        <img src="https://vanfestusa.com/assets/images/image10.jpg?v=c74940d3" alt="VanFest" className="w-full h-full object-cover" />
+        <img src="https://vanfestusa.com/assets/images/image06.jpg?v=c74940d3" alt="VanFest" className="w-full h-full object-cover" />
+      </div>
 
       {/* Escape to the Cape */}
       <section id="escape" className="py-20 px-4 bg-white scroll-mt-20">

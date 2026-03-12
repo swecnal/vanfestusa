@@ -68,6 +68,7 @@ const upcomingEvents = [
       "Let's Escape (back to) the Cape this summer! We'll be on picturesque Cape Cod for the second annual largest vanlife and nomadic celebration in New England!",
     color: "from-blue-600 to-teal",
     tag: "Early Bird Tickets On Sale!",
+    image: "https://vanfestusa.com/assets/images/image127.jpg?v=89623a00",
   },
   {
     name: "LIFTOFF!",
@@ -77,6 +78,7 @@ const upcomingEvents = [
       "Details coming soon for our Florida event! Stay tuned for what promises to be an unforgettable experience.",
     color: "from-purple-600 to-pink-500",
     tag: "Coming Soon",
+    image: "https://vanfestusa.com/assets/images/image157.jpg?v=c74940d3",
   },
 ];
 
@@ -162,18 +164,21 @@ export default function Home() {
                 className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow"
               >
                 <div
-                  className={`bg-gradient-to-r ${ev.color} p-8 text-white`}
+                  className={`relative bg-gradient-to-r ${ev.color} p-8 text-white overflow-hidden`}
                 >
-                  <span className="inline-block bg-white/20 text-white text-xs font-bold px-3 py-1 rounded-full mb-4">
-                    {ev.tag}
-                  </span>
-                  <h3 className="font-display font-black text-3xl mb-1">
-                    {ev.name}
-                  </h3>
-                  <p className="text-white/80 text-sm">{ev.location}</p>
-                  <p className="text-white/80 text-sm font-semibold mt-1">
-                    {ev.dates}
-                  </p>
+                  <img src={ev.image} alt="" className="absolute inset-0 w-full h-full object-cover opacity-20 mix-blend-overlay" />
+                  <div className="relative">
+                    <span className="inline-block bg-white/20 text-white text-xs font-bold px-3 py-1 rounded-full mb-4">
+                      {ev.tag}
+                    </span>
+                    <h3 className="font-display font-black text-3xl mb-1">
+                      {ev.name}
+                    </h3>
+                    <p className="text-white/80 text-sm">{ev.location}</p>
+                    <p className="text-white/80 text-sm font-semibold mt-1">
+                      {ev.dates}
+                    </p>
+                  </div>
                 </div>
                 <div className="p-6">
                   <p className="text-charcoal/70 text-sm leading-relaxed mb-4">
@@ -238,23 +243,42 @@ export default function Home() {
       </section>
 
       {/* Builds Gallery Preview */}
-      <section className="relative py-20 px-4 bg-charcoal">
-        <div className="mx-auto max-w-4xl text-center">
+      <section className="relative py-20 px-4 bg-charcoal overflow-hidden">
+        <img
+          src="https://vanfestusa.com/assets/images/image24.jpg?v=c74940d3"
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover opacity-15"
+        />
+        <div className="relative mx-auto max-w-6xl">
           <SectionHeading
             title="Check Out These Builds!"
             subtitle="VanFest has dozens of amazing, unique conversions open for tours at each event."
             light
           />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-10">
+            <div className="rounded-xl overflow-hidden">
+              <img src="https://vanfestusa.com/assets/images/image07.jpg?v=c74940d3" alt="Van build" className="w-full h-40 object-cover hover:scale-105 transition-transform duration-300" />
+            </div>
+            <div className="rounded-xl overflow-hidden">
+              <img src="https://vanfestusa.com/assets/images/image12.jpg?v=c74940d3" alt="Van interior" className="w-full h-40 object-cover hover:scale-105 transition-transform duration-300" />
+            </div>
+            <div className="rounded-xl overflow-hidden">
+              <img src="https://vanfestusa.com/assets/images/image14.jpg?v=c74940d3" alt="Van conversion" className="w-full h-40 object-cover hover:scale-105 transition-transform duration-300" />
+            </div>
+            <div className="rounded-xl overflow-hidden">
+              <img src="https://vanfestusa.com/assets/images/image19.jpg?v=c74940d3" alt="Van touring" className="w-full h-40 object-cover hover:scale-105 transition-transform duration-300" />
+            </div>
+          </div>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               href="/media"
-              className="bg-teal hover:bg-teal-dark text-white font-bold px-8 py-3 rounded-full transition-colors"
+              className="bg-teal hover:bg-teal-dark text-white font-bold px-8 py-3 rounded-full transition-colors text-center"
             >
               View Gallery
             </Link>
             <Link
               href="/get-involved#exhibit"
-              className="border-2 border-white/40 hover:border-white text-white font-bold px-8 py-3 rounded-full transition-colors hover:bg-white/10"
+              className="border-2 border-white/40 hover:border-white text-white font-bold px-8 py-3 rounded-full transition-colors hover:bg-white/10 text-center"
             >
               Exhibit My Rig!
             </Link>

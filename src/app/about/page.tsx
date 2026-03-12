@@ -9,8 +9,13 @@ export const metadata = {
 export default function AboutPage() {
   return (
     <>
-      <section className="relative pt-32 pb-20 px-4 bg-charcoal">
-        <div className="mx-auto max-w-6xl">
+      <section className="relative pt-32 pb-20 px-4 bg-charcoal overflow-hidden">
+        <img
+          src="https://vanfestusa.com/assets/images/image21.jpg?v=c74940d3"
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover opacity-15"
+        />
+        <div className="relative mx-auto max-w-6xl">
           <SectionHeading
             title="About VanFest"
             subtitle="The story behind the ultimate vanlife experience."
@@ -21,6 +26,15 @@ export default function AboutPage() {
 
       <section className="py-20 px-4 bg-white">
         <div className="mx-auto max-w-3xl">
+          {/* Hero image */}
+          <div className="rounded-2xl overflow-hidden mb-10">
+            <img
+              src="https://vanfestusa.com/assets/images/image23.jpg?v=c74940d3"
+              alt="VanFest community gathering"
+              className="w-full h-64 md:h-80 object-cover"
+            />
+          </div>
+
           <div className="prose prose-lg max-w-none">
             <p className="text-charcoal/80 text-lg leading-relaxed mb-6">
               VanFest is the <strong>ultimate vanlife experience</strong> &mdash; a
