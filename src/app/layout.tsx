@@ -1,0 +1,37 @@
+import type { Metadata } from "next";
+import "./globals.css";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
+
+export const metadata: Metadata = {
+  title: "VanFest | The ULTIMATE vanlife experience!",
+  description: "Miles - Moments - Music - Memories",
+  openGraph: {
+    title: "VanFest | The ULTIMATE vanlife experience!",
+    description: "Miles - Moments - Music - Memories",
+    siteName: "VanFest",
+    type: "website",
+  },
+};
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en">
+      <head>
+        <link
+          href="https://fonts.googleapis.com/css2?display=swap&family=Poppins:wght@300;400;500;600;700;800;900&family=EB+Garamond:ital,wght@0,400;0,500;0,700;1,400&family=Gothic+A1:wght@300;400;700&family=Orbitron:wght@400;700;900"
+          rel="stylesheet"
+        />
+      </head>
+      <body className="antialiased">
+        <Navbar />
+        <main>{children}</main>
+        <Footer />
+      </body>
+    </html>
+  );
+}
