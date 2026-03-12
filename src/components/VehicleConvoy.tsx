@@ -331,13 +331,13 @@ function renderVehicle(
 }
 
 // ─── Generate convoy data ───
-function generateConvoy(seed: number, count: number, reverse: boolean) {
+function generateConvoy(seed: number, count: number) {
   const rng = seededRandom(seed);
   const vehicles: {
     def: VehicleDef;
     color: { body: string; stroke: string };
-    gap: number; // gap BEFORE this vehicle
-    speedMul: number; // speed multiplier (0.7 - 1.3)
+    gap: number;
+    speedMul: number;
     rngSeed: number;
   }[] = [];
 
@@ -345,10 +345,16 @@ function generateConvoy(seed: number, count: number, reverse: boolean) {
     const def = pickRandom(vehiclePool, rng);
     const isBus = def.type.startsWith("skoolie") || def.type === "rv";
     const color = pickRandom(isBus ? busColors : vanColors, rng);
-    const gap = 20 + Math.floor(rng() * 60); // 20-80px gap
-    const speedMul = 0.75 + rng() * 0.5; // 0.75x - 1.25x
+    const gap = 30 + Math.floor(rng() * 80); // 30-110px gap
+    const speedMul = 0.7 + rng() * 0.6; // 0.7x - 1.3x
     vehicles.push({ def, color, gap, speedMul, rngSeed: Math.floor(rng() * 100000) });
   }
+
+  // Sort by speed ascending: slowest first (index 0), fastest last (index N).
+  // Fastest vehicle gets highest cumulative offset → enters viewport first
+  // and moves fastest → pulls away from slower ones → no collisions.
+  vehicles.sort((a, b) => a.speedMul - b.speedMul);
+
   return vehicles;
 }
 
@@ -367,57 +373,57 @@ export default function VehicleConvoy({
   marginTop = "20px",
 }: VehicleConvoyProps) {
   const sectionRef = useRef<HTMLDivElement>(null);
-  const convoyRef = useRef<HTMLDivElement>(null);
   const vehicleRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   const vehicles = useMemo(
-    () => generateConvoy(seed, count, reverse),
-    [seed, count, reverse],
+    () => generateConvoy(seed, count),
+    [seed, count],
   );
 
-  // Calculate cumulative offsets so vehicles form a line
-  const cumulativeOffsets = useMemo(() => {
-    const offsets: number[] = [];
+  // Cumulative offsets for formation spacing
+  const offsets = useMemo(() => {
+    const o: number[] = [];
     let x = 0;
     for (let i = 0; i < vehicles.length; i++) {
-      offsets.push(x);
+      o.push(x);
       x += vehicles[i].def.width + vehicles[i].gap;
     }
-    return offsets;
+    return o;
   }, [vehicles]);
 
-  const totalConvoyWidth = useMemo(() => {
-    return cumulativeOffsets.length > 0
-      ? cumulativeOffsets[cumulativeOffsets.length - 1] + vehicles[vehicles.length - 1].def.width
-      : 0;
-  }, [cumulativeOffsets, vehicles]);
+  const totalWidth = useMemo(() => {
+    if (vehicles.length === 0) return 0;
+    return offsets[offsets.length - 1] + vehicles[vehicles.length - 1].def.width;
+  }, [offsets, vehicles]);
 
   useEffect(() => {
     let rafId: number;
     const update = () => {
-      if (!sectionRef.current || !convoyRef.current) return;
+      if (!sectionRef.current) return;
       const rect = sectionRef.current.getBoundingClientRect();
       const wh = window.innerHeight;
       const total = wh + rect.height;
       const traveled = wh - rect.top;
       const progress = Math.max(0, Math.min(1, traveled / total));
       const cw = sectionRef.current.offsetWidth;
+      const pad = 150;
+      const travelDist = cw + totalWidth + pad * 2;
 
-      // Move the whole convoy group
-      let groupX: number;
-      if (reverse) {
-        groupX = cw + 100 - progress * (cw + totalConvoyWidth + 200);
-      } else {
-        groupX = -(totalConvoyWidth + 100) + progress * (cw + totalConvoyWidth + 200);
-      }
-      convoyRef.current.style.transform = `translateX(${groupX}px)`;
-
-      // Add small per-vehicle jitter based on speed multiplier
       vehicleRefs.current.forEach((el, i) => {
         if (!el) return;
         const v = vehicles[i];
-        const jitter = (v.speedMul - 1) * progress * 80; // +-20px max jitter
-        el.style.transform = `translateX(${jitter}px)`;
+        const off = offsets[i];
+        let x: number;
+        if (reverse) {
+          // Start right, move left. Fastest vehicle (highest offset) is
+          // closest to viewport and enters first, then pulls away.
+          x = (cw + totalWidth + pad) - off - progress * v.speedMul * travelDist;
+        } else {
+          // Start left, move right. Fastest vehicle (highest offset) is
+          // closest to viewport and enters first, then pulls away.
+          x = -(totalWidth + pad) + off + progress * v.speedMul * travelDist;
+        }
+        el.style.transform = `translateX(${x}px)`;
       });
     };
     const onScroll = () => {
@@ -430,7 +436,7 @@ export default function VehicleConvoy({
       window.removeEventListener("scroll", onScroll);
       cancelAnimationFrame(rafId);
     };
-  }, [vehicles, reverse, totalConvoyWidth]);
+  }, [vehicles, reverse, totalWidth, offsets]);
 
   return (
     <section
@@ -445,25 +451,20 @@ export default function VehicleConvoy({
         </svg>
       </div>
 
-      {/* Convoy group - moves as a unit */}
-      <div
-        ref={convoyRef}
-        className="absolute bottom-5 flex items-end"
-        style={{ willChange: "transform" }}
-      >
-        {vehicles.map((v, i) => {
-          const vRng = seededRandom(v.rngSeed);
-          return (
-            <div
-              key={i}
-              ref={(el) => { vehicleRefs.current[i] = el; }}
-              style={{ marginLeft: i === 0 ? 0 : v.gap, willChange: "transform" }}
-            >
-              {renderVehicle(v.def.type, v.color, vRng, reverse)}
-            </div>
-          );
-        })}
-      </div>
+      {/* Each vehicle independently positioned and animated */}
+      {vehicles.map((v, i) => {
+        const vRng = seededRandom(v.rngSeed);
+        return (
+          <div
+            key={i}
+            ref={(el) => { vehicleRefs.current[i] = el; }}
+            className="absolute bottom-5"
+            style={{ willChange: "transform" }}
+          >
+            {renderVehicle(v.def.type, v.color, vRng, reverse)}
+          </div>
+        );
+      })}
     </section>
   );
 }

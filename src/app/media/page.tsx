@@ -29,8 +29,7 @@ const galleryImages = [
   // Drive folder 1 - Bruce Murray Photography (Cape Cod setup day)
   { src: "/images/drive1/BruceMurrayPhoto_com-20250820-VanFest-Cape-Cod-9180.jpg", alt: "VanFest Cape Cod" },
   { src: "/images/drive1/BruceMurrayPhoto_com-20250820-VanFest-Cape-Cod-9182.jpg", alt: "VanFest Cape Cod" },
-  { src: "/images/drive1/BruceMurrayPhoto_com-20250820-VanFest-Cape-Cod-9189.jpg", alt: "VanFest Cape Cod" },
-  { src: "/images/drive1/BruceMurrayPhoto_com-20250820-VanFest-Cape-Cod-9191.jpg", alt: "VanFest Cape Cod" },
+  { src: "/images/drive1/BruceMurrayPhoto_com-20250820-VanFest-Cape-Cod-9189.jpg", alt: "VanFest Cape Cod setup" },
   { src: "/images/drive1/BruceMurrayPhoto_com-20250820-VanFest-Cape-Cod-9193.jpg", alt: "VanFest Cape Cod" },
   { src: "/images/drive1/BruceMurrayPhoto_com-20250820-VanFest-Cape-Cod-9200.jpg", alt: "VanFest Cape Cod" },
   { src: "/images/drive1/BruceMurrayPhoto_com-20250820-VanFest-Cape-Cod-9206.jpg", alt: "VanFest Cape Cod" },
@@ -39,9 +38,7 @@ const galleryImages = [
   { src: "/images/drive1/BruceMurrayPhoto_com-20250820-VanFest-Cape-Cod-9216.jpg", alt: "VanFest Cape Cod" },
   { src: "/images/drive1/BruceMurrayPhoto_com-20250820-VanFest-Cape-Cod-9219.jpg", alt: "VanFest Cape Cod" },
   { src: "/images/drive1/BruceMurrayPhoto_com-20250820-VanFest-Cape-Cod-9223.jpg", alt: "VanFest Cape Cod" },
-  { src: "/images/drive1/BruceMurrayPhoto_com-20250820-VanFest-Cape-Cod-9229.jpg", alt: "VanFest Cape Cod" },
-  { src: "/images/drive1/BruceMurrayPhoto_com-20250820-VanFest-Cape-Cod-9230.jpg", alt: "VanFest Cape Cod" },
-  { src: "/images/drive1/BruceMurrayPhoto_com-20250820-VanFest-Cape-Cod-9231.jpg", alt: "VanFest Cape Cod" },
+  { src: "/images/drive1/BruceMurrayPhoto_com-20250820-VanFest-Cape-Cod-9229.jpg", alt: "VanFest Cape Cod potluck" },
   // Drive folder 2 - Community uploads
   { src: "/images/drive2/IMG_0119.jpeg", alt: "VanFest community photo" },
   { src: "/images/drive2/IMG_0133.jpeg", alt: "VanFest community photo" },

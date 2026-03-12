@@ -60,6 +60,7 @@ const defaultNavLinks: NavLink[] = [
 const escapeNavLinks: NavLink[] = [
   { label: "About", href: "/events#escape" },
   { label: "Schedule", href: "/events#escape-schedule" },
+  { label: "Map", href: "/events#escape-map" },
   {
     label: "Get Involved",
     href: "/get-involved",
@@ -76,6 +77,7 @@ const escapeNavLinks: NavLink[] = [
 const liftoffNavLinks: NavLink[] = [
   { label: "About", href: "/events#liftoff" },
   { label: "Schedule & Details", href: "/events#liftoff" },
+  { label: "Map", href: "/events#liftoff-map" },
   {
     label: "Get Involved",
     href: "/get-involved",
@@ -167,7 +169,7 @@ export default function Navbar() {
     >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex items-center justify-between">
         {/* Logo */}
-        <Link href={isEventPage ? "/" : "/"} className="flex items-center gap-3 group">
+        <Link href="/" className="flex items-center gap-3 group">
           <img
             src="/images/vanfest-logo.png"
             alt="VanFest"
@@ -176,15 +178,6 @@ export default function Navbar() {
             }`}
             style={{ marginTop: "0%", marginBottom: scrolled ? "-30%" : "-40%" }}
           />
-          {isEventPage && (
-            <span
-              className={`font-display font-semibold text-white/80 hover:text-white transition-colors hidden sm:block ${
-                scrolled ? "text-xs" : "text-sm"
-              }`}
-            >
-              &larr; Return to VanFest
-            </span>
-          )}
         </Link>
 
         {/* Event title badge (visible only on event pages) */}
@@ -220,6 +213,27 @@ export default function Navbar() {
                 >
                   {link.label}
                 </a>
+              ) : link.children ? (
+                <span
+                  className={`px-3.5 py-2.5 rounded-lg font-medium text-white/90 hover:text-white hover:bg-white/10 transition-colors cursor-default select-none ${
+                    scrolled ? "text-sm" : "text-base"
+                  }`}
+                >
+                  {link.label}
+                  <svg
+                    className="inline ml-1 w-3 h-3"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </span>
               ) : (
                 <Link
                   href={link.href}
@@ -228,21 +242,6 @@ export default function Navbar() {
                   }`}
                 >
                   {link.label}
-                  {link.children && (
-                    <svg
-                      className="inline ml-1 w-3 h-3"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 9l-7 7-7-7"
-                      />
-                    </svg>
-                  )}
                 </Link>
               )}
               {link.children && openDropdown === link.label && (
@@ -335,6 +334,10 @@ export default function Navbar() {
                   >
                     {link.label}
                   </a>
+                ) : link.children ? (
+                  <span className="block px-3 py-2 text-white/60 rounded-lg font-medium text-sm uppercase tracking-wider">
+                    {link.label}
+                  </span>
                 ) : (
                   <Link
                     href={link.href}
