@@ -77,7 +77,7 @@ export default function HeroCarousel() {
 
       {/* Event overlay content */}
       <div className="absolute inset-0 flex items-center justify-center">
-        <div className="text-center text-white px-6 sm:px-10 md:px-14 py-10 md:py-14 max-w-4xl bg-black/25 backdrop-blur-[2px] rounded-3xl border border-white/10">
+        <div className="text-center text-white px-6 sm:px-10 md:px-14 py-10 md:py-14 max-w-4xl bg-white/15 backdrop-blur-[2px] rounded-3xl border border-white/20">
           <p
             className="font-display font-semibold tracking-[0.3em] uppercase text-sm md:text-base mb-4"
             style={{ textShadow, color: "#09B593" }}
