@@ -178,7 +178,7 @@ export default function SponsorsPage() {
                           <div className="border-t border-charcoal/10 pt-5">
                             {/* Larger logo + details */}
                             <div className="flex flex-col sm:flex-row gap-6">
-                              <div className="bg-white rounded-xl p-6 flex-shrink-0 w-28 h-28 flex items-center justify-center self-start">
+                              <div className={`rounded-xl p-6 flex-shrink-0 w-28 h-28 flex items-center justify-center self-start ${sponsor.darkBg ? "bg-charcoal" : "bg-white"}`}>
                                 <img
                                   src={sponsor.logo}
                                   alt={`${sponsor.name} logo`}

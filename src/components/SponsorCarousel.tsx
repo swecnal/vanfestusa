@@ -66,8 +66,8 @@ export default function SponsorCarousel({ eventFilter }: SponsorCarouselProps) {
             onClick={() => goToSponsor(i)}
             className={`relative flex items-center justify-center rounded-xl p-2 transition-all duration-300 ${
               i === activeIndex
-                ? "ring-2 ring-teal shadow-[0_0_12px_rgba(28,162,136,0.35)] scale-110 bg-white"
-                : "opacity-60 hover:opacity-90 bg-white/50 hover:bg-white"
+                ? `ring-2 ring-teal shadow-[0_0_12px_rgba(28,162,136,0.35)] scale-110 ${sponsor.darkBg ? "bg-charcoal" : "bg-white"}`
+                : `opacity-60 hover:opacity-90 ${sponsor.darkBg ? "bg-charcoal/50 hover:bg-charcoal" : "bg-white/50 hover:bg-white"}`
             }`}
             aria-label={`View ${sponsor.name}`}
           >

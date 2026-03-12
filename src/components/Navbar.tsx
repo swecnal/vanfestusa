@@ -64,27 +64,21 @@ export default function Navbar() {
     <nav
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         scrolled
-          ? "bg-charcoal/95 backdrop-blur-md py-2 shadow-lg"
-          : "bg-transparent py-4"
+          ? "bg-charcoal/95 backdrop-blur-md py-3 shadow-lg"
+          : "bg-transparent py-5"
       }`}
     >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-3 group">
           <img
-            src={scrolled ? "/images/vanfest-logo.png" : "/images/vanfest-logo-white.png"}
+            src="/images/vanfest-logo.png"
             alt="VanFest"
             className={`transition-all duration-300 ${
-              scrolled ? "h-9" : "h-12"
+              scrolled ? "h-14" : "h-20"
             }`}
+            style={{ marginTop: scrolled ? "35%" : "35%", marginBottom: "-15%" }}
           />
-          <span
-            className={`font-display font-bold text-white transition-all duration-300 ${
-              scrolled ? "text-lg" : "text-xl"
-            }`}
-          >
-            VanFest
-          </span>
         </Link>
 
         {/* Desktop nav */}
@@ -103,8 +97,8 @@ export default function Navbar() {
                   href={link.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={`px-3 py-2 rounded-lg text-sm font-medium text-white/90 hover:text-white hover:bg-white/10 transition-colors ${
-                    scrolled ? "text-xs" : "text-sm"
+                  className={`px-3.5 py-2.5 rounded-lg font-medium text-white/90 hover:text-white hover:bg-white/10 transition-colors ${
+                    scrolled ? "text-sm" : "text-base"
                   }`}
                 >
                   {link.label}
@@ -112,8 +106,8 @@ export default function Navbar() {
               ) : (
                 <Link
                   href={link.href}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium text-white/90 hover:text-white hover:bg-white/10 transition-colors ${
-                    scrolled ? "text-xs" : "text-sm"
+                  className={`px-3.5 py-2.5 rounded-lg font-medium text-white/90 hover:text-white hover:bg-white/10 transition-colors ${
+                    scrolled ? "text-sm" : "text-base"
                   }`}
                 >
                   {link.label}
@@ -157,10 +151,10 @@ export default function Navbar() {
             href="https://vanfest.fieldpass.app"
             target="_blank"
             rel="noopener noreferrer"
-            className={`bg-teal hover:bg-teal-dark text-white font-bold rounded-full transition-all duration-300 shadow-lg hover:shadow-xl ${
+            className={`bg-teal hover:bg-teal-dark text-white font-bold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl ${
               scrolled
-                ? "px-4 py-1.5 text-xs"
-                : "px-5 py-2 text-sm"
+                ? "px-5 py-2 text-sm"
+                : "px-7 py-2.5 text-base"
             }`}
           >
             Get Tickets

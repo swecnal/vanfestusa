@@ -32,7 +32,7 @@ export default function SponsorMarquee() {
               href={sponsor.websiteUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex-shrink-0 bg-white rounded-xl p-3 shadow-sm hover:shadow-md transition-shadow flex items-center justify-center"
+              className={`flex-shrink-0 rounded-xl p-3 shadow-sm hover:shadow-md transition-shadow flex items-center justify-center ${sponsor.darkBg ? "bg-charcoal" : "bg-white"}`}
               style={{ height: "70px", minWidth: "140px" }}
               title={sponsor.name}
             >
@@ -50,7 +50,7 @@ export default function SponsorMarquee() {
       <div className="text-center mt-10">
         <Link
           href="/get-involved#sponsors"
-          className="inline-block bg-teal hover:bg-teal-dark text-white font-bold px-8 py-3 rounded-full transition-colors"
+          className="inline-block bg-teal hover:bg-teal-dark text-white font-bold px-8 py-3 rounded-xl transition-colors"
         >
           Become a Sponsor
         </Link>

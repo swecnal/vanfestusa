@@ -20,6 +20,8 @@ export interface Sponsor {
   category: SponsorCategory;
   /** Which VanFest events this sponsor is associated with */
   events: ("escape_to_the_cape" | "liftoff" | "all")[];
+  /** Optional dark background for logos that are white/light */
+  darkBg?: boolean;
 }
 
 /**
@@ -75,6 +77,7 @@ export const sponsors: Sponsor[] = [
       "Eco-friendly cleaning and personal care products for sustainable living.",
     category: "official_sponsor",
     events: ["liftoff"],
+    darkBg: true,
   },
   {
     name: "Brevard Humane Society",

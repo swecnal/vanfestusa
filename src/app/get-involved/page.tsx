@@ -350,7 +350,7 @@ export default function GetInvolvedPage() {
                   .getElementById("exhibit")
                   ?.scrollIntoView({ behavior: "smooth" });
               }}
-              className="bg-white/10 hover:bg-white/20 text-white font-bold px-6 py-2.5 rounded-full border border-white/20 transition-colors text-sm"
+              className="bg-white/10 hover:bg-white/20 text-white font-bold px-6 py-2.5 rounded-xl border border-white/20 transition-colors text-sm"
             >
               Exhibit
             </a>
@@ -362,7 +362,7 @@ export default function GetInvolvedPage() {
                   .getElementById("sponsors")
                   ?.scrollIntoView({ behavior: "smooth" });
               }}
-              className="bg-white/10 hover:bg-white/20 text-white font-bold px-6 py-2.5 rounded-full border border-white/20 transition-colors text-sm"
+              className="bg-white/10 hover:bg-white/20 text-white font-bold px-6 py-2.5 rounded-xl border border-white/20 transition-colors text-sm"
             >
               Sponsors & Vendors
             </a>
@@ -374,7 +374,7 @@ export default function GetInvolvedPage() {
                   .getElementById("jobs")
                   ?.scrollIntoView({ behavior: "smooth" });
               }}
-              className="bg-white/10 hover:bg-white/20 text-white font-bold px-6 py-2.5 rounded-full border border-white/20 transition-colors text-sm"
+              className="bg-white/10 hover:bg-white/20 text-white font-bold px-6 py-2.5 rounded-xl border border-white/20 transition-colors text-sm"
             >
               Jobs
             </a>
@@ -444,7 +444,7 @@ export default function GetInvolvedPage() {
             href="https://vanfest.fieldpass.app"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-block bg-teal hover:bg-teal-dark text-white font-bold px-8 py-3 rounded-full transition-colors"
+            className="inline-block bg-teal hover:bg-teal-dark text-white font-bold px-8 py-3 rounded-xl transition-colors"
           >
             Camp & Exhibit at VanFest
           </a>
@@ -552,7 +552,7 @@ export default function GetInvolvedPage() {
           <div className="mt-10">
             <a
               href="mailto:hello@vanfestusa.com?subject=Sponsorship%20%2F%20Vendor%20Inquiry"
-              className="inline-block bg-teal hover:bg-teal-dark text-white font-bold px-8 py-3 rounded-full transition-colors"
+              className="inline-block bg-teal hover:bg-teal-dark text-white font-bold px-8 py-3 rounded-xl transition-colors"
             >
               Contact Us About Sponsorship
             </a>
@@ -603,7 +603,7 @@ export default function GetInvolvedPage() {
 
           <a
             href="mailto:hello@vanfestusa.com?subject=Jobs%20Inquiry"
-            className="inline-block bg-teal hover:bg-teal-dark text-white font-bold px-8 py-3 rounded-full transition-colors"
+            className="inline-block bg-teal hover:bg-teal-dark text-white font-bold px-8 py-3 rounded-xl transition-colors"
           >
             Apply Now
           </a>

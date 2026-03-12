@@ -133,13 +133,13 @@ export default function HeroCarousel() {
               href="https://vanfest.fieldpass.app"
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-teal hover:bg-teal-dark text-white font-bold px-10 py-4 rounded-full text-xl shadow-[0_0_30px_rgba(9,181,147,0.5)] hover:shadow-[0_0_50px_rgba(9,181,147,0.7)] transition-all hover:scale-105 animate-pulse-subtle"
+              className="bg-teal hover:bg-teal-dark text-white font-bold px-10 py-4 rounded-xl text-xl shadow-[0_0_30px_rgba(9,181,147,0.5)] hover:shadow-[0_0_50px_rgba(9,181,147,0.7)] transition-all hover:scale-105 animate-pulse-subtle"
             >
               Get Tickets
             </a>
             <a
               href="/events"
-              className="border-2 border-white/40 hover:border-white text-white font-bold px-8 py-3 rounded-full text-lg transition-all hover:bg-white/10"
+              className="border-2 border-white/40 hover:border-white text-white font-bold px-8 py-3 rounded-xl text-lg transition-all hover:bg-white/10"
             >
               Learn More
             </a>

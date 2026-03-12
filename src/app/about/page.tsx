@@ -67,13 +67,13 @@ export default function AboutPage() {
           <div className="mt-12 flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               href="/magnet"
-              className="text-center bg-teal hover:bg-teal-dark text-white font-bold px-8 py-3 rounded-full transition-colors inline-flex items-center justify-center"
+              className="text-center bg-teal hover:bg-teal-dark text-white font-bold px-8 py-3 rounded-xl transition-colors inline-flex items-center justify-center"
             >
               Found a Magnet?
             </Link>
             <Link
               href="/terms"
-              className="text-center border-2 border-charcoal/20 hover:border-charcoal text-charcoal font-bold px-8 py-3 rounded-full transition-colors inline-flex items-center justify-center"
+              className="text-center border-2 border-charcoal/20 hover:border-charcoal text-charcoal font-bold px-8 py-3 rounded-xl transition-colors inline-flex items-center justify-center"
             >
               Terms & Conduct
             </Link>

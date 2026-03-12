@@ -128,7 +128,7 @@ export default function MediaPage() {
               href="https://instagram.com/vanfestusa"
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-teal hover:bg-teal-dark text-white font-bold px-6 py-3 rounded-full transition-colors"
+              className="bg-teal hover:bg-teal-dark text-white font-bold px-6 py-3 rounded-xl transition-colors"
             >
               Follow on Instagram
             </a>
@@ -136,7 +136,7 @@ export default function MediaPage() {
               href="https://facebook.com/vanfestusa"
               target="_blank"
               rel="noopener noreferrer"
-              className="border-2 border-charcoal/20 hover:border-charcoal text-charcoal font-bold px-6 py-3 rounded-full transition-colors"
+              className="border-2 border-charcoal/20 hover:border-charcoal text-charcoal font-bold px-6 py-3 rounded-xl transition-colors"
             >
               Follow on Facebook
             </a>

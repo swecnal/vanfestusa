@@ -1,5 +1,6 @@
 import HeroCarousel from "@/components/HeroCarousel";
 import ScrollingVan from "@/components/ScrollingVan";
+import ReverseConvoy from "@/components/ReverseConvoy";
 import SponsorMarquee from "@/components/SponsorMarquee";
 import SectionHeading from "@/components/SectionHeading";
 import Link from "next/link";
@@ -173,6 +174,9 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Reverse Convoy Divider */}
+      <ReverseConvoy />
+
       {/* Upcoming Events */}
       <section className="py-20 px-4 bg-sand">
         <div className="mx-auto max-w-6xl">
@@ -181,14 +185,14 @@ export default function Home() {
             {upcomingEvents.map((ev) => (
               <div
                 key={ev.name}
-                className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow"
+                className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl hover:scale-[1.03] transition-all duration-300"
               >
                 <div
                   className={`relative bg-gradient-to-r ${ev.color} p-8 text-white overflow-hidden`}
                 >
                   <img src={ev.image} alt="" className="absolute inset-0 w-full h-full object-cover opacity-20 mix-blend-overlay" />
                   <div className="relative">
-                    <span className="inline-block bg-white/20 text-white text-xs font-bold px-3 py-1 rounded-full mb-4">
+                    <span className="inline-block bg-white/20 text-white text-xs font-bold px-3 py-1 rounded-lg mb-4">
                       {ev.tag}
                     </span>
                     <h3 className="font-display font-black text-3xl mb-1">
@@ -204,12 +208,22 @@ export default function Home() {
                   <p className="text-charcoal/70 text-sm leading-relaxed mb-4">
                     {ev.description}
                   </p>
-                  <Link
-                    href="/events"
-                    className="text-teal hover:text-teal-dark font-semibold text-sm transition-colors"
-                  >
-                    View Details &rarr;
-                  </Link>
+                  <div className="flex items-center justify-between">
+                    <Link
+                      href="/events"
+                      className="text-teal hover:text-teal-dark font-semibold text-sm transition-colors"
+                    >
+                      Event Details &rarr;
+                    </Link>
+                    <a
+                      href="https://vanfest.fieldpass.app"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-teal hover:bg-teal-dark text-white font-bold px-5 py-2 rounded-xl text-sm transition-colors"
+                    >
+                      Get Tickets
+                    </a>
+                  </div>
                 </div>
               </div>
             ))}
@@ -295,13 +309,13 @@ export default function Home() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               href="/media"
-              className="bg-teal hover:bg-teal-dark text-white font-bold px-8 py-3 rounded-full transition-colors text-center"
+              className="bg-teal hover:bg-teal-dark text-white font-bold px-8 py-3 rounded-xl transition-colors text-center"
             >
               View Gallery
             </Link>
             <Link
               href="/get-involved#exhibit"
-              className="border-2 border-white/40 hover:border-white text-white font-bold px-8 py-3 rounded-full transition-colors hover:bg-white/10 text-center"
+              className="border-2 border-white/40 hover:border-white text-white font-bold px-8 py-3 rounded-xl transition-colors hover:bg-white/10 text-center"
             >
               Exhibit My Rig!
             </Link>

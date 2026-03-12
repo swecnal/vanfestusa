@@ -275,7 +275,7 @@ export default function ContactPage() {
                 <button
                   type="submit"
                   disabled={!humanChecked || formState === "sending"}
-                  className={`w-full py-3.5 rounded-full font-bold text-white transition-all ${
+                  className={`w-full py-3.5 rounded-xl font-bold text-white transition-all ${
                     humanChecked
                       ? "bg-teal hover:bg-teal-dark shadow-lg hover:shadow-xl"
                       : "bg-charcoal/20 cursor-not-allowed"
