@@ -3,7 +3,19 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 
-const navLinks = [
+interface NavChild {
+  label: string;
+  href: string;
+}
+
+interface NavLink {
+  label: string;
+  href: string;
+  external?: boolean;
+  children?: NavChild[];
+}
+
+const navLinks: NavLink[] = [
   {
     label: "Events",
     href: "/events",
@@ -32,7 +44,7 @@ const navLinks = [
     ],
   },
   { label: "Media", href: "/media" },
-  { label: "Merch", href: "/merch" },
+  { label: "Merch", href: "https://merch.vanfestusa.com/", external: true },
   { label: "Contact", href: "/contact" },
 ];
 
@@ -85,29 +97,42 @@ export default function Navbar() {
               }
               onMouseLeave={() => setOpenDropdown(null)}
             >
-              <Link
-                href={link.href}
-                className={`px-3 py-2 rounded-lg text-sm font-medium text-white/90 hover:text-white hover:bg-white/10 transition-colors ${
-                  scrolled ? "text-xs" : "text-sm"
-                }`}
-              >
-                {link.label}
-                {link.children && (
-                  <svg
-                    className="inline ml-1 w-3 h-3"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                )}
-              </Link>
+              {link.external ? (
+                <a
+                  href={link.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`px-3 py-2 rounded-lg text-sm font-medium text-white/90 hover:text-white hover:bg-white/10 transition-colors ${
+                    scrolled ? "text-xs" : "text-sm"
+                  }`}
+                >
+                  {link.label}
+                </a>
+              ) : (
+                <Link
+                  href={link.href}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium text-white/90 hover:text-white hover:bg-white/10 transition-colors ${
+                    scrolled ? "text-xs" : "text-sm"
+                  }`}
+                >
+                  {link.label}
+                  {link.children && (
+                    <svg
+                      className="inline ml-1 w-3 h-3"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  )}
+                </Link>
+              )}
               {link.children && openDropdown === link.label && (
                 <div className="absolute top-full left-0 mt-1 w-56 bg-charcoal/95 backdrop-blur-md rounded-lg shadow-xl border border-white/10 py-2">
                   {link.children.map((child) => (
@@ -178,13 +203,25 @@ export default function Navbar() {
           <div className="px-4 py-4 space-y-1">
             {navLinks.map((link) => (
               <div key={link.label}>
-                <Link
-                  href={link.href}
-                  className="block px-3 py-2 text-white/90 hover:text-white hover:bg-white/10 rounded-lg font-medium"
-                  onClick={() => setMobileOpen(false)}
-                >
-                  {link.label}
-                </Link>
+                {link.external ? (
+                  <a
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block px-3 py-2 text-white/90 hover:text-white hover:bg-white/10 rounded-lg font-medium"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    {link.label}
+                  </a>
+                ) : (
+                  <Link
+                    href={link.href}
+                    className="block px-3 py-2 text-white/90 hover:text-white hover:bg-white/10 rounded-lg font-medium"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    {link.label}
+                  </Link>
+                )}
                 {link.children && (
                   <div className="ml-4 space-y-1">
                     {link.children.map((child) => (

@@ -8,6 +8,7 @@ export default function ContactPage() {
   const [humanChecked, setHumanChecked] = useState(false);
   const [showChallenge, setShowChallenge] = useState(false);
   const [challengeAnswer, setChallengeAnswer] = useState("");
+  const [challengeError, setChallengeError] = useState(false);
   const honeypotRef = useRef<HTMLInputElement>(null);
   const formStartTime = useRef(Date.now());
   const interactionCount = useRef(0);
@@ -38,6 +39,9 @@ export default function ContactPage() {
     if (parseInt(challengeAnswer) === challengeA + challengeB) {
       setHumanChecked(true);
       setShowChallenge(false);
+      setChallengeError(false);
+    } else {
+      setChallengeError(true);
     }
   };
 
@@ -70,7 +74,7 @@ export default function ContactPage() {
     <>
       <section className="relative pt-32 pb-20 px-4 bg-charcoal overflow-hidden">
         <img
-          src="https://vanfestusa.com/assets/images/image34.jpg?v=c74940d3"
+          src="/images/image34.jpg"
           alt=""
           className="absolute inset-0 w-full h-full object-cover opacity-20"
         />
@@ -259,6 +263,11 @@ export default function ContactPage() {
                           Verify
                         </button>
                       </div>
+                      {challengeError && (
+                        <p className="text-red-500 text-sm font-semibold">
+                          Incorrect! Try again.
+                        </p>
+                      )}
                     </div>
                   )}
                 </div>

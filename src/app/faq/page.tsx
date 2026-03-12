@@ -98,7 +98,7 @@ export default function FAQPage() {
     <>
       <section className="relative pt-32 pb-20 px-4 bg-charcoal overflow-hidden">
         <img
-          src="https://vanfestusa.com/assets/images/image109.jpg?v=c74940d3"
+          src="/images/image109.jpg"
           alt=""
           className="absolute inset-0 w-full h-full object-cover opacity-15"
         />

@@ -11,7 +11,7 @@ export default function AboutPage() {
     <>
       <section className="relative pt-32 pb-20 px-4 bg-charcoal overflow-hidden">
         <img
-          src="https://vanfestusa.com/assets/images/image21.jpg?v=c74940d3"
+          src="/images/image21.jpg"
           alt=""
           className="absolute inset-0 w-full h-full object-cover opacity-15"
         />
@@ -29,7 +29,7 @@ export default function AboutPage() {
           {/* Hero image */}
           <div className="rounded-2xl overflow-hidden mb-10">
             <img
-              src="https://vanfestusa.com/assets/images/image23.jpg?v=c74940d3"
+              src="/images/image23.jpg"
               alt="VanFest community gathering"
               className="w-full h-64 md:h-80 object-cover"
             />
@@ -62,25 +62,18 @@ export default function AboutPage() {
               </p>
             </div>
 
-            <p className="text-charcoal/70 leading-relaxed mb-6">
-              VanFest is a nomadic event series brand run by{" "}
-              <strong>Ever Onward LLC</strong>, a Massachusetts-based Limited
-              Liability Company. What started as a dream to bring the vanlife
-              community together has grown into a movement that spans the East
-              Coast and beyond.
-            </p>
           </div>
 
           <div className="mt-12 flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               href="/magnet"
-              className="text-center bg-teal hover:bg-teal-dark text-white font-bold px-8 py-3 rounded-full transition-colors"
+              className="text-center bg-teal hover:bg-teal-dark text-white font-bold px-8 py-3 rounded-full transition-colors inline-flex items-center justify-center"
             >
               Found a Magnet?
             </Link>
             <Link
               href="/terms"
-              className="text-center border-2 border-charcoal/20 hover:border-charcoal text-charcoal font-bold px-8 py-3 rounded-full transition-colors"
+              className="text-center border-2 border-charcoal/20 hover:border-charcoal text-charcoal font-bold px-8 py-3 rounded-full transition-colors inline-flex items-center justify-center"
             >
               Terms & Conduct
             </Link>

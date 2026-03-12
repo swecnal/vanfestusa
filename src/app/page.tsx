@@ -68,7 +68,7 @@ const upcomingEvents = [
       "Let's Escape (back to) the Cape this summer! We'll be on picturesque Cape Cod for the second annual largest vanlife and nomadic celebration in New England!",
     color: "from-blue-600 to-teal",
     tag: "Early Bird Tickets On Sale!",
-    image: "https://vanfestusa.com/assets/images/image127.jpg?v=89623a00",
+    image: "/images/image127.jpg",
   },
   {
     name: "LIFTOFF!",
@@ -78,7 +78,7 @@ const upcomingEvents = [
       "Details coming soon for our Florida event! Stay tuned for what promises to be an unforgettable experience.",
     color: "from-purple-600 to-pink-500",
     tag: "Coming Soon",
-    image: "https://vanfestusa.com/assets/images/image157.jpg?v=c74940d3",
+    image: "/images/image157.jpg",
   },
 ];
 
@@ -245,7 +245,7 @@ export default function Home() {
       {/* Builds Gallery Preview */}
       <section className="relative py-20 px-4 bg-charcoal overflow-hidden">
         <img
-          src="https://vanfestusa.com/assets/images/image24.jpg?v=c74940d3"
+          src="/images/image24.jpg"
           alt=""
           className="absolute inset-0 w-full h-full object-cover opacity-15"
         />
@@ -257,16 +257,16 @@ export default function Home() {
           />
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-10">
             <div className="rounded-xl overflow-hidden">
-              <img src="https://vanfestusa.com/assets/images/image07.jpg?v=c74940d3" alt="Van build" className="w-full h-40 object-cover hover:scale-105 transition-transform duration-300" />
+              <img src="/images/image07.jpg" alt="Van build" className="w-full h-40 object-cover hover:scale-105 transition-transform duration-300" />
             </div>
             <div className="rounded-xl overflow-hidden">
-              <img src="https://vanfestusa.com/assets/images/image12.jpg?v=c74940d3" alt="Van interior" className="w-full h-40 object-cover hover:scale-105 transition-transform duration-300" />
+              <img src="/images/image12.jpg" alt="Van interior" className="w-full h-40 object-cover hover:scale-105 transition-transform duration-300" />
             </div>
             <div className="rounded-xl overflow-hidden">
-              <img src="https://vanfestusa.com/assets/images/image14.jpg?v=c74940d3" alt="Van conversion" className="w-full h-40 object-cover hover:scale-105 transition-transform duration-300" />
+              <img src="/images/image14.jpg" alt="Van conversion" className="w-full h-40 object-cover hover:scale-105 transition-transform duration-300" />
             </div>
             <div className="rounded-xl overflow-hidden">
-              <img src="https://vanfestusa.com/assets/images/image19.jpg?v=c74940d3" alt="Van touring" className="w-full h-40 object-cover hover:scale-105 transition-transform duration-300" />
+              <img src="/images/image19.jpg" alt="Van touring" className="w-full h-40 object-cover hover:scale-105 transition-transform duration-300" />
             </div>
           </div>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">

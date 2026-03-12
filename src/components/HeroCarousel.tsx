@@ -8,17 +8,18 @@ interface HeroSlide {
 }
 
 const slides: HeroSlide[] = [
-  { image: "https://vanfestusa.com/assets/images/image127.jpg?v=89623a00", alt: "VanFest gathering at Cape Cod" },
-  { image: "https://vanfestusa.com/assets/images/image153.jpg?v=89623a00", alt: "VanFest community event" },
-  { image: "https://vanfestusa.com/assets/images/image154.jpg?v=89623a00", alt: "VanFest vans lined up" },
-  { image: "https://vanfestusa.com/assets/images/image155.jpg?v=89623a00", alt: "VanFest sunset gathering" },
-  { image: "https://vanfestusa.com/assets/images/image156.jpg?v=89623a00", alt: "VanFest festival scene" },
+  { image: "/images/image127.jpg", alt: "VanFest gathering at Cape Cod" },
+  { image: "/images/image153.jpg", alt: "VanFest community event" },
+  { image: "/images/image154.jpg", alt: "VanFest vans lined up" },
+  { image: "/images/image155.jpg", alt: "VanFest sunset gathering" },
+  { image: "/images/image156.jpg", alt: "VanFest festival scene" },
 ];
 
 interface EventOverlay {
   eventName: string;
   tagline: string;
   location: string;
+  locationUrl: string;
   dates: string;
 }
 
@@ -26,8 +27,11 @@ const nextEvent: EventOverlay = {
   eventName: "Escape to the Cape",
   tagline: "The biggest vanlife celebration in New England!",
   location: "Cape Cod Fairgrounds — East Falmouth, MA",
-  dates: "August 20 - 24, 2026",
+  locationUrl: "https://www.google.com/maps/place/Cape+Cod+Fairgrounds/data=!4m2!3m1!1s0x89e4d7e5b8f3b8a7:0x4b3b8b8b8b8b8b8b",
+  dates: "August 20th - 24th, 2026",
 };
+
+const textShadow = "0 2px 8px rgba(0,0,0,0.7), 0 0 30px rgba(0,0,0,0.4)";
 
 export default function HeroCarousel() {
   const [current, setCurrent] = useState(0);
@@ -74,26 +78,47 @@ export default function HeroCarousel() {
       {/* Event overlay content */}
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="text-center text-white px-4 max-w-4xl">
-          <p className="text-teal-light font-display font-semibold tracking-[0.3em] uppercase text-sm md:text-base mb-4 animate-fade-in">
+          <p
+            className="font-display font-semibold tracking-[0.3em] uppercase text-sm md:text-base mb-4"
+            style={{ textShadow, color: "#09B593" }}
+          >
             Next Event
           </p>
-          <h1 className="font-display font-black text-4xl sm:text-5xl md:text-7xl lg:text-8xl mb-4 leading-tight drop-shadow-2xl whitespace-nowrap">
+          <h1
+            className="font-accent font-bold text-4xl sm:text-5xl md:text-7xl lg:text-8xl mb-4 leading-tight whitespace-nowrap italic"
+            style={{ textShadow, fontFamily: "'EB Garamond', serif" }}
+          >
             {nextEvent.eventName}
           </h1>
-          <p className="font-accent text-xl md:text-2xl text-white/90 mb-6 italic">
+          <p
+            className="text-xl md:text-2xl lg:text-3xl mb-8 font-bold tracking-wide"
+            style={{
+              textShadow,
+              color: "#09B593",
+              fontFamily: "'Poppins', sans-serif",
+            }}
+          >
             {nextEvent.tagline}
           </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 text-sm md:text-base mb-8">
-            <span className="flex items-center gap-2 text-white/80">
-              <svg className="w-4 h-4 text-teal" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div
+            className="flex flex-col sm:flex-row items-center justify-center gap-4 md:gap-6 text-base md:text-lg lg:text-xl mb-8 font-semibold"
+            style={{ textShadow }}
+          >
+            <a
+              href={nextEvent.locationUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-white hover:text-teal-light transition-colors"
+            >
+              <svg className="w-5 h-5 text-teal" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
               {nextEvent.location}
-            </span>
+            </a>
             <span className="hidden sm:block text-white/40">|</span>
-            <span className="flex items-center gap-2 text-white/80">
-              <svg className="w-4 h-4 text-teal" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <span className="flex items-center gap-2 text-white">
+              <svg className="w-5 h-5 text-teal" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
               {nextEvent.dates}

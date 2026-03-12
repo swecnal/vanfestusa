@@ -11,7 +11,7 @@ export default function EventsPage() {
       {/* Hero */}
       <section className="relative pt-32 pb-20 px-4 bg-charcoal overflow-hidden">
         <img
-          src="https://vanfestusa.com/assets/images/image01.jpg?v=c74940d3"
+          src="/images/image01.jpg"
           alt=""
           className="absolute inset-0 w-full h-full object-cover opacity-15"
         />
@@ -26,10 +26,10 @@ export default function EventsPage() {
 
       {/* Event photo strip */}
       <div className="grid grid-cols-4 h-48 overflow-hidden">
-        <img src="https://vanfestusa.com/assets/images/image08.jpg?v=c74940d3" alt="VanFest" className="w-full h-full object-cover" />
-        <img src="https://vanfestusa.com/assets/images/image09.jpg?v=c74940d3" alt="VanFest" className="w-full h-full object-cover" />
-        <img src="https://vanfestusa.com/assets/images/image10.jpg?v=c74940d3" alt="VanFest" className="w-full h-full object-cover" />
-        <img src="https://vanfestusa.com/assets/images/image06.jpg?v=c74940d3" alt="VanFest" className="w-full h-full object-cover" />
+        <img src="/images/image08.jpg" alt="VanFest" className="w-full h-full object-cover" />
+        <img src="/images/image09.jpg" alt="VanFest" className="w-full h-full object-cover" />
+        <img src="/images/image10.jpg" alt="VanFest" className="w-full h-full object-cover" />
+        <img src="/images/image06.jpg" alt="VanFest" className="w-full h-full object-cover" />
       </div>
 
       {/* Escape to the Cape */}
