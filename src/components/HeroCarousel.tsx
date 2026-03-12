@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 interface HeroSlide {
   image: string;
@@ -36,6 +36,14 @@ const textShadow = "0 2px 12px rgba(0,0,0,0.9), 0 0 40px rgba(0,0,0,0.6), 0 4px 
 export default function HeroCarousel() {
   const [current, setCurrent] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const heroCTARef = useRef<HTMLAnchorElement>(null);
+
+  // Randomize bounce timing
+  useEffect(() => {
+    if (!heroCTARef.current) return;
+    heroCTARef.current.style.animationDuration = `${2 + Math.random() * 3}s`;
+    heroCTARef.current.style.animationDelay = `${Math.random() * 3}s`;
+  }, []);
 
   const goToSlide = useCallback(
     (index: number) => {
@@ -130,6 +138,7 @@ export default function HeroCarousel() {
           </div>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <a
+              ref={heroCTARef}
               href="https://vanfest.fieldpass.app"
               target="_blank"
               rel="noopener noreferrer"

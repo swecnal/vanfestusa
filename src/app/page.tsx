@@ -1,8 +1,8 @@
 import HeroCarousel from "@/components/HeroCarousel";
-import ScrollingVan from "@/components/ScrollingVan";
-import ReverseConvoy from "@/components/ReverseConvoy";
+import VehicleConvoy from "@/components/VehicleConvoy";
 import SponsorMarquee from "@/components/SponsorMarquee";
 import SectionHeading from "@/components/SectionHeading";
+import BounceCTA from "@/components/BounceCTA";
 import Link from "next/link";
 
 const features = [
@@ -90,8 +90,8 @@ export default function Home() {
     <>
       <HeroCarousel />
 
-      {/* Scrolling Van Divider */}
-      <ScrollingVan />
+      {/* Scrolling Vehicle Convoy */}
+      <VehicleConvoy seed={42} count={6} />
 
       {/* What is VanFest */}
       <section className="py-20 px-4 bg-white">
@@ -174,8 +174,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Reverse Convoy Divider */}
-      <ReverseConvoy />
+      {/* Reverse Vehicle Convoy */}
+      <VehicleConvoy seed={99} count={5} reverse marginTop="0px" />
 
       {/* Upcoming Events */}
       <section className="py-20 px-4 bg-sand">
@@ -215,14 +215,14 @@ export default function Home() {
                     >
                       Event Details &rarr;
                     </Link>
-                    <a
+                    <BounceCTA
                       href="https://vanfest.fieldpass.app"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="bg-teal hover:bg-teal-dark text-white font-bold px-5 py-2 rounded-xl text-sm transition-colors animate-bounce-attention"
+                      className="bg-teal hover:bg-teal-dark text-white font-bold px-5 py-2 rounded-xl text-sm transition-colors"
                     >
                       Get Tickets
-                    </a>
+                    </BounceCTA>
                   </div>
                 </div>
               </div>

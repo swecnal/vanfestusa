@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 
@@ -44,7 +44,14 @@ const defaultNavLinks: NavLink[] = [
       { label: "Jobs @ VanFest", href: "/get-involved#jobs" },
     ],
   },
-  { label: "Media", href: "/media" },
+  {
+    label: "Media",
+    href: "/media",
+    children: [
+      { label: "Gallery", href: "/media#gallery" },
+      { label: "Community Media", href: "/media#community" },
+    ],
+  },
   { label: "Sponsors", href: "/sponsors" },
   { label: "Merch", href: "https://merch.vanfestusa.com/", external: true },
   { label: "Contact", href: "/contact" },
@@ -90,6 +97,7 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [eventMode, setEventMode] = useState<EventMode>(null);
+  const ctaRef = useRef<HTMLAnchorElement>(null);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 50);
@@ -131,6 +139,13 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", detectEvent);
   }, [pathname]);
 
+  // Randomize CTA bounce timing
+  useEffect(() => {
+    if (!ctaRef.current) return;
+    ctaRef.current.style.animationDuration = `${2 + Math.random() * 3}s`;
+    ctaRef.current.style.animationDelay = `${Math.random() * 3}s`;
+  }, []);
+
   const isEventPage = eventMode !== null;
   const navLinks = isEventPage
     ? eventMode === "liftoff"
@@ -159,7 +174,7 @@ export default function Navbar() {
             className={`transition-all duration-300 ${
               scrolled ? "h-14" : "h-20"
             }`}
-            style={{ marginTop: scrolled ? "35%" : "35%", marginBottom: "-15%" }}
+            style={{ marginTop: "0%", marginBottom: scrolled ? "-30%" : "-40%" }}
           />
           {isEventPage && (
             <span
@@ -250,6 +265,7 @@ export default function Navbar() {
         {/* CTA + Mobile Toggle */}
         <div className="flex items-center gap-3">
           <a
+            ref={ctaRef}
             href="https://vanfest.fieldpass.app"
             target="_blank"
             rel="noopener noreferrer"

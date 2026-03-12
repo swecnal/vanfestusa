@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import SectionHeading from "@/components/SectionHeading";
 import SponsorCarousel from "@/components/SponsorCarousel";
+import BounceCTA from "@/components/BounceCTA";
 
 const escapeSchedule = [
   {
@@ -175,14 +176,14 @@ export default function EventsPage() {
             </div>
 
             <div className="text-center">
-              <a
+              <BounceCTA
                 href="https://vanfest.fieldpass.app"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-block bg-teal hover:bg-teal-dark text-white font-bold px-10 py-4 rounded-xl text-lg shadow-lg hover:shadow-xl transition-all hover:scale-105 animate-bounce-attention"
+                className="inline-block bg-teal hover:bg-teal-dark text-white font-bold px-10 py-4 rounded-xl text-lg shadow-lg hover:shadow-xl transition-all hover:scale-105"
               >
                 Get Escape to the Cape Tickets
-              </a>
+              </BounceCTA>
             </div>
           </div>
 

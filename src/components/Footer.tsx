@@ -8,7 +8,7 @@ export default function Footer() {
           {/* Brand */}
           <div>
             <div className="flex items-center gap-3 mb-4">
-              <img src="/images/vanfest-logo-white.png" alt="VanFest" className="h-10" />
+              <img src="/images/vanfest-logo.png" alt="VanFest" className="h-10" />
               <span className="font-display font-bold text-xl">VanFest</span>
             </div>
             <p className="text-white/60 text-sm leading-relaxed">
