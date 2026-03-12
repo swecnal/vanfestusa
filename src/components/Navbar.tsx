@@ -22,7 +22,7 @@ const defaultNavLinks: NavLink[] = [
     href: "/events",
     children: [
       { label: "Escape to the Cape — MA 2026", href: "/events/escape" },
-      { label: "LIFTOFF! — FL 2027", href: "/events/liftoff" },
+      { label: "LIFTOFF!", href: "/events/liftoff" },
     ],
   },
   {

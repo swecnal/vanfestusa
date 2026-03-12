@@ -77,8 +77,8 @@ const upcomingEvents = [
   },
   {
     name: "LIFTOFF!",
-    location: "Melbourne, FL",
-    dates: "February 4 - 8, 2027",
+    location: "",
+    dates: "Details to be Announced",
     description:
       "Details coming soon for our Florida event! Stay tuned for what promises to be an unforgettable experience.",
     color: "from-purple-600 to-pink-500",
@@ -202,7 +202,7 @@ export default function Home() {
                     <h3 className="font-display font-black text-3xl mb-1">
                       {ev.name}
                     </h3>
-                    <p className="text-white/80 text-sm">{ev.location}</p>
+                    {ev.location && <p className="text-white/80 text-sm">{ev.location}</p>}
                     <p className="text-white/80 text-sm font-semibold mt-1">
                       {ev.dates}
                     </p>

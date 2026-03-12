@@ -39,11 +39,8 @@ export default function LiftoffPage() {
             >
               LIFTOFF!
             </h1>
-            <p className="text-white/80 text-lg">
-              Space Coast Daily Park &mdash; Melbourne, FL
-            </p>
             <p className="text-white/90 text-xl font-semibold mt-2">
-              February 4 - 8, 2027
+              Details to be Announced
             </p>
           </div>
         </div>
@@ -54,9 +51,8 @@ export default function LiftoffPage() {
         <div className="mx-auto max-w-5xl">
           <div className="prose prose-lg max-w-none text-center">
             <p className="text-charcoal/80 text-lg leading-relaxed mb-6">
-              Get ready for LIFTOFF! &mdash; VanFest&apos;s Florida event
-              bringing the vanlife community together on the Space Coast. Details
-              are coming soon for what promises to be an unforgettable
+              Get ready for LIFTOFF! &mdash; VanFest&apos;s next big event.
+              Details are coming soon for what promises to be an unforgettable
               experience.
             </p>
             <p className="text-charcoal/50 mb-8">
@@ -386,7 +382,7 @@ export default function LiftoffPage() {
             Ready for LIFTOFF?
           </h2>
           <p className="text-white/60 mb-8">
-            Join us in Melbourne, FL this February for an unforgettable experience!
+            Stay tuned for an unforgettable experience!
           </p>
           <BounceCTA
             href="https://tickets.vanfestusa.com"
