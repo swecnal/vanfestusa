@@ -31,7 +31,7 @@ const nextEvent: EventOverlay = {
   dates: "August 20th - 24th, 2026",
 };
 
-const textShadow = "0 2px 8px rgba(0,0,0,0.7), 0 0 30px rgba(0,0,0,0.4)";
+const textShadow = "0 2px 12px rgba(0,0,0,0.9), 0 0 40px rgba(0,0,0,0.6), 0 4px 20px rgba(0,0,0,0.5)";
 
 export default function HeroCarousel() {
   const [current, setCurrent] = useState(0);
@@ -73,7 +73,7 @@ export default function HeroCarousel() {
       ))}
 
       {/* Gradient overlays */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-black/70" />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-black/80" />
 
       {/* Event overlay content */}
       <div className="absolute inset-0 flex items-center justify-center">
@@ -85,8 +85,12 @@ export default function HeroCarousel() {
             Next Event
           </p>
           <h1
-            className="font-accent font-bold text-4xl sm:text-5xl md:text-7xl lg:text-8xl mb-4 leading-tight whitespace-nowrap italic"
-            style={{ textShadow, fontFamily: "'EB Garamond', serif" }}
+            className="font-accent font-bold text-4xl sm:text-5xl md:text-7xl lg:text-8xl mb-4 leading-tight whitespace-nowrap"
+            style={{
+              textShadow: `${textShadow}, 0 0 60px rgba(9,181,147,0.3)`,
+              fontFamily: "'EB Garamond', serif",
+              WebkitTextStroke: "1px rgba(255,255,255,0.1)",
+            }}
           >
             {nextEvent.eventName}
           </h1>
@@ -129,7 +133,7 @@ export default function HeroCarousel() {
               href="https://vanfest.fieldpass.app"
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-teal hover:bg-teal-dark text-white font-bold px-8 py-3 rounded-full text-lg shadow-xl hover:shadow-2xl transition-all hover:scale-105"
+              className="bg-teal hover:bg-teal-dark text-white font-bold px-10 py-4 rounded-full text-xl shadow-[0_0_30px_rgba(9,181,147,0.5)] hover:shadow-[0_0_50px_rgba(9,181,147,0.7)] transition-all hover:scale-105 animate-pulse-subtle"
             >
               Get Tickets
             </a>

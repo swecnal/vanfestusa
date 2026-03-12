@@ -1,4 +1,6 @@
 import HeroCarousel from "@/components/HeroCarousel";
+import ScrollingVan from "@/components/ScrollingVan";
+import SponsorMarquee from "@/components/SponsorMarquee";
 import SectionHeading from "@/components/SectionHeading";
 import Link from "next/link";
 
@@ -87,6 +89,9 @@ export default function Home() {
     <>
       <HeroCarousel />
 
+      {/* Scrolling Van Divider */}
+      <ScrollingVan />
+
       {/* What is VanFest */}
       <section className="py-20 px-4 bg-white">
         <div className="mx-auto max-w-4xl text-center">
@@ -124,6 +129,21 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Wave Divider: white to charcoal */}
+      <div className="relative bg-charcoal -mt-1">
+        <svg
+          viewBox="0 0 1440 60"
+          preserveAspectRatio="none"
+          className="block w-full h-[40px] sm:h-[60px]"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M0,0 L0,30 Q180,60 360,30 T720,30 T1080,30 T1440,30 L1440,0 Z"
+            fill="white"
+          />
+        </svg>
+      </div>
 
       {/* Features */}
       <section className="py-20 px-4 bg-charcoal">
@@ -241,6 +261,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Sponsor Marquee */}
+      <SponsorMarquee />
 
       {/* Builds Gallery Preview */}
       <section className="relative py-20 px-4 bg-charcoal overflow-hidden">

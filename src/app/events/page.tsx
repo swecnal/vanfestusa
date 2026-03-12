@@ -1,9 +1,7 @@
-import SectionHeading from "@/components/SectionHeading";
+"use client";
 
-export const metadata = {
-  title: "Events | VanFest",
-  description: "Upcoming VanFest events across the country",
-};
+import SectionHeading from "@/components/SectionHeading";
+import SponsorCarousel from "@/components/SponsorCarousel";
 
 export default function EventsPage() {
   return (
@@ -18,7 +16,7 @@ export default function EventsPage() {
         <div className="relative mx-auto max-w-6xl">
           <SectionHeading
             title="VanFest Events"
-            subtitle="From coast to coast, VanFest brings the nomadic community together."
+            subtitle="Building community through connection and experiences."
             light
           />
         </div>
@@ -108,6 +106,14 @@ export default function EventsPage() {
               </a>
             </div>
           </div>
+
+          {/* Sponsors */}
+          <div className="mt-14">
+            <h3 className="font-display font-bold text-xl text-charcoal/80 text-center mb-4">
+              Proudly Sponsored By
+            </h3>
+            <SponsorCarousel eventFilter="escape_to_the_cape" />
+          </div>
         </div>
       </section>
 
@@ -150,6 +156,14 @@ export default function EventsPage() {
               </a>{" "}
               on Instagram for announcements.
             </p>
+          </div>
+
+          {/* Sponsors */}
+          <div className="mt-14">
+            <h3 className="font-display font-bold text-xl text-charcoal/80 text-center mb-4">
+              Proudly Sponsored By
+            </h3>
+            <SponsorCarousel eventFilter="liftoff" />
           </div>
         </div>
       </section>

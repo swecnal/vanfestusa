@@ -24,3 +24,31 @@
     font-family: var(--font-display);
   }
 }
+
+@keyframes pulse-subtle {
+  0%, 100% { box-shadow: 0 0 30px rgba(9,181,147,0.5); }
+  50% { box-shadow: 0 0 50px rgba(9,181,147,0.8), 0 0 80px rgba(9,181,147,0.3); }
+}
+.animate-pulse-subtle {
+  animation: pulse-subtle 3s ease-in-out infinite;
+}
+
+@keyframes van-drive {
+  from { transform: translateX(-200px); }
+  to { transform: translateX(calc(100vw + 200px)); }
+}
+.van-divider {
+  position: relative;
+  overflow: hidden;
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.animate-marquee {
+  animation: marquee 30s linear infinite;
+}
+.animate-marquee:hover {
+  animation-play-state: paused;
+}

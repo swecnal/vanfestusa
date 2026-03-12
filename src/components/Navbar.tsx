@@ -44,6 +44,7 @@ const navLinks: NavLink[] = [
     ],
   },
   { label: "Media", href: "/media" },
+  { label: "Sponsors", href: "/sponsors" },
   { label: "Merch", href: "https://merch.vanfestusa.com/", external: true },
   { label: "Contact", href: "/contact" },
 ];
@@ -70,13 +71,13 @@ export default function Navbar() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-3 group">
-          <div
-            className={`rounded-full bg-teal flex items-center justify-center font-bold text-white transition-all duration-300 ${
-              scrolled ? "w-9 h-9 text-sm" : "w-12 h-12 text-lg"
+          <img
+            src={scrolled ? "/images/vanfest-logo.png" : "/images/vanfest-logo-white.png"}
+            alt="VanFest"
+            className={`transition-all duration-300 ${
+              scrolled ? "h-9" : "h-12"
             }`}
-          >
-            VF
-          </div>
+          />
           <span
             className={`font-display font-bold text-white transition-all duration-300 ${
               scrolled ? "text-lg" : "text-xl"
