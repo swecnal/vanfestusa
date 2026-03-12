@@ -106,6 +106,12 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  // Close menus on navigation
+  useEffect(() => {
+    setMobileOpen(false);
+    setOpenDropdown(null);
+  }, [pathname]);
+
   // Randomize CTA bounce timing
   useEffect(() => {
     if (!ctaRef.current) return;
@@ -252,7 +258,7 @@ export default function Navbar() {
         <div className="flex items-center gap-3">
           <a
             ref={ctaRef}
-            href="https://vanfest.fieldpass.app"
+            href={eventMode === "escape" ? "https://vanfest.ticketspice.com/escape2026" : "https://vanfest.fieldpass.app"}
             target="_blank"
             rel="noopener noreferrer"
             className={`bg-teal hover:bg-teal-dark text-white font-bold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl animate-bounce-attention ${

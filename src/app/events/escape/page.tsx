@@ -117,7 +117,7 @@ export default function EscapePage() {
 
             <div className="text-center">
               <BounceCTA
-                href="https://vanfest.fieldpass.app"
+                href="https://vanfest.ticketspice.com/escape2026"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-block bg-teal hover:bg-teal-dark text-white font-bold px-10 py-4 rounded-xl text-lg shadow-lg hover:shadow-xl transition-all hover:scale-105"
@@ -241,57 +241,69 @@ export default function EscapePage() {
             people who care and who stand behind what they offer.
           </p>
 
-          <div className="space-y-4">
-            {sponsorTiers.map((tier, idx) => (
-              <details
-                key={idx}
-                className="group rounded-2xl border border-charcoal/10 overflow-hidden"
-              >
-                <summary className="flex items-center justify-between cursor-pointer px-6 py-5 bg-sand hover:bg-sand/80 transition-colors list-none [&::-webkit-details-marker]:hidden">
-                  <div>
-                    <span className="font-display font-bold text-lg text-charcoal">
-                      {tier.name}
-                    </span>
-                    {tier.frontage && (
-                      <span className="text-charcoal/50 text-sm ml-3">
-                        {tier.frontage}
+          <details className="group/outer rounded-2xl border border-teal/20 overflow-hidden">
+            <summary className="flex items-center justify-between cursor-pointer px-6 py-5 bg-teal/5 hover:bg-teal/10 transition-colors list-none [&::-webkit-details-marker]:hidden">
+              <span className="font-display font-bold text-lg text-teal-dark">
+                Expand to learn more about Sponsorship
+              </span>
+              <span className="text-teal transition-transform group-open/outer:rotate-180">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <path d="M5 7.5L10 12.5L15 7.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </span>
+            </summary>
+            <div className="px-6 pb-6 pt-4 space-y-4">
+              {sponsorTiers.map((tier, idx) => (
+                <details
+                  key={idx}
+                  className="group rounded-2xl border border-charcoal/10 overflow-hidden"
+                >
+                  <summary className="flex items-center justify-between cursor-pointer px-6 py-5 bg-sand hover:bg-sand/80 transition-colors list-none [&::-webkit-details-marker]:hidden">
+                    <div>
+                      <span className="font-display font-bold text-lg text-charcoal">
+                        {tier.name}
                       </span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="font-display font-black text-teal text-lg">
-                      {tier.price}
-                    </span>
-                    <span className="text-charcoal/40 transition-transform group-open:rotate-180">
-                      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                        <path d="M5 7.5L10 12.5L15 7.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    </span>
-                  </div>
-                </summary>
-                <div className="px-6 py-6 bg-white">
-                  <p className="text-charcoal/70 leading-relaxed mb-6 text-sm">
-                    {tier.summary}
-                  </p>
-                  {tier.categories.map((cat, cIdx) => (
-                    <div key={cIdx} className="mb-5 last:mb-0">
-                      <h4 className="font-display font-bold text-sm text-teal-dark mb-2">
-                        {cat.heading}
-                      </h4>
-                      <ul className="space-y-1.5">
-                        {cat.items.map((item, iIdx) => (
-                          <li key={iIdx} className="flex gap-2 text-charcoal/70 text-sm leading-relaxed">
-                            <span className="text-teal font-bold shrink-0">&bull;</span>
-                            {item}
-                          </li>
-                        ))}
-                      </ul>
+                      {tier.frontage && (
+                        <span className="text-charcoal/50 text-sm ml-3">
+                          {tier.frontage}{tier.frontageNote && <span className="text-xs ml-1">({tier.frontageNote})</span>}
+                        </span>
+                      )}
                     </div>
-                  ))}
-                </div>
-              </details>
-            ))}
-          </div>
+                    <div className="flex items-center gap-3">
+                      <span className="font-display font-black text-teal text-lg">
+                        {tier.price}
+                      </span>
+                      <span className="text-charcoal/40 transition-transform group-open:rotate-180">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                          <path d="M5 7.5L10 12.5L15 7.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </span>
+                    </div>
+                  </summary>
+                  <div className="px-6 py-6 bg-white">
+                    <p className="text-charcoal/70 leading-relaxed mb-6 text-sm">
+                      {tier.summary}
+                    </p>
+                    {tier.categories.map((cat, cIdx) => (
+                      <div key={cIdx} className="mb-5 last:mb-0">
+                        <h4 className="font-display font-bold text-sm text-teal-dark mb-2">
+                          {cat.heading}
+                        </h4>
+                        <ul className="space-y-1.5">
+                          {cat.items.map((item, iIdx) => (
+                            <li key={iIdx} className="flex gap-2 text-charcoal/70 text-sm leading-relaxed">
+                              <span className="text-teal font-bold shrink-0">&bull;</span>
+                              {item}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                </details>
+              ))}
+            </div>
+          </details>
 
           <div className="mt-10">
             <a
@@ -359,7 +371,7 @@ export default function EscapePage() {
           </div>
 
           <a
-            href="https://vanfest.fieldpass.app"
+            href="https://vanfest.ticketspice.com/escape2026"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-block bg-teal hover:bg-teal-dark text-white font-bold px-8 py-3 rounded-xl transition-colors"
@@ -491,7 +503,7 @@ export default function EscapePage() {
             Grab your tickets and join us on Cape Cod this August!
           </p>
           <BounceCTA
-            href="https://vanfest.fieldpass.app"
+            href="https://vanfest.ticketspice.com/escape2026"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-block bg-teal hover:bg-teal-dark text-white font-bold px-10 py-4 rounded-xl text-lg shadow-lg hover:shadow-xl transition-all hover:scale-105"

@@ -170,7 +170,7 @@ export default function GetInvolvedPage() {
                     </span>
                     {tier.frontage && (
                       <span className="text-charcoal/50 text-sm ml-3">
-                        {tier.frontage}
+                        {tier.frontage}{tier.frontageNote && <span className="text-xs ml-1">({tier.frontageNote})</span>}
                       </span>
                     )}
                   </div>

@@ -73,6 +73,7 @@ const upcomingEvents = [
     tag: "Early Bird Tickets On Sale!",
     image: "/images/image127.jpg",
     href: "/events/escape",
+    ticketUrl: "https://vanfest.ticketspice.com/escape2026",
   },
   {
     name: "LIFTOFF!",
@@ -84,6 +85,7 @@ const upcomingEvents = [
     tag: "Coming Soon",
     image: "/images/image157.jpg",
     href: "/events/liftoff",
+    ticketUrl: "https://vanfest.fieldpass.app",
   },
 ];
 
@@ -218,7 +220,7 @@ export default function Home() {
                       Event Details &rarr;
                     </Link>
                     <BounceCTA
-                      href="https://vanfest.fieldpass.app"
+                      href={ev.ticketUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="bg-teal hover:bg-teal-dark text-white font-bold px-5 py-2 rounded-xl text-sm transition-colors"

@@ -55,6 +55,7 @@ export default function Footer() {
                 ["About", "/about"],
                 ["FAQ", "/faq"],
                 ["Contact", "/contact"],
+                ["Terms & Conduct", "/terms"],
               ].map(([label, href]) => (
                 <li key={label}>
                   <Link

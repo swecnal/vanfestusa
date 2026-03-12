@@ -139,7 +139,7 @@ export default function HeroCarousel() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <a
               ref={heroCTARef}
-              href="https://vanfest.fieldpass.app"
+              href="https://vanfest.ticketspice.com/escape2026"
               target="_blank"
               rel="noopener noreferrer"
               className="bg-teal hover:bg-teal-dark text-white font-bold px-10 py-4 rounded-xl text-xl shadow-[0_0_30px_rgba(9,181,147,0.5)] hover:shadow-[0_0_50px_rgba(9,181,147,0.7)] transition-all hover:scale-105 animate-pulse-subtle animate-bounce-attention"

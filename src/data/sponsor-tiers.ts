@@ -2,7 +2,8 @@ export const sponsorTiers = [
   {
     name: "Presenting Partner",
     price: "$6,500",
-    frontage: "40' Frontage",
+    frontage: "Custom On-Site Dimensions",
+    frontageNote: "Unlimited",
     summary:
       "The highest, top-tier sponsorship with exclusivity, deep brand integration across ALL aspects of the event, and premium on-site visibility. Includes entire event branding (ex: \"VanFest: LIFTOFF! is presented by YOUR BRAND\"), significant social media exposure, premium branding on all digital and physical event collateral, stage/workshop branding, inclusion in all press features, dedicated digital communications, and full integration into all event-specific communication and branding. Limited to one per event.",
     categories: [
@@ -65,7 +66,8 @@ export const sponsorTiers = [
   {
     name: "Premier Sponsor",
     price: "$3,500",
-    frontage: "25' Frontage",
+    frontage: "40' Frontage",
+    frontageNote: "3 vans + tents",
     summary:
       "High-impact sponsorship with branded presence across all digital, on-site, and media channels. Includes press features, stage/banner branding, giveaways, and full integration into VanFest communications and giveaways. Limited to 2 per event.",
     categories: [
@@ -123,7 +125,8 @@ export const sponsorTiers = [
   {
     name: "Feature Sponsor",
     price: "$1,850",
-    frontage: "15' Frontage",
+    frontage: "30' Frontage",
+    frontageNote: "2 vans + tents",
     summary:
       "A robust promotional tier with significant branding across the website, tickets, wristbands, and giveaways. Includes speaking opportunities, contests, and moderate site footprint.",
     categories: [
@@ -181,7 +184,8 @@ export const sponsorTiers = [
   {
     name: "Official Sponsor",
     price: "$1,000",
-    frontage: "10' Frontage",
+    frontage: "20' Frontage",
+    frontageNote: "1 van + tent",
     summary:
       "Recognized as an official supporter of VanFest, this tier offers solid visibility through website placement, branded discount codes, staff access, and on-site space for two vans. Ideal for custom builders and brands ready to show up, engage, and grow within the vanlife community.",
     categories: [
@@ -252,7 +256,8 @@ export const sponsorTiers = [
   {
     name: "Exhibiting Vendor",
     price: "$500",
-    frontage: null,
+    frontage: "10' x 20'",
+    frontageNote: "2 tents",
     summary:
       "Standard exhibiting package with a 10\u2019x10\u2019 booth, website presence, and light perks like ticket discounts and giveaway inclusion. Perfect for small businesses or first-time VanFest participants.",
     categories: [
@@ -288,7 +293,8 @@ export const sponsorTiers = [
   {
     name: "Local Artisan",
     price: "$150",
-    frontage: null,
+    frontage: "10' x 10'",
+    frontageNote: "1 tent",
     summary:
       "A low cost-of-entry vendor spot for local crafters, artisans, and merchants. Includes space for a pop-up tent and table.",
     categories: [
