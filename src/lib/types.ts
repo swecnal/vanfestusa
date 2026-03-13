@@ -115,7 +115,7 @@ export interface HeroCarouselData {
     locationUrl?: string;
     dates?: string;
     primaryCta?: { text: string; href: string; external?: boolean };
-    secondaryCta?: { text: string; href: string };
+    secondaryCta?: { text: string; href: string; external?: boolean };
   };
   autoplayInterval?: number;
 }
@@ -352,7 +352,7 @@ export const SECTION_TYPE_LABELS: Record<SectionType, string> = {
   hero_carousel: "Hero Carousel",
   hero_simple: "Hero Banner",
   text_block: "Text Block",
-  two_column_cards: "Two-Column Cards",
+  two_column_cards: "Column Cards",
   feature_grid: "Feature Grid",
   event_cards: "Event Cards",
   cta_cards: "CTA Cards",
@@ -365,7 +365,7 @@ export const SECTION_TYPE_LABELS: Record<SectionType, string> = {
   image_carousel: "Image Carousel",
   photo_strip: "Photo Strip",
   image_gallery: "Image Gallery",
-  wave_divider: "Wave Divider",
+  wave_divider: "Divider",
   vehicle_convoy: "Vehicle Convoy",
   vehicle_stream: "Vehicle Stream",
   contact_form: "Contact Form",

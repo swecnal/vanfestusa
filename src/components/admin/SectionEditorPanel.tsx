@@ -1073,11 +1073,11 @@ function HeroCarouselEditor({
             />
           </Field>
           <Field label="Tagline">
-            <input
-              type="text"
+            <textarea
               value={(overlay.tagline as string) || ""}
               onChange={(e) => updateOverlay("tagline", e.target.value)}
               className="input-sm"
+              rows={2}
             />
           </Field>
           <Field label="Location">
@@ -1173,6 +1173,14 @@ function HeroCarouselEditor({
               placeholder="/events/escape"
             />
           </Field>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={(secondaryCta.external as boolean) || false}
+              onChange={(e) => updateSecondaryCta("external", e.target.checked)}
+            />
+            Open in new tab
+          </label>
           <ButtonStylePicker
             value={secondaryCta.styleId as string | undefined}
             onChange={(id) => updateSecondaryCta("styleId", id)}

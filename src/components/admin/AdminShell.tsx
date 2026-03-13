@@ -18,11 +18,11 @@ interface User {
 const ELEMENT_GROUPS: { label: string; items: { type: SectionType; label: string }[] }[] = [
   { label: "Heroes", items: [{ type: "hero_carousel", label: "Hero Carousel" }, { type: "hero_simple", label: "Hero Banner" }] },
   { label: "Content", items: [{ type: "text_block", label: "Text Block" }, { type: "html_block", label: "HTML Block" }] },
-  { label: "Cards & Grids", items: [{ type: "two_column_cards", label: "Two-Column Cards" }, { type: "feature_grid", label: "Feature Grid" }, { type: "event_cards", label: "Event Cards" }, { type: "cta_cards", label: "CTA Cards" }] },
+  { label: "Cards & Grids", items: [{ type: "two_column_cards", label: "Column Cards" }, { type: "feature_grid", label: "Feature Grid" }, { type: "event_cards", label: "Event Cards" }, { type: "cta_cards", label: "CTA Cards" }] },
   { label: "Actions", items: [{ type: "cta_section", label: "CTA Section" }, { type: "contact_form", label: "Contact Form" }] },
   { label: "Accordions", items: [{ type: "faq_accordion", label: "FAQ Accordion" }, { type: "schedule_accordion", label: "Schedule" }, { type: "sponsor_tiers", label: "Sponsor Tiers" }, { type: "sponsor_list", label: "Sponsor List" }] },
   { label: "Media", items: [{ type: "image_carousel", label: "Image Carousel" }, { type: "photo_strip", label: "Photo Strip" }, { type: "image_gallery", label: "Image Gallery" }, { type: "sponsor_marquee", label: "Marquee" }] },
-  { label: "Decorative", items: [{ type: "wave_divider", label: "Wave Divider" }, { type: "vehicle_convoy", label: "Vehicle Convoy" }, { type: "vehicle_stream", label: "Vehicle Stream" }] },
+  { label: "Decorative", items: [{ type: "wave_divider", label: "Divider" }, { type: "vehicle_convoy", label: "Vehicle Convoy" }, { type: "vehicle_stream", label: "Vehicle Stream" }] },
 ];
 
 const navItems = [
@@ -70,13 +70,12 @@ function InlineElementPalette() {
                       e.dataTransfer.setData("application/section-type", item.type);
                       e.dataTransfer.effectAllowed = "copy";
                     }}
-                    onClick={() => { if (isActive && addSection) addSection(item.type); }}
                     className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs transition-all ${
                       isActive
                         ? "text-white/60 hover:text-white hover:bg-white/10 cursor-grab active:cursor-grabbing"
                         : "text-white/30 cursor-default"
                     }`}
-                    title={isActive ? `Drag or click to add ${item.label}` : "Open a page to add elements"}
+                    title={isActive ? `Drag to add ${item.label}` : "Open a page to add elements"}
                   >
                     <svg className="w-3 h-3 flex-shrink-0 text-teal/60" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M8 6a2 2 0 11-4 0 2 2 0 014 0zm0 6a2 2 0 11-4 0 2 2 0 014 0zm-4 8a2 2 0 104 0 2 2 0 00-4 0zm12-14a2 2 0 11-4 0 2 2 0 014 0zm-4 6a2 2 0 104 0 2 2 0 00-4 0zm0 8a2 2 0 104 0 2 2 0 00-4 0z" />

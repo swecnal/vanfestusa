@@ -16,7 +16,7 @@ interface EventOverlay {
   locationUrl?: string;
   dates?: string;
   primaryCta?: { text: string; href: string; external?: boolean; styleId?: string };
-  secondaryCta?: { text: string; href: string; styleId?: string };
+  secondaryCta?: { text: string; href: string; external?: boolean; styleId?: string };
 }
 
 interface HeroCarouselProps {
@@ -177,6 +177,8 @@ export default function HeroCarousel({ slides, overlay, autoplayInterval = 5000,
               return (
                 <a
                   href={overlay.secondaryCta.href}
+                  target={overlay.secondaryCta.external ? "_blank" : undefined}
+                  rel={overlay.secondaryCta.external ? "noopener noreferrer" : undefined}
                   className={style ? "transition-all" : "border-2 border-white/40 hover:border-white text-white font-bold px-8 py-3 rounded-xl text-lg transition-all hover:bg-white/10"}
                   style={style ? buttonStyleToCSS(style) : undefined}
                 >
