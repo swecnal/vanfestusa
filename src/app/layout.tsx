@@ -1,8 +1,5 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import VehicleStream from "@/components/VehicleStream";
 
 export const metadata: Metadata = {
   title: "VanFest | The ULTIMATE vanlife experience!",
@@ -30,12 +27,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="antialiased">
-        <Navbar />
-        <main>{children}</main>
-        <VehicleStream />
-        <Footer />
-      </body>
+      <body className="antialiased">{children}</body>
     </html>
   );
 }
