@@ -369,6 +369,23 @@ export default function VehicleStream() {
       className="relative overflow-hidden bg-sand"
       style={{ height: "90px" }}
     >
+      {/* Road signs */}
+      {["COMMUNITY", "MUSIC", "MEMORIES", "VANFEST"].map((text, i) => (
+        <div
+          key={text}
+          className="absolute bottom-3 flex flex-col items-center"
+          style={{ left: `${18 + i * 22}%` }}
+        >
+          <div className="bg-teal/90 text-white font-display font-bold text-[9px] tracking-widest px-2.5 py-1 rounded-sm shadow-sm">
+            {text}
+          </div>
+          <svg width="18" height="8" viewBox="0 0 18 8" className="mt-0.5">
+            <path d="M2 4 L12 4 M10 1.5 L14 4 L10 6.5" stroke="#1CA288" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          <div className="w-0.5 h-3 bg-teal/40" />
+        </div>
+      ))}
+
       {/* Dashed road line */}
       <div className="absolute bottom-3 left-0 w-full">
         <svg width="100%" height="4" className="block">
