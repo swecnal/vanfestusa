@@ -4,6 +4,7 @@ import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useState, useEffect, useCallback } from "react";
 import { Toaster } from "sonner";
+import PageTree from "./PageTree";
 
 interface User {
   id: string;
@@ -14,7 +15,6 @@ interface User {
 
 const navItems = [
   { label: "Dashboard", href: "/admin", icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" },
-  { label: "Pages", href: "/admin/pages", icon: "M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" },
   { label: "Media", href: "/admin/media", icon: "M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" },
   { label: "Settings", href: "/admin/settings", icon: "M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z" },
   { label: "Users", href: "/admin/users", icon: "M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" },
@@ -26,7 +26,8 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   const [user, setUser] = useState<User | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  const isLoginPage = pathname === "/admin/login";
+  const isLoginPage = pathname === "/admin/login" || pathname === "/admin/change-password";
+  const isPageEditor = pathname.startsWith("/admin/pages/") && pathname !== "/admin/pages";
 
   const fetchUser = useCallback(async () => {
     try {
@@ -51,7 +52,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
     router.push("/admin/login");
   };
 
-  // Login page gets no shell
+  // Login / change-password gets no shell
   if (isLoginPage) {
     return (
       <>
@@ -61,13 +62,25 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
     );
   }
 
+  // Determine active nav label for top bar
+  const getTopBarTitle = () => {
+    if (isPageEditor) return "Page Editor";
+    if (pathname === "/admin/pages") return "Pages";
+    const nav = navItems.find(
+      (item) =>
+        pathname === item.href ||
+        (item.href !== "/admin" && pathname.startsWith(item.href))
+    );
+    return nav?.label || "Admin";
+  };
+
   return (
     <div className="flex h-screen bg-gray-50">
       <Toaster position="top-right" richColors />
 
       {/* Sidebar */}
       <aside
-        className={`${sidebarOpen ? "w-60" : "w-16"} bg-charcoal text-white flex flex-col transition-all duration-200 flex-shrink-0`}
+        className={`${sidebarOpen ? "w-64" : "w-16"} bg-charcoal text-white flex flex-col transition-all duration-200 flex-shrink-0`}
       >
         {/* Logo */}
         <div className="p-4 flex items-center gap-3 border-b border-white/10">
@@ -78,14 +91,14 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 py-4">
+        <nav className="py-2">
           {navItems.map((item) => {
             const isActive = pathname === item.href || (item.href !== "/admin" && pathname.startsWith(item.href));
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${
+                className={`flex items-center gap-3 px-4 py-2 text-sm transition-colors ${
                   isActive
                     ? "bg-teal text-white"
                     : "text-white/60 hover:text-white hover:bg-white/5"
@@ -100,10 +113,26 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
           })}
         </nav>
 
+        {/* Page Tree divider */}
+        <div className="px-4 pt-2 pb-1">
+          {sidebarOpen ? (
+            <p className="text-[10px] uppercase tracking-wider text-white/30 font-semibold">
+              Site Pages
+            </p>
+          ) : (
+            <div className="border-t border-white/10" />
+          )}
+        </div>
+
+        {/* Page Tree */}
+        <div className="flex-1 overflow-y-auto px-1 scrollbar-thin">
+          <PageTree collapsed={!sidebarOpen} />
+        </div>
+
         {/* Bottom */}
         <div className="border-t border-white/10 p-4">
           <a
-            href="/"
+            href="https://vanfestusa.com"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 text-white/40 hover:text-white text-xs transition-colors mb-3"
@@ -147,11 +176,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         {/* Top bar */}
         <header className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between flex-shrink-0">
           <h1 className="text-lg font-display font-semibold text-charcoal">
-            {navItems.find(
-              (item) =>
-                pathname === item.href ||
-                (item.href !== "/admin" && pathname.startsWith(item.href))
-            )?.label || "Admin"}
+            {getTopBarTitle()}
           </h1>
         </header>
 
