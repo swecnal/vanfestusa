@@ -1,6 +1,13 @@
 import Link from "next/link";
 
-export default function Footer() {
+interface FooterConfig {
+  brand?: { tagline?: string };
+  socialLinks?: Array<{ platform: string; url: string }>;
+  columns?: Array<{ title: string; links: Array<{ label: string; href: string; external?: boolean }> }>;
+  contactInfo?: { email?: string; phone?: string; instagram?: string };
+}
+
+export default function Footer({ config }: { config?: FooterConfig | null }) {
   return (
     <footer className="bg-charcoal text-white">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">

@@ -91,9 +91,22 @@ const liftoffNavLinks: NavLink[] = [
   { label: "Contact", href: "/contact" },
 ];
 
+interface NavbarProps {
+  config?: {
+    links: NavLink[];
+    ctaButton: { text: string; href: string; external?: boolean };
+    eventOverrides?: Record<string, {
+      links: NavLink[];
+      ctaButton?: { text: string; href: string; external?: boolean };
+      badgeText?: string;
+      badgeGradient?: string;
+    }>;
+  };
+}
+
 type EventMode = "escape" | "liftoff" | null;
 
-export default function Navbar() {
+export default function Navbar({ config }: NavbarProps) {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -130,11 +143,25 @@ export default function Navbar() {
         : null;
 
   const isEventPage = eventMode !== null;
-  const navLinks = isEventPage
-    ? eventMode === "liftoff"
-      ? liftoffNavLinks
-      : escapeNavLinks
-    : defaultNavLinks;
+
+  // Resolve nav links: config overrides > event-specific > hardcoded defaults
+  const eventOverride = config?.eventOverrides?.[pathname];
+  const navLinks = eventOverride?.links
+    ? eventOverride.links
+    : config?.links?.length
+      ? (isEventPage
+          ? eventMode === "liftoff" ? liftoffNavLinks : escapeNavLinks
+          : config.links)
+      : (isEventPage
+          ? eventMode === "liftoff" ? liftoffNavLinks : escapeNavLinks
+          : defaultNavLinks);
+
+  // Resolve CTA
+  const ctaButton = eventOverride?.ctaButton || config?.ctaButton || {
+    text: "Get Tickets",
+    href: eventMode === "escape" ? "https://vanfest.ticketspice.com/escape2026" : "https://tickets.vanfestusa.com",
+    external: true,
+  };
 
   const eventAccent = eventMode === "liftoff"
     ? "from-purple-600 to-pink-500"
@@ -260,16 +287,16 @@ export default function Navbar() {
         <div className="flex items-center gap-3">
           <a
             ref={ctaRef}
-            href={eventMode === "escape" ? "https://vanfest.ticketspice.com/escape2026" : "https://tickets.vanfestusa.com"}
-            target="_blank"
-            rel="noopener noreferrer"
+            href={ctaButton.href}
+            target={ctaButton.external !== false ? "_blank" : undefined}
+            rel={ctaButton.external !== false ? "noopener noreferrer" : undefined}
             className={`bg-teal hover:bg-teal-dark text-white font-bold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl animate-bounce-attention ${
               scrolled
                 ? "px-5 py-2 text-sm"
                 : "px-7 py-2.5 text-base"
             }`}
           >
-            Get Tickets
+            {ctaButton.text}
           </a>
 
           {/* Mobile hamburger */}

@@ -363,7 +363,7 @@ export interface HtmlBlockData {
   sandboxed?: boolean;
 }
 
-// ─── Navbar Config ───
+// ─── Navbar Config (page-level, legacy) ───
 
 export interface NavbarConfig {
   mode?: "default" | "escape" | "liftoff";
@@ -371,6 +371,27 @@ export interface NavbarConfig {
     label: string;
     href: string;
     children?: Array<{ label: string; href: string }>;
+  }>;
+}
+
+// ─── Global Navbar Config (from global_settings) ───
+
+export interface NavbarLink {
+  id: string;
+  label: string;
+  href: string;
+  external?: boolean;
+  children?: Array<{ id: string; label: string; href: string }>;
+}
+
+export interface GlobalNavbarConfig {
+  links: NavbarLink[];
+  ctaButton: { text: string; href: string; external?: boolean };
+  eventOverrides?: Record<string, {
+    links: NavbarLink[];
+    ctaButton?: { text: string; href: string; external?: boolean };
+    badgeText?: string;
+    badgeGradient?: string;
   }>;
 }
 
