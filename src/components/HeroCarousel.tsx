@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { type SiteStyles, EMPTY_SITE_STYLES, findButtonStyle, buttonStyleToCSS } from "@/lib/styles";
+import { type SiteStyles, type TextStyleConfig, EMPTY_SITE_STYLES, findButtonStyle, buttonStyleToCSS, textStyleConfigToCSS } from "@/lib/styles";
 
 interface HeroSlide {
   image: string;
@@ -17,6 +17,11 @@ interface EventOverlay {
   dates?: string;
   primaryCta?: { text: string; href: string; external?: boolean; styleId?: string };
   secondaryCta?: { text: string; href: string; external?: boolean; styleId?: string };
+  labelStyle?: TextStyleConfig;
+  eventNameStyle?: TextStyleConfig;
+  taglineStyle?: TextStyleConfig;
+  locationStyle?: TextStyleConfig;
+  datesStyle?: TextStyleConfig;
 }
 
 interface HeroCarouselProps {
@@ -84,20 +89,12 @@ export default function HeroCarousel({ slides, overlay, autoplayInterval = 5000,
       {/* Event overlay content */}
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="text-center text-white px-6 sm:px-10 md:px-14 py-10 md:py-14 max-w-4xl bg-white/15 backdrop-blur-[2px] rounded-3xl border border-white/20">
-          {overlay.label && (
+          {(overlay.label || !overlay.label) && (
             <p
               className="font-display font-semibold tracking-[0.3em] uppercase text-sm md:text-base mb-4"
-              style={{ textShadow, color: "#09B593" }}
+              style={{ textShadow, color: "#09B593", ...textStyleConfigToCSS(overlay.labelStyle || {}) }}
             >
-              {overlay.label}
-            </p>
-          )}
-          {!overlay.label && (
-            <p
-              className="font-display font-semibold tracking-[0.3em] uppercase text-sm md:text-base mb-4"
-              style={{ textShadow, color: "#09B593" }}
-            >
-              Next Event
+              {overlay.label || "Next Event"}
             </p>
           )}
           <h1
@@ -106,6 +103,7 @@ export default function HeroCarousel({ slides, overlay, autoplayInterval = 5000,
               textShadow: `${textShadow}, 0 0 60px rgba(9,181,147,0.3)`,
               fontFamily: "'EB Garamond', serif",
               WebkitTextStroke: "1px rgba(255,255,255,0.1)",
+              ...textStyleConfigToCSS(overlay.eventNameStyle || {}),
             }}
           >
             {overlay.eventName}
@@ -117,6 +115,7 @@ export default function HeroCarousel({ slides, overlay, autoplayInterval = 5000,
                 textShadow,
                 color: "#09B593",
                 fontFamily: "'Poppins', sans-serif",
+                ...textStyleConfigToCSS(overlay.taglineStyle || {}),
               }}
             >
               {overlay.tagline}
@@ -132,6 +131,7 @@ export default function HeroCarousel({ slides, overlay, autoplayInterval = 5000,
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 text-white hover:text-teal-light transition-colors"
+                style={textStyleConfigToCSS(overlay.locationStyle || {})}
               >
                 <svg className="w-5 h-5 text-teal" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -144,7 +144,10 @@ export default function HeroCarousel({ slides, overlay, autoplayInterval = 5000,
               <span className="hidden sm:block text-white/40">|</span>
             )}
             {overlay.dates && (
-              <span className="flex items-center gap-2 text-white">
+              <span
+                className="flex items-center gap-2 text-white"
+                style={textStyleConfigToCSS(overlay.datesStyle || {})}
+              >
                 <svg className="w-5 h-5 text-teal" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>

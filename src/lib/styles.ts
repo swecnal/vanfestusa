@@ -1,5 +1,31 @@
 import type { CSSProperties } from "react";
 
+// ─── Text Style Config (per-field text customization) ───
+
+export interface TextStyleConfig {
+  fontFamily?: string;
+  fontSize?: string;
+  fontWeight?: string;
+  color?: string;
+  textTransform?: string;
+  letterSpacing?: string;
+  textShadow?: string;
+}
+
+export const EMPTY_TEXT_STYLE: TextStyleConfig = {};
+
+export function textStyleConfigToCSS(style: TextStyleConfig): CSSProperties {
+  const css: CSSProperties = {};
+  if (style.fontFamily && style.fontFamily !== "inherit") css.fontFamily = style.fontFamily;
+  if (style.fontSize) css.fontSize = style.fontSize;
+  if (style.fontWeight) css.fontWeight = style.fontWeight;
+  if (style.color) css.color = style.color;
+  if (style.textTransform) css.textTransform = style.textTransform as CSSProperties["textTransform"];
+  if (style.letterSpacing && style.letterSpacing !== "normal") css.letterSpacing = style.letterSpacing;
+  if (style.textShadow) css.textShadow = style.textShadow;
+  return css;
+}
+
 // ─── Button Style ───
 
 export interface ButtonStyle {

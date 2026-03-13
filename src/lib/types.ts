@@ -116,6 +116,11 @@ export interface HeroCarouselData {
     dates?: string;
     primaryCta?: { text: string; href: string; external?: boolean };
     secondaryCta?: { text: string; href: string; external?: boolean };
+    labelStyle?: import("@/lib/styles").TextStyleConfig;
+    eventNameStyle?: import("@/lib/styles").TextStyleConfig;
+    taglineStyle?: import("@/lib/styles").TextStyleConfig;
+    locationStyle?: import("@/lib/styles").TextStyleConfig;
+    datesStyle?: import("@/lib/styles").TextStyleConfig;
   };
   autoplayInterval?: number;
 }

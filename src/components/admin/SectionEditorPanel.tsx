@@ -4,9 +4,11 @@ import { useState, useEffect } from "react";
 import type { Section } from "@/lib/types";
 import RichTextEditor from "./RichTextEditor";
 import ImagePicker from "./ImagePicker";
+import TextStyleEditor from "./TextStyleEditor";
 import {
   type SiteStyles,
   type ButtonStyle,
+  type TextStyleConfig,
   EMPTY_SITE_STYLES,
   buttonStyleToCSS,
 } from "@/lib/styles";
@@ -1064,6 +1066,11 @@ function HeroCarouselEditor({
               placeholder="e.g. Next Event"
             />
           </Field>
+          <TextStyleEditor
+            label="Label Style"
+            value={(overlay.labelStyle as TextStyleConfig) || {}}
+            onChange={(s) => updateOverlay("labelStyle", s)}
+          />
           <Field label="Event Name">
             <input
               type="text"
@@ -1072,6 +1079,11 @@ function HeroCarouselEditor({
               className="input-sm"
             />
           </Field>
+          <TextStyleEditor
+            label="Event Name Style"
+            value={(overlay.eventNameStyle as TextStyleConfig) || {}}
+            onChange={(s) => updateOverlay("eventNameStyle", s)}
+          />
           <Field label="Tagline">
             <textarea
               value={(overlay.tagline as string) || ""}
@@ -1080,6 +1092,11 @@ function HeroCarouselEditor({
               rows={2}
             />
           </Field>
+          <TextStyleEditor
+            label="Tagline Style"
+            value={(overlay.taglineStyle as TextStyleConfig) || {}}
+            onChange={(s) => updateOverlay("taglineStyle", s)}
+          />
           <Field label="Location">
             <input
               type="text"
@@ -1097,6 +1114,11 @@ function HeroCarouselEditor({
               placeholder="https://www.google.com/maps/..."
             />
           </Field>
+          <TextStyleEditor
+            label="Location Style"
+            value={(overlay.locationStyle as TextStyleConfig) || {}}
+            onChange={(s) => updateOverlay("locationStyle", s)}
+          />
           <Field label="Dates">
             <input
               type="text"
@@ -1106,6 +1128,11 @@ function HeroCarouselEditor({
               placeholder="e.g. August 20th - 24th, 2026"
             />
           </Field>
+          <TextStyleEditor
+            label="Dates Style"
+            value={(overlay.datesStyle as TextStyleConfig) || {}}
+            onChange={(s) => updateOverlay("datesStyle", s)}
+          />
         </div>
       </details>
 
