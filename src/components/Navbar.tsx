@@ -98,6 +98,7 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
   const ctaRef = useRef<HTMLAnchorElement>(null);
 
   useEffect(() => {
@@ -110,6 +111,7 @@ export default function Navbar() {
   useEffect(() => {
     setMobileOpen(false);
     setOpenDropdown(null);
+    setMobileExpanded(null);
   }, [pathname]);
 
   // Randomize CTA bounce timing
@@ -308,8 +310,18 @@ export default function Navbar() {
           <div className="px-4 py-4 space-y-1">
             {isEventPage && (
               <div className="mb-3 pb-3 border-b border-white/10">
+                <Link
+                  href="/"
+                  className="flex items-center gap-2 px-3 py-2.5 text-white hover:bg-white/10 rounded-lg font-semibold transition-colors"
+                  onClick={() => setMobileOpen(false)}
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                  Back to VanFest Home
+                </Link>
                 <span
-                  className={`inline-block bg-gradient-to-r ${eventAccent} text-white font-display font-bold px-4 py-1.5 rounded-xl text-sm`}
+                  className={`inline-block bg-gradient-to-r ${eventAccent} text-white font-display font-bold px-4 py-1.5 rounded-xl text-sm mt-2`}
                 >
                   {eventMode === "liftoff" ? "LIFTOFF!" : "Escape to the Cape"}
                 </span>
@@ -322,51 +334,59 @@ export default function Navbar() {
                     href={link.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="block px-3 py-2 text-white/90 hover:text-white hover:bg-white/10 rounded-lg font-semibold"
+                    className="block px-3 py-2.5 text-white/90 hover:text-white hover:bg-white/10 rounded-lg font-semibold"
                     onClick={() => setMobileOpen(false)}
                   >
                     {link.label}
                   </a>
                 ) : link.children ? (
-                  <span className="block px-3 py-2 text-white/60 rounded-lg font-semibold text-sm uppercase tracking-wider">
-                    {link.label}
-                  </span>
+                  <>
+                    <button
+                      onClick={() =>
+                        setMobileExpanded(
+                          mobileExpanded === link.label ? null : link.label,
+                        )
+                      }
+                      className="flex items-center justify-between w-full px-3 py-2.5 text-white/90 hover:text-white hover:bg-white/10 rounded-lg font-semibold transition-colors"
+                    >
+                      {link.label}
+                      <svg
+                        className={`w-4 h-4 text-white/50 transition-transform duration-200 ${
+                          mobileExpanded === link.label ? "rotate-180" : ""
+                        }`}
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    {mobileExpanded === link.label && (
+                      <div className="ml-4 space-y-1 mt-1">
+                        {link.children.map((child) => (
+                          <Link
+                            key={child.label}
+                            href={child.href}
+                            className="block px-3 py-2 text-sm font-medium text-white/60 hover:text-white hover:bg-white/10 rounded-lg"
+                            onClick={() => setMobileOpen(false)}
+                          >
+                            {child.label}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </>
                 ) : (
                   <Link
                     href={link.href}
-                    className="block px-3 py-2 text-white/90 hover:text-white hover:bg-white/10 rounded-lg font-semibold"
+                    className="block px-3 py-2.5 text-white/90 hover:text-white hover:bg-white/10 rounded-lg font-semibold"
                     onClick={() => setMobileOpen(false)}
                   >
                     {link.label}
                   </Link>
                 )}
-                {link.children && (
-                  <div className="ml-4 space-y-1">
-                    {link.children.map((child) => (
-                      <Link
-                        key={child.label}
-                        href={child.href}
-                        className="block px-3 py-1.5 text-sm font-medium text-white/60 hover:text-white hover:bg-white/10 rounded-lg"
-                        onClick={() => setMobileOpen(false)}
-                      >
-                        {child.label}
-                      </Link>
-                    ))}
-                  </div>
-                )}
               </div>
             ))}
-            {isEventPage && (
-              <div className="pt-3 mt-3 border-t border-white/10">
-                <Link
-                  href="/"
-                  className="block px-3 py-2 text-white/60 hover:text-white hover:bg-white/10 rounded-lg font-semibold"
-                  onClick={() => setMobileOpen(false)}
-                >
-                  &larr; Return to VanFest
-                </Link>
-              </div>
-            )}
           </div>
         </div>
       )}
