@@ -15,8 +15,11 @@ export function middleware(request: NextRequest) {
 
     // Already on /admin path
     if (pathname.startsWith("/admin")) {
-      // Allow login page without auth
-      if (pathname === "/admin/login") {
+      // Allow login and change-password pages without auth
+      if (
+        pathname === "/admin/login" ||
+        pathname === "/admin/change-password"
+      ) {
         return NextResponse.next();
       }
       // Check for session cookie
@@ -34,8 +37,11 @@ export function middleware(request: NextRequest) {
       url.pathname = `/admin${pathname}`;
     }
 
-    // Check auth for non-login pages
-    if (url.pathname !== "/admin/login") {
+    // Check auth for non-login/change-password pages
+    if (
+      url.pathname !== "/admin/login" &&
+      url.pathname !== "/admin/change-password"
+    ) {
       const sessionCookie = request.cookies.get("vf_session");
       if (!sessionCookie?.value) {
         url.pathname = "/admin/login";
@@ -47,7 +53,11 @@ export function middleware(request: NextRequest) {
   }
 
   // Protect /admin routes on main domain too (for local dev)
-  if (pathname.startsWith("/admin") && pathname !== "/admin/login") {
+  if (
+    pathname.startsWith("/admin") &&
+    pathname !== "/admin/login" &&
+    pathname !== "/admin/change-password"
+  ) {
     const sessionCookie = request.cookies.get("vf_session");
     if (!sessionCookie?.value) {
       return NextResponse.redirect(new URL("/admin/login", request.url));

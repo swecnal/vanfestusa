@@ -8,7 +8,6 @@ import {
 
 export async function POST(request: Request) {
   try {
-    let step = "parse_body";
     const { email, password } = await request.json();
 
     if (!email || !password) {
@@ -18,7 +17,6 @@ export async function POST(request: Request) {
       );
     }
 
-    step = "supabase_query";
     const supabase = getSupabaseServer();
     const { data: user, error } = await supabase
       .from("cms_users")
@@ -33,7 +31,6 @@ export async function POST(request: Request) {
       );
     }
 
-    step = "verify_password";
     const valid = await verifyPassword(password, user.password_hash);
     if (!valid) {
       return NextResponse.json(
@@ -42,10 +39,8 @@ export async function POST(request: Request) {
       );
     }
 
-    step = "create_session";
     const { token, expiresAt } = await createSession(user.id);
 
-    step = "build_response";
     const response = NextResponse.json({
       user: {
         id: user.id,
@@ -62,7 +57,7 @@ export async function POST(request: Request) {
   } catch (err) {
     console.error("Login error:", err);
     return NextResponse.json(
-      { error: `Internal server error`, debug: String(err) },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }
