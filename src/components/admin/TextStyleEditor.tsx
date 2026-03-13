@@ -30,9 +30,10 @@ interface Props {
   label: string;
   value: TextStyleConfig;
   onChange: (style: TextStyleConfig) => void;
+  defaults?: Partial<TextStyleConfig>;
 }
 
-export default function TextStyleEditor({ label, value, onChange }: Props) {
+export default function TextStyleEditor({ label, value, onChange, defaults }: Props) {
   const [open, setOpen] = useState(false);
 
   const update = (key: keyof TextStyleConfig, val: string) => {
@@ -63,13 +64,15 @@ export default function TextStyleEditor({ label, value, onChange }: Props) {
         <div className="p-3 space-y-2.5 border-t border-gray-100 bg-gray-50/50">
           {/* Font Family */}
           <div>
-            <label className="text-[10px] text-gray-400 uppercase block mb-0.5">Font</label>
+            <label className="text-[10px] text-gray-400 uppercase block mb-0.5">
+              Font{defaults?.fontFamily ? <span className="text-gray-300 normal-case ml-1">(default: {defaults.fontFamily})</span> : ""}
+            </label>
             <select
               value={value.fontFamily || ""}
               onChange={(e) => update("fontFamily", e.target.value)}
               className="w-full p-1.5 border border-gray-200 rounded text-xs bg-white"
             >
-              <option value="">Inherit</option>
+              <option value="">{defaults?.fontFamily ? `Inherit (${defaults.fontFamily})` : "Inherit"}</option>
               {FONT_OPTIONS.filter((f) => f !== "inherit").map((f) => (
                 <option key={f} value={f}>{f}</option>
               ))}
@@ -78,26 +81,34 @@ export default function TextStyleEditor({ label, value, onChange }: Props) {
 
           {/* Font Size */}
           <div>
-            <label className="text-[10px] text-gray-400 uppercase block mb-0.5">Size</label>
+            <label className="text-[10px] text-gray-400 uppercase block mb-0.5">
+              Size{defaults?.fontSize ? <span className="text-gray-300 normal-case ml-1">(default: {defaults.fontSize})</span> : ""}
+            </label>
             <input
               type="text"
               value={value.fontSize || ""}
               onChange={(e) => update("fontSize", e.target.value)}
               className="w-full p-1.5 border border-gray-200 rounded text-xs"
-              placeholder="e.g. 24px, 2rem, clamp(...)"
+              placeholder={defaults?.fontSize || "e.g. 24px, 2rem, clamp(...)"}
             />
           </div>
 
           {/* Font Weight */}
           <div>
-            <label className="text-[10px] text-gray-400 uppercase block mb-0.5">Weight</label>
+            <label className="text-[10px] text-gray-400 uppercase block mb-0.5">
+              Weight{defaults?.fontWeight ? <span className="text-gray-300 normal-case ml-1">(default: {defaults.fontWeight})</span> : ""}
+            </label>
             <select
               value={value.fontWeight || ""}
               onChange={(e) => update("fontWeight", e.target.value)}
               className="w-full p-1.5 border border-gray-200 rounded text-xs bg-white"
             >
               {FONT_WEIGHT_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>{o.label}</option>
+                <option key={o.value} value={o.value}>
+                  {o.value === "" && defaults?.fontWeight
+                    ? `Inherit (${FONT_WEIGHT_OPTIONS.find((fw) => fw.value === defaults.fontWeight)?.label || defaults.fontWeight})`
+                    : o.label}
+                </option>
               ))}
             </select>
           </div>

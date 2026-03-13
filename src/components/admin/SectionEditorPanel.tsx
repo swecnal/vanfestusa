@@ -224,6 +224,145 @@ function SectionFields({
         <FeatureGridEditor data={data} updateData={updateData} siteStyles={siteStyles} />
       );
 
+    case "accordion_parent": {
+      const accChildren = (data.children as Array<Record<string, string>>) || [];
+      const updateAccChild = (index: number, key: string, value: string) => {
+        const next = [...accChildren];
+        next[index] = { ...next[index], [key]: value };
+        updateData("children", next);
+      };
+      const removeAccChild = (index: number) => {
+        updateData("children", accChildren.filter((_, i) => i !== index));
+      };
+      const moveAccChild = (from: number, to: number) => {
+        if (to < 0 || to >= accChildren.length) return;
+        const next = [...accChildren];
+        const [moved] = next.splice(from, 1);
+        next.splice(to, 0, moved);
+        updateData("children", next);
+      };
+      return (
+        <div className="space-y-3">
+          <Field label="Title">
+            <input
+              type="text"
+              value={(data.title as string) || ""}
+              onChange={(e) => updateData("title", e.target.value)}
+              className="input-sm"
+            />
+          </Field>
+          <TextStyleEditor
+            label="Title Style"
+            value={(data.titleStyle as TextStyleConfig) || {}}
+            onChange={(s) => updateData("titleStyle", s)}
+            defaults={{ fontSize: "clamp(1.875rem, 4vw, 2.25rem)", fontWeight: "900" }}
+          />
+          <Field label="Image">
+            <ImagePicker
+              value={(data.image as string) || ""}
+              onChange={(url) => updateData("image", url)}
+            />
+          </Field>
+          {(data.image as string) && (
+            <Field label="Image Position">
+              <select
+                value={(data.imagePosition as string) || "full-width"}
+                onChange={(e) => updateData("imagePosition", e.target.value)}
+                className="input-sm"
+              >
+                <option value="full-width">Full Width</option>
+                <option value="small-left">Small Left</option>
+                <option value="small-right">Small Right</option>
+                <option value="background">Background</option>
+              </select>
+            </Field>
+          )}
+          <Field label="Description">
+            <textarea
+              value={(data.description as string) || ""}
+              onChange={(e) => updateData("description", e.target.value)}
+              className="input-sm"
+              rows={3}
+            />
+          </Field>
+          <TextStyleEditor
+            label="Description Style"
+            value={(data.descriptionStyle as TextStyleConfig) || {}}
+            onChange={(s) => updateData("descriptionStyle", s)}
+            defaults={{ fontSize: "16px" }}
+          />
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={(data.showExpandAll as boolean) ?? true}
+              onChange={(e) => updateData("showExpandAll", e.target.checked)}
+            />
+            Show Expand/Collapse All
+          </label>
+
+          <div className="border-t border-gray-200 pt-3 mt-3">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-semibold text-gray-700">Accordion Items ({accChildren.length})</p>
+              <button
+                onClick={() => updateData("children", [...accChildren, { title: "New Item", body: "<p>Content</p>" }])}
+                className="text-teal hover:text-teal-dark text-xs font-semibold"
+              >
+                + Add Item
+              </button>
+            </div>
+            <div className="space-y-2">
+              {accChildren.map((child, i) => (
+                <details key={i} className="border border-gray-200 rounded-lg overflow-hidden">
+                  <summary className="px-3 py-2 text-sm font-medium text-gray-700 cursor-pointer hover:bg-gray-50 flex items-center gap-2">
+                    <span className="text-gray-400 text-xs w-5">{i + 1}.</span>
+                    <span className="flex-1 truncate">{child.title || "Untitled"}</span>
+                    <span className="flex gap-0.5">
+                      <button
+                        onClick={(e) => { e.preventDefault(); moveAccChild(i, i - 1); }}
+                        disabled={i === 0}
+                        className="text-gray-400 hover:text-gray-600 disabled:opacity-20 p-0.5"
+                      >
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" /></svg>
+                      </button>
+                      <button
+                        onClick={(e) => { e.preventDefault(); moveAccChild(i, i + 1); }}
+                        disabled={i === accChildren.length - 1}
+                        className="text-gray-400 hover:text-gray-600 disabled:opacity-20 p-0.5"
+                      >
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                      </button>
+                      <button
+                        onClick={(e) => { e.preventDefault(); removeAccChild(i); }}
+                        className="text-gray-300 hover:text-red-500 p-0.5"
+                      >
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                      </button>
+                    </span>
+                  </summary>
+                  <div className="p-3 border-t border-gray-100 space-y-2">
+                    <Field label="Title">
+                      <input
+                        type="text"
+                        value={child.title || ""}
+                        onChange={(e) => updateAccChild(i, "title", e.target.value)}
+                        className="input-sm"
+                      />
+                    </Field>
+                    <Field label="Content">
+                      <RichTextEditor
+                        content={child.body || ""}
+                        onChange={(html) => updateAccChild(i, "body", html)}
+                      />
+                    </Field>
+                  </div>
+                </details>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     case "faq_accordion":
       return (
         <div className="space-y-3">
@@ -1144,6 +1283,7 @@ function HeroCarouselEditor({
             label="Label Style"
             value={(overlay.labelStyle as TextStyleConfig) || {}}
             onChange={(s) => updateOverlay("labelStyle", s)}
+            defaults={{ fontSize: "text-sm md:text-base", fontWeight: "600", fontFamily: "Gothic A1" }}
           />
           <Field label="Event Name">
             <input
@@ -1157,6 +1297,7 @@ function HeroCarouselEditor({
             label="Event Name Style"
             value={(overlay.eventNameStyle as TextStyleConfig) || {}}
             onChange={(s) => updateOverlay("eventNameStyle", s)}
+            defaults={{ fontSize: "clamp(2.5rem, 6vw, 5rem)", fontWeight: "700", fontFamily: "EB Garamond" }}
           />
           <Field label="Tagline">
             <textarea
@@ -1170,6 +1311,7 @@ function HeroCarouselEditor({
             label="Tagline Style"
             value={(overlay.taglineStyle as TextStyleConfig) || {}}
             onChange={(s) => updateOverlay("taglineStyle", s)}
+            defaults={{ fontSize: "clamp(1.25rem, 2.5vw, 1.875rem)", fontWeight: "700" }}
           />
           <Field label="Location">
             <input
@@ -1192,6 +1334,7 @@ function HeroCarouselEditor({
             label="Location Style"
             value={(overlay.locationStyle as TextStyleConfig) || {}}
             onChange={(s) => updateOverlay("locationStyle", s)}
+            defaults={{ fontSize: "text-base md:text-xl", fontWeight: "600" }}
           />
           <Field label="Dates">
             <input
@@ -1206,6 +1349,7 @@ function HeroCarouselEditor({
             label="Dates Style"
             value={(overlay.datesStyle as TextStyleConfig) || {}}
             onChange={(s) => updateOverlay("datesStyle", s)}
+            defaults={{ fontSize: "text-base md:text-xl", fontWeight: "600" }}
           />
         </div>
       </details>
@@ -1470,11 +1614,11 @@ function EventCardsEditor({
           Text Styles (all cards)
         </summary>
         <div className="p-3 space-y-2 border-t border-gray-100">
-          <TextStyleEditor label="Title Style" value={(data.titleStyle as TextStyleConfig) || {}} onChange={(s) => updateData("titleStyle", s)} />
-          <TextStyleEditor label="Location Style" value={(data.locationStyle as TextStyleConfig) || {}} onChange={(s) => updateData("locationStyle", s)} />
-          <TextStyleEditor label="Date Style" value={(data.dateStyle as TextStyleConfig) || {}} onChange={(s) => updateData("dateStyle", s)} />
-          <TextStyleEditor label="Description Style" value={(data.descriptionStyle as TextStyleConfig) || {}} onChange={(s) => updateData("descriptionStyle", s)} />
-          <TextStyleEditor label="Tag Style" value={(data.tagStyle as TextStyleConfig) || {}} onChange={(s) => updateData("tagStyle", s)} />
+          <TextStyleEditor label="Title Style" value={(data.titleStyle as TextStyleConfig) || {}} onChange={(s) => updateData("titleStyle", s)} defaults={{ fontSize: "text-3xl / text-5xl (featured)", fontWeight: "900", fontFamily: "Gothic A1" }} />
+          <TextStyleEditor label="Location Style" value={(data.locationStyle as TextStyleConfig) || {}} onChange={(s) => updateData("locationStyle", s)} defaults={{ fontSize: "14px", fontWeight: "600" }} />
+          <TextStyleEditor label="Date Style" value={(data.dateStyle as TextStyleConfig) || {}} onChange={(s) => updateData("dateStyle", s)} defaults={{ fontSize: "14px", fontWeight: "600" }} />
+          <TextStyleEditor label="Description Style" value={(data.descriptionStyle as TextStyleConfig) || {}} onChange={(s) => updateData("descriptionStyle", s)} defaults={{ fontSize: "14px" }} />
+          <TextStyleEditor label="Tag Style" value={(data.tagStyle as TextStyleConfig) || {}} onChange={(s) => updateData("tagStyle", s)} defaults={{ fontSize: "12px", fontWeight: "700" }} />
         </div>
       </details>
 
@@ -1618,15 +1762,15 @@ function FeatureGridEditor({
             <Field label="Title">
               <input type="text" value={(item.title as string) || ""} onChange={(e) => updateItem(i, "title", e.target.value)} className="input-sm" />
             </Field>
-            <TextStyleEditor label="Title Style" value={(item.titleStyle as TextStyleConfig) || {}} onChange={(s) => updateItem(i, "titleStyle", s)} />
+            <TextStyleEditor label="Title Style" value={(item.titleStyle as TextStyleConfig) || {}} onChange={(s) => updateItem(i, "titleStyle", s)} defaults={{ fontSize: "18px (text-lg)", fontWeight: "700", fontFamily: "Gothic A1" }} />
             <Field label="Subtitle">
               <input type="text" value={(item.subtitle as string) || ""} onChange={(e) => updateItem(i, "subtitle", e.target.value)} className="input-sm" />
             </Field>
-            <TextStyleEditor label="Subtitle Style" value={(item.subtitleStyle as TextStyleConfig) || {}} onChange={(s) => updateItem(i, "subtitleStyle", s)} />
+            <TextStyleEditor label="Subtitle Style" value={(item.subtitleStyle as TextStyleConfig) || {}} onChange={(s) => updateItem(i, "subtitleStyle", s)} defaults={{ fontSize: "14px", fontWeight: "400" }} />
             <Field label="Description">
               <textarea value={(item.description as string) || ""} onChange={(e) => updateItem(i, "description", e.target.value)} className="input-sm" rows={2} />
             </Field>
-            <TextStyleEditor label="Description Style" value={(item.descriptionStyle as TextStyleConfig) || {}} onChange={(s) => updateItem(i, "descriptionStyle", s)} />
+            <TextStyleEditor label="Description Style" value={(item.descriptionStyle as TextStyleConfig) || {}} onChange={(s) => updateItem(i, "descriptionStyle", s)} defaults={{ fontSize: "14px" }} />
 
             {/* Icon */}
             <Field label="Icon SVG">
@@ -1778,15 +1922,15 @@ function ColumnCardsEditor({
             <Field label="Title">
               <input type="text" value={(card.title as string) || ""} onChange={(e) => updateCard(i, "title", e.target.value)} className="input-sm" />
             </Field>
-            <TextStyleEditor label="Title Style" value={(card.titleStyle as TextStyleConfig) || {}} onChange={(s) => updateCard(i, "titleStyle", s)} />
+            <TextStyleEditor label="Title Style" value={(card.titleStyle as TextStyleConfig) || {}} onChange={(s) => updateCard(i, "titleStyle", s)} defaults={{ fontSize: "20px (text-xl)", fontWeight: "700", fontFamily: "Gothic A1" }} />
             <Field label="Subtitle">
               <input type="text" value={(card.subtitle as string) || ""} onChange={(e) => updateCard(i, "subtitle", e.target.value)} className="input-sm" />
             </Field>
-            <TextStyleEditor label="Subtitle Style" value={(card.subtitleStyle as TextStyleConfig) || {}} onChange={(s) => updateCard(i, "subtitleStyle", s)} />
+            <TextStyleEditor label="Subtitle Style" value={(card.subtitleStyle as TextStyleConfig) || {}} onChange={(s) => updateCard(i, "subtitleStyle", s)} defaults={{ fontSize: "12px", fontWeight: "400" }} />
             <Field label="Body">
               <textarea value={(card.body as string) || ""} onChange={(e) => updateCard(i, "body", e.target.value)} className="input-sm" rows={3} />
             </Field>
-            <TextStyleEditor label="Body Style" value={(card.bodyStyle as TextStyleConfig) || {}} onChange={(s) => updateCard(i, "bodyStyle", s)} />
+            <TextStyleEditor label="Body Style" value={(card.bodyStyle as TextStyleConfig) || {}} onChange={(s) => updateCard(i, "bodyStyle", s)} defaults={{ fontSize: "14px" }} />
             <Field label="Background Color">
               <input type="text" value={(card.bgColor as string) || ""} onChange={(e) => updateCard(i, "bgColor", e.target.value)} className="input-sm" placeholder="e.g. bg-sand, #hex" />
             </Field>

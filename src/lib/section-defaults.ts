@@ -96,6 +96,13 @@ export const SECTION_DEFAULTS: Record<SectionType, Record<string, unknown>> = {
     count: 14,
     signs: ["COMMUNITY", "MUSIC", "MEMORIES", "VANFEST"],
   },
+  accordion_parent: {
+    title: "Section Title",
+    showExpandAll: true,
+    children: [
+      { title: "Item 1", body: "<p>Content for item 1</p>" },
+    ],
+  },
   contact_form: {
     recipientEmail: "hello@vanfestusa.com",
     contactCards: [

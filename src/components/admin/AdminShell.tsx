@@ -20,7 +20,7 @@ const ELEMENT_GROUPS: { label: string; items: { type: SectionType; label: string
   { label: "Content", items: [{ type: "text_block", label: "Text Block" }, { type: "html_block", label: "HTML Block" }] },
   { label: "Cards & Grids", items: [{ type: "two_column_cards", label: "Column Cards" }, { type: "feature_grid", label: "Feature Grid" }, { type: "event_cards", label: "Event Cards" }, { type: "cta_cards", label: "CTA Cards" }] },
   { label: "Actions", items: [{ type: "cta_section", label: "CTA Section" }, { type: "contact_form", label: "Contact Form" }] },
-  { label: "Accordions", items: [{ type: "faq_accordion", label: "FAQ Accordion" }, { type: "schedule_accordion", label: "Schedule" }, { type: "sponsor_tiers", label: "Sponsor Tiers" }, { type: "sponsor_list", label: "Sponsor List" }] },
+  { label: "Accordions", items: [{ type: "accordion_parent", label: "Accordion Group" }, { type: "faq_accordion", label: "FAQ Accordion" }, { type: "schedule_accordion", label: "Schedule" }, { type: "sponsor_tiers", label: "Sponsor Tiers" }, { type: "sponsor_list", label: "Sponsor List" }] },
   { label: "Media", items: [{ type: "image_carousel", label: "Image Carousel" }, { type: "photo_strip", label: "Photo Strip" }, { type: "image_gallery", label: "Image Gallery" }, { type: "sponsor_marquee", label: "Marquee" }] },
   { label: "Decorative", items: [{ type: "wave_divider", label: "Divider" }, { type: "vehicle_convoy", label: "Vehicle Convoy" }, { type: "vehicle_stream", label: "Vehicle Stream" }] },
 ];

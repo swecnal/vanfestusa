@@ -86,6 +86,7 @@ export type SectionType =
   | "wave_divider"
   | "vehicle_convoy"
   | "vehicle_stream"
+  | "accordion_parent"
   | "contact_form"
   | "html_block";
 
@@ -365,6 +366,20 @@ export interface VehicleStreamData {
   signs?: string[];
 }
 
+export interface AccordionParentData {
+  title?: string;
+  image?: string;
+  imagePosition?: "small-left" | "small-right" | "full-width" | "background";
+  description?: string;
+  titleStyle?: import("@/lib/styles").TextStyleConfig;
+  descriptionStyle?: import("@/lib/styles").TextStyleConfig;
+  showExpandAll?: boolean;
+  children: Array<{
+    title: string;
+    body: string;
+  }>;
+}
+
 export interface ContactFormData {
   introText?: string;
   contactCards?: Array<{
@@ -440,6 +455,7 @@ export const SECTION_TYPE_LABELS: Record<SectionType, string> = {
   image_carousel: "Image Carousel",
   photo_strip: "Photo Strip",
   image_gallery: "Image Gallery",
+  accordion_parent: "Accordion Group",
   wave_divider: "Divider",
   vehicle_convoy: "Vehicle Convoy",
   vehicle_stream: "Vehicle Stream",

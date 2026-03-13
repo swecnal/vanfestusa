@@ -19,6 +19,7 @@ import ImageGallerySection from "./ImageGallerySection";
 import WaveDividerSection from "./WaveDividerSection";
 import VehicleConvoySection from "./VehicleConvoySection";
 import VehicleStreamSection from "./VehicleStreamSection";
+import AccordionParentSection from "./AccordionParentSection";
 import ContactFormSection from "./ContactFormSection";
 import HtmlBlockSection from "./HtmlBlockSection";
 
@@ -73,6 +74,8 @@ export default function SectionRenderer({ section, siteStyles = EMPTY_SITE_STYLE
         return <VehicleConvoySection data={data} />;
       case "vehicle_stream":
         return <VehicleStreamSection data={data} />;
+      case "accordion_parent":
+        return <AccordionParentSection data={data} settings={settings} />;
       case "contact_form":
         return <ContactFormSection data={data} settings={settings} />;
       case "html_block":
