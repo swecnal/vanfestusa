@@ -182,6 +182,14 @@ export interface FeatureGridData {
 
 export interface EventCardsData {
   heading?: { title: string; subtitle?: string };
+  columns?: 1 | 2 | 3;
+  layout?: "equal" | "featured";
+  featuredIndex?: number;
+  titleStyle?: import("@/lib/styles").TextStyleConfig;
+  locationStyle?: import("@/lib/styles").TextStyleConfig;
+  dateStyle?: import("@/lib/styles").TextStyleConfig;
+  descriptionStyle?: import("@/lib/styles").TextStyleConfig;
+  tagStyle?: import("@/lib/styles").TextStyleConfig;
   events: Array<{
     name: string;
     location: string;
@@ -193,6 +201,8 @@ export interface EventCardsData {
     href: string;
     ticketUrl: string;
     fontOverride?: string;
+    overlayColor?: string;
+    overlayOpacity?: number;
   }>;
 }
 

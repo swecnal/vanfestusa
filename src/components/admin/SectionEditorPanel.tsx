@@ -432,25 +432,7 @@ function SectionFields({
 
     case "event_cards":
       return (
-        <div className="space-y-3">
-          <Field label="Heading Title">
-            <input
-              type="text"
-              value={((data.heading as Record<string, unknown>)?.title as string) || ""}
-              onChange={(e) =>
-                updateData("heading", { ...(data.heading as Record<string, unknown>), title: e.target.value })
-              }
-              className="input-sm"
-            />
-          </Field>
-          <Field label="Events">
-            <ArrayEditor
-              items={(data.events as Array<Record<string, string>>) || []}
-              onChange={(items) => updateData("events", items)}
-              fields={["name", "location", "dates", "description", "tag", "href", "ticketUrl"]}
-            />
-          </Field>
-        </div>
+        <EventCardsEditor data={data} updateData={updateData} />
       );
 
     case "cta_cards":
@@ -1269,6 +1251,158 @@ function TextBlockEditor({
         />
         Apply prose typography
       </label>
+    </div>
+  );
+}
+
+function EventCardsEditor({
+  data,
+  updateData,
+}: {
+  data: Record<string, unknown>;
+  updateData: (key: string, value: unknown) => void;
+}) {
+  const heading = (data.heading as Record<string, unknown>) || {};
+  const events = (data.events as Array<Record<string, unknown>>) || [];
+
+  const updateEvent = (index: number, key: string, value: unknown) => {
+    const next = [...events];
+    next[index] = { ...next[index], [key]: value };
+    updateData("events", next);
+  };
+
+  return (
+    <div className="space-y-3">
+      <Field label="Heading Title">
+        <input
+          type="text"
+          value={(heading.title as string) || ""}
+          onChange={(e) => updateData("heading", { ...heading, title: e.target.value })}
+          className="input-sm"
+        />
+      </Field>
+      <Field label="Heading Subtitle">
+        <input
+          type="text"
+          value={(heading.subtitle as string) || ""}
+          onChange={(e) => updateData("heading", { ...heading, subtitle: e.target.value })}
+          className="input-sm"
+        />
+      </Field>
+
+      {/* Layout controls */}
+      <Field label="Columns">
+        <select
+          value={String(data.columns || 2)}
+          onChange={(e) => updateData("columns", Number(e.target.value))}
+          className="input-sm"
+        >
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+        </select>
+      </Field>
+      <Field label="Layout">
+        <select
+          value={(data.layout as string) || "equal"}
+          onChange={(e) => updateData("layout", e.target.value)}
+          className="input-sm"
+        >
+          <option value="equal">Equal</option>
+          <option value="featured">Featured (one larger)</option>
+        </select>
+      </Field>
+      {(data.layout as string) === "featured" && (
+        <Field label="Featured Index (0-based)">
+          <input
+            type="number"
+            value={(data.featuredIndex as number) ?? 0}
+            onChange={(e) => updateData("featuredIndex", Number(e.target.value))}
+            className="input-sm"
+            min={0}
+            max={events.length - 1}
+          />
+        </Field>
+      )}
+
+      {/* Element-level text styles */}
+      <details className="border border-gray-200 rounded-lg">
+        <summary className="px-3 py-2 text-xs font-semibold text-gray-500 cursor-pointer hover:bg-gray-50">
+          Text Styles (all cards)
+        </summary>
+        <div className="p-3 space-y-2 border-t border-gray-100">
+          <TextStyleEditor label="Title Style" value={(data.titleStyle as TextStyleConfig) || {}} onChange={(s) => updateData("titleStyle", s)} />
+          <TextStyleEditor label="Location Style" value={(data.locationStyle as TextStyleConfig) || {}} onChange={(s) => updateData("locationStyle", s)} />
+          <TextStyleEditor label="Date Style" value={(data.dateStyle as TextStyleConfig) || {}} onChange={(s) => updateData("dateStyle", s)} />
+          <TextStyleEditor label="Description Style" value={(data.descriptionStyle as TextStyleConfig) || {}} onChange={(s) => updateData("descriptionStyle", s)} />
+          <TextStyleEditor label="Tag Style" value={(data.tagStyle as TextStyleConfig) || {}} onChange={(s) => updateData("tagStyle", s)} />
+        </div>
+      </details>
+
+      {/* Individual events */}
+      {events.map((ev, i) => (
+        <details key={i} className="border border-gray-200 rounded-lg">
+          <summary className="px-3 py-2 text-xs font-semibold text-gray-600 cursor-pointer hover:bg-gray-50">
+            Event {i + 1}: {(ev.name as string) || "Untitled"}
+          </summary>
+          <div className="p-3 space-y-3 border-t border-gray-100">
+            <Field label="Event Name">
+              <input type="text" value={(ev.name as string) || ""} onChange={(e) => updateEvent(i, "name", e.target.value)} className="input-sm" />
+            </Field>
+            <Field label="Location">
+              <input type="text" value={(ev.location as string) || ""} onChange={(e) => updateEvent(i, "location", e.target.value)} className="input-sm" />
+            </Field>
+            <Field label="Dates">
+              <input type="text" value={(ev.dates as string) || ""} onChange={(e) => updateEvent(i, "dates", e.target.value)} className="input-sm" />
+            </Field>
+            <Field label="Description">
+              <textarea value={(ev.description as string) || ""} onChange={(e) => updateEvent(i, "description", e.target.value)} className="input-sm" rows={2} />
+            </Field>
+            <Field label="Tag">
+              <input type="text" value={(ev.tag as string) || ""} onChange={(e) => updateEvent(i, "tag", e.target.value)} className="input-sm" />
+            </Field>
+            <Field label="Link (href)">
+              <input type="text" value={(ev.href as string) || ""} onChange={(e) => updateEvent(i, "href", e.target.value)} className="input-sm" />
+            </Field>
+            <Field label="Ticket URL">
+              <input type="text" value={(ev.ticketUrl as string) || ""} onChange={(e) => updateEvent(i, "ticketUrl", e.target.value)} className="input-sm" />
+            </Field>
+            <Field label="Gradient (CSS)">
+              <input type="text" value={(ev.gradient as string) || ""} onChange={(e) => updateEvent(i, "gradient", e.target.value)} className="input-sm" placeholder="from-teal to-charcoal" />
+            </Field>
+            <Field label="Image">
+              <ImagePicker value={(ev.image as string) || ""} onChange={(url) => updateEvent(i, "image", url)} />
+            </Field>
+            <Field label="Font Override">
+              <input type="text" value={(ev.fontOverride as string) || ""} onChange={(e) => updateEvent(i, "fontOverride", e.target.value)} className="input-sm" placeholder="e.g. EB Garamond" />
+            </Field>
+
+            {/* Per-event overlay */}
+            <Field label="Overlay Color">
+              <div className="flex gap-2">
+                <input type="color" value={(ev.overlayColor as string) || "#000000"} onChange={(e) => updateEvent(i, "overlayColor", e.target.value)} className="w-8 h-8 rounded border border-gray-200 cursor-pointer p-0.5" />
+                <input type="text" value={(ev.overlayColor as string) || ""} onChange={(e) => updateEvent(i, "overlayColor", e.target.value)} className="flex-1 p-1.5 border border-gray-200 rounded text-xs" placeholder="Default (from gradient)" />
+              </div>
+            </Field>
+            <Field label="Overlay Opacity (0-100)">
+              <input type="number" value={(ev.overlayOpacity as number) ?? ""} onChange={(e) => updateEvent(i, "overlayOpacity", e.target.value ? Number(e.target.value) : undefined)} className="input-sm" min={0} max={100} placeholder="Default" />
+            </Field>
+
+            <button
+              onClick={() => updateData("events", events.filter((_, idx) => idx !== i))}
+              className="text-red-400 hover:text-red-600 text-xs font-semibold"
+            >
+              Remove Event
+            </button>
+          </div>
+        </details>
+      ))}
+      <button
+        onClick={() => updateData("events", [...events, { name: "New Event", location: "", dates: "", description: "", gradient: "from-teal to-charcoal", tag: "", image: "", href: "#", ticketUrl: "#" }])}
+        className="text-teal hover:text-teal-dark text-xs font-semibold transition-colors"
+      >
+        + Add Event
+      </button>
     </div>
   );
 }
