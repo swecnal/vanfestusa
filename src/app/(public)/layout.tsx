@@ -1,6 +1,7 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import VehicleStream from "@/components/VehicleStream";
+import type { VehicleStreamConfig } from "@/components/VehicleStream";
 import { getSupabaseServer } from "@/lib/supabase/server";
 
 async function getGlobalSetting(key: string) {
@@ -22,9 +23,10 @@ export default async function PublicLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [navbarConfig, footerConfig] = await Promise.all([
+  const [navbarConfig, footerConfig, vehicleStreamConfig] = await Promise.all([
     getGlobalSetting("navbar_config"),
     getGlobalSetting("footer_config"),
+    getGlobalSetting("vehicle_stream_config"),
   ]);
 
   return (
@@ -32,7 +34,7 @@ export default async function PublicLayout({
       {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
       <Navbar config={navbarConfig as any} />
       <main>{children}</main>
-      <VehicleStream />
+      <VehicleStream config={vehicleStreamConfig as VehicleStreamConfig | null} />
       {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
       <Footer config={footerConfig as any} />
     </>

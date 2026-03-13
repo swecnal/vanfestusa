@@ -21,6 +21,13 @@ interface FooterConfig {
   contactInfo: { email: string; phone: string; instagram: string };
 }
 
+interface VehicleStreamConfig {
+  enabled: boolean;
+  seed: number;
+  count: number;
+  signs: string[];
+}
+
 const EMPTY_CONFIG: FooterConfig = {
   brand: { tagline: "The ULTIMATE vanlife experience!" },
   socialLinks: [
@@ -55,8 +62,16 @@ const EMPTY_CONFIG: FooterConfig = {
   },
 };
 
+const EMPTY_STREAM: VehicleStreamConfig = {
+  enabled: true,
+  seed: 777,
+  count: 14,
+  signs: ["COMMUNITY", "MUSIC", "MEMORIES", "VANFEST"],
+};
+
 export default function FooterEditorPage() {
   const [config, setConfig] = useState<FooterConfig>(EMPTY_CONFIG);
+  const [stream, setStream] = useState<VehicleStreamConfig>(EMPTY_STREAM);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -67,6 +82,9 @@ export default function FooterEditorPage() {
         const s = res.settings || {};
         if (s.footer_config) {
           setConfig(s.footer_config as FooterConfig);
+        }
+        if (s.vehicle_stream_config) {
+          setStream({ ...EMPTY_STREAM, ...(s.vehicle_stream_config as VehicleStreamConfig) });
         }
       })
       .catch(() => toast.error("Failed to load footer config"))
@@ -79,7 +97,10 @@ export default function FooterEditorPage() {
       const res = await fetch("/api/global-settings", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ footer_config: config }),
+        body: JSON.stringify({
+          footer_config: config,
+          vehicle_stream_config: stream,
+        }),
       });
       if (!res.ok) throw new Error();
       toast.success("Footer saved");
@@ -88,7 +109,7 @@ export default function FooterEditorPage() {
     } finally {
       setSaving(false);
     }
-  }, [config]);
+  }, [config, stream]);
 
   const updateColumn = (colIdx: number, key: string, value: unknown) => {
     setConfig((prev) => {
@@ -130,6 +151,14 @@ export default function FooterEditorPage() {
     });
   };
 
+  const updateSign = (index: number, value: string) => {
+    setStream((prev) => {
+      const signs = [...prev.signs];
+      signs[index] = value;
+      return { ...prev, signs };
+    });
+  };
+
   if (loading) {
     return (
       <div className="max-w-3xl mx-auto">
@@ -152,6 +181,76 @@ export default function FooterEditorPage() {
         >
           {saving ? "Saving..." : "Save Footer"}
         </button>
+      </div>
+
+      {/* Vehicle Stream (above footer) */}
+      <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-gray-700">Vehicle Stream (above footer)</h3>
+          <label className="flex items-center gap-2 text-sm text-gray-600">
+            <input
+              type="checkbox"
+              checked={stream.enabled}
+              onChange={(e) => setStream((prev) => ({ ...prev, enabled: e.target.checked }))}
+            />
+            Enabled
+          </label>
+        </div>
+        {stream.enabled && (
+          <>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Seed</label>
+                <input
+                  type="number"
+                  value={stream.seed}
+                  onChange={(e) => setStream((prev) => ({ ...prev, seed: Number(e.target.value) }))}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Vehicle Count</label>
+                <input
+                  type="number"
+                  value={stream.count}
+                  min={1}
+                  max={30}
+                  onChange={(e) => setStream((prev) => ({ ...prev, count: Number(e.target.value) }))}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                />
+              </div>
+            </div>
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs text-gray-500">Road Signs</label>
+                <button
+                  onClick={() => setStream((prev) => ({ ...prev, signs: [...prev.signs, "NEW"] }))}
+                  className="text-teal hover:text-teal-dark text-xs font-semibold"
+                >
+                  + Add Sign
+                </button>
+              </div>
+              <div className="space-y-1.5">
+                {stream.signs.map((sign, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={sign}
+                      onChange={(e) => updateSign(i, e.target.value)}
+                      className="flex-1 px-2 py-1.5 border border-gray-200 rounded text-xs uppercase"
+                    />
+                    <button
+                      onClick={() => setStream((prev) => ({ ...prev, signs: prev.signs.filter((_, idx) => idx !== i) }))}
+                      className="text-gray-300 hover:text-red-500 p-1"
+                    >
+                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Brand */}

@@ -354,8 +354,20 @@ function generateStream(seed: number, count: number): StreamVehicle[] {
   return vehicles;
 }
 
-export default function VehicleStream() {
-  const vehicles = useMemo(() => generateStream(777, 14), []);
+export interface VehicleStreamConfig {
+  enabled?: boolean;
+  seed?: number;
+  count?: number;
+  signs?: string[];
+}
+
+export default function VehicleStream({ config }: { config?: VehicleStreamConfig | null }) {
+  const enabled = config?.enabled ?? true;
+  const seed = config?.seed ?? 777;
+  const count = config?.count ?? 14;
+  const signs = config?.signs ?? ["COMMUNITY", "MUSIC", "MEMORIES", "VANFEST"];
+
+  const vehicles = useMemo(() => generateStream(seed, count), [seed, count]);
 
   // Total cycle time = max delay + longest duration, so we can
   // set negative delays to pre-distribute vehicles across the viewport
@@ -364,19 +376,23 @@ export default function VehicleStream() {
     return maxDelay + 4; // add buffer
   }, [vehicles]);
 
+  if (!enabled) return null;
+
   return (
     <section
       className="relative overflow-hidden bg-sand"
       style={{ height: "90px" }}
     >
       {/* Road signs */}
-      {["COMMUNITY", "MUSIC", "MEMORIES", "VANFEST"].map((text, i) => {
-        const big = text === "VANFEST";
+      {signs.map((text, i) => {
+        const big = i === signs.length - 1;
+        const spacing = signs.length > 1 ? 70 / (signs.length - 1) : 0;
+        const leftPct = signs.length === 1 ? 50 : 15 + i * spacing;
         return (
           <div
-            key={text}
+            key={`${text}-${i}`}
             className="absolute bottom-3 flex flex-col items-center"
-            style={{ left: `${18 + i * 22}%` }}
+            style={{ left: `${leftPct}%` }}
           >
             <div className={`bg-teal/90 text-white font-display font-bold tracking-widest rounded-sm shadow-sm ${big ? "text-[18px] px-5 py-2" : "text-[9px] px-2.5 py-1"}`}>
               {text}
