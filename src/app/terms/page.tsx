@@ -832,6 +832,130 @@ export default function TermsPage() {
             </div>
           </div>
 
+          {/* ── SMS Terms & Conditions ── */}
+          <h2 className="font-display font-bold text-2xl mb-6">
+            VanFest SMS Terms &amp; Conditions
+          </h2>
+
+          <div className="bg-sand rounded-2xl p-6 mb-8">
+            <h3 className="font-display font-bold text-lg text-teal-dark mb-3">
+              VanFest Text Alerts
+            </h3>
+            <p className="text-charcoal/70 text-sm leading-relaxed mb-4">
+              VanFest (&ldquo;VanFest Text Alerts&rdquo;) offers an SMS
+              messaging program for ticket holders and community members who opt
+              in. This program provides event announcements, schedule updates,
+              logistical information, important reminders, and other
+              communications related to VanFest events.
+            </p>
+
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-display font-bold text-base text-charcoal mb-1">
+                  Opt-In &amp; Consent
+                </h4>
+                <p className="text-charcoal/70 text-sm leading-relaxed">
+                  By checking the SMS opt-in box during ticket checkout, texting
+                  a VanFest keyword, or otherwise providing your phone number
+                  with consent to receive texts, you agree to receive recurring
+                  SMS/MMS messages from VanFest. Consent is not a condition of
+                  purchase.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-display font-bold text-base text-charcoal mb-1">
+                  Message Frequency
+                </h4>
+                <p className="text-charcoal/70 text-sm leading-relaxed">
+                  Message frequency varies. You may receive up to 10 messages
+                  per month, with increased frequency around event dates (up to
+                  5 messages per day during active events).
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-display font-bold text-base text-charcoal mb-1">
+                  Message &amp; Data Rates
+                </h4>
+                <p className="text-charcoal/70 text-sm leading-relaxed">
+                  Message and data rates may apply. Check with your mobile
+                  carrier for details about your messaging plan. VanFest is not
+                  responsible for any charges incurred from your carrier.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-display font-bold text-base text-charcoal mb-1">
+                  Opt-Out Instructions
+                </h4>
+                <p className="text-charcoal/70 text-sm leading-relaxed">
+                  You can opt out at any time by texting{" "}
+                  <strong className="text-charcoal">STOP</strong> to any message
+                  you receive from VanFest. After sending{" "}
+                  <strong className="text-charcoal">STOP</strong>, you will
+                  receive a one-time confirmation message and will no longer
+                  receive SMS messages from VanFest unless you opt in again.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-display font-bold text-base text-charcoal mb-1">
+                  Help
+                </h4>
+                <p className="text-charcoal/70 text-sm leading-relaxed">
+                  For help or support, text{" "}
+                  <strong className="text-charcoal">HELP</strong> to any message
+                  from VanFest, or contact us directly at{" "}
+                  <a
+                    href="mailto:hello@vanfestusa.com"
+                    className="text-teal hover:text-teal-dark font-semibold transition-colors"
+                  >
+                    hello@vanfestusa.com
+                  </a>{" "}
+                  or{" "}
+                  <a
+                    href="tel:8058263378"
+                    className="text-teal hover:text-teal-dark font-semibold transition-colors"
+                  >
+                    805.826.3378
+                  </a>
+                  .
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-display font-bold text-base text-charcoal mb-1">
+                  Privacy
+                </h4>
+                <p className="text-charcoal/70 text-sm leading-relaxed">
+                  Your phone number and personal information will not be sold,
+                  rented, or shared with third parties or affiliates for their
+                  own marketing or promotional purposes. For full details, see
+                  our{" "}
+                  <a
+                    href="/privacy"
+                    className="text-teal hover:text-teal-dark font-semibold transition-colors"
+                  >
+                    Privacy Policy
+                  </a>
+                  .
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-display font-bold text-base text-charcoal mb-1">
+                  Supported Carriers
+                </h4>
+                <p className="text-charcoal/70 text-sm leading-relaxed">
+                  VanFest SMS is supported on major US carriers including
+                  AT&amp;T, Verizon, T-Mobile, Sprint, and others. Carriers are
+                  not liable for delayed or undelivered messages.
+                </p>
+              </div>
+            </div>
+          </div>
+
           {/* ── Our Commitment ── */}
           <div className="bg-sand rounded-2xl p-6 mt-10">
             <h3 className="font-display font-bold text-lg text-teal-dark mb-4">
