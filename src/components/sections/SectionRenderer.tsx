@@ -10,6 +10,7 @@ import CtaSectionSection from "./CtaSectionSection";
 import FaqAccordionSection from "./FaqAccordionSection";
 import ScheduleAccordionSection from "./ScheduleAccordionSection";
 import SponsorTiersSection from "./SponsorTiersSection";
+import SponsorListSection from "./SponsorListSection";
 import SponsorMarqueeSection from "./SponsorMarqueeSection";
 import ImageCarouselSection from "./ImageCarouselSection";
 import PhotoStripSection from "./PhotoStripSection";
@@ -54,6 +55,8 @@ export default function SectionRenderer({ section }: Props) {
         return <ScheduleAccordionSection data={data} settings={settings} />;
       case "sponsor_tiers":
         return <SponsorTiersSection data={data} settings={settings} />;
+      case "sponsor_list":
+        return <SponsorListSection data={data} settings={settings} />;
       case "sponsor_marquee":
         return <SponsorMarqueeSection data={data} settings={settings} />;
       case "image_carousel":

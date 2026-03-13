@@ -113,7 +113,8 @@ function TreeItem({
         style={{ paddingLeft: `${depth * 16 + 8}px` }}
         onClick={() => {
           if (node.page) onSelect(node.page.id);
-          if (hasChildren) setExpanded(!expanded);
+          // Root node (depth 0) only collapses via the chevron button
+          if (hasChildren && depth > 0) setExpanded(!expanded);
         }}
       >
         {/* Expand/collapse chevron */}

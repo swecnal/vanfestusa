@@ -1,9 +1,32 @@
 "use client";
 
-import { sponsors } from "@/data/sponsors";
 import Link from "next/link";
 
-export default function SponsorMarquee() {
+interface Sponsor {
+  name: string;
+  logo: string;
+  websiteUrl?: string;
+  darkBg?: boolean;
+}
+
+interface SponsorMarqueeProps {
+  sponsors: Sponsor[];
+  heading?: string;
+  subheading?: string;
+  ctaText?: string;
+  ctaHref?: string;
+  speed?: number;
+}
+
+export default function SponsorMarquee({
+  sponsors,
+  heading = "Our Sponsors",
+  subheading = "Proudly supported by these amazing brands",
+  ctaText = "Become a Sponsor",
+  ctaHref = "/get-involved#sponsors",
+}: SponsorMarqueeProps) {
+  if (!sponsors.length) return null;
+
   // Double the sponsors array so the marquee can loop seamlessly
   const doubled = [...sponsors, ...sponsors];
 
@@ -11,10 +34,10 @@ export default function SponsorMarquee() {
     <section className="py-16 px-4 bg-sand">
       <div className="mx-auto max-w-6xl text-center mb-10">
         <h2 className="font-display font-black text-3xl sm:text-4xl text-charcoal mb-3">
-          Our Sponsors
+          {heading}
         </h2>
         <p className="text-charcoal/60 text-lg">
-          Proudly supported by these amazing brands
+          {subheading}
         </p>
       </div>
 
@@ -29,7 +52,7 @@ export default function SponsorMarquee() {
           {doubled.map((sponsor, idx) => (
             <a
               key={`${sponsor.name}-${idx}`}
-              href={sponsor.websiteUrl}
+              href={sponsor.websiteUrl || "#"}
               target="_blank"
               rel="noopener noreferrer"
               className={`flex-shrink-0 rounded-xl p-3 shadow-sm hover:shadow-md transition-shadow flex items-center justify-center ${sponsor.darkBg ? "bg-charcoal" : "bg-white"}`}
@@ -46,15 +69,17 @@ export default function SponsorMarquee() {
         </div>
       </div>
 
-      {/* Become a Sponsor CTA */}
-      <div className="text-center mt-10">
-        <Link
-          href="/get-involved#sponsors"
-          className="inline-block bg-teal hover:bg-teal-dark text-white font-bold px-8 py-3 rounded-xl transition-colors"
-        >
-          Become a Sponsor
-        </Link>
-      </div>
+      {/* CTA */}
+      {ctaText && ctaHref && (
+        <div className="text-center mt-10">
+          <Link
+            href={ctaHref}
+            className="inline-block bg-teal hover:bg-teal-dark text-white font-bold px-8 py-3 rounded-xl transition-colors"
+          >
+            {ctaText}
+          </Link>
+        </div>
+      )}
     </section>
   );
 }

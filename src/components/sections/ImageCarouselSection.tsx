@@ -1,7 +1,7 @@
 import SectionHeading from "@/components/SectionHeading";
 import BuildsCarousel from "@/components/BuildsCarousel";
 import Link from "next/link";
-import type { ImageCarouselData, SectionSettings } from "@/lib/types";
+import type { SectionSettings } from "@/lib/types";
 
 interface Props {
   data: Record<string, unknown>;
@@ -9,8 +9,18 @@ interface Props {
 }
 
 export default function ImageCarouselSection({ data, settings }: Props) {
-  const d = data as unknown as ImageCarouselData;
-  const isLight = d.heading?.light || settings.bgColor === "charcoal";
+  const d = data as Record<string, unknown>;
+
+  // heading can be a string or an object { title, subtitle, light }
+  const heading = typeof d.heading === "string"
+    ? { title: d.heading, subtitle: d.subheading as string | undefined, light: true }
+    : (d.heading as { title: string; subtitle?: string; light?: boolean } | undefined);
+
+  const images = (d.images as Array<{ src: string; alt: string }>) || [];
+  const ctaButtons = (d.ctaButtons as Array<{ text: string; href: string; variant: string; external?: boolean }>) || [];
+  const autoplayInterval = d.autoplayInterval as number | undefined;
+  const bgImage = (d.bgImage as string) || settings.bgImage;
+  const isLight = heading?.light || settings.bgColor === "charcoal" || !!bgImage;
 
   return (
     <section
@@ -18,28 +28,31 @@ export default function ImageCarouselSection({ data, settings }: Props) {
         isLight ? "bg-charcoal" : "bg-white"
       } overflow-hidden ${settings.customClasses || ""}`}
     >
-      {settings.bgImage && (
+      {bgImage && (
         <img
-          src={settings.bgImage}
+          src={bgImage}
           alt=""
           className="absolute inset-0 w-full h-full object-cover"
           style={{ opacity: settings.bgImageOpacity ?? 0.15 }}
         />
       )}
       <div className={`relative mx-auto ${settings.maxWidth || "max-w-6xl"}`}>
-        {d.heading && (
+        {heading && (
           <SectionHeading
-            title={d.heading.title}
-            subtitle={d.heading.subtitle}
-            light={d.heading.light}
+            title={heading.title}
+            subtitle={heading.subtitle}
+            light={heading.light}
           />
         )}
         <div className="mb-10">
-          <BuildsCarousel />
+          <BuildsCarousel
+            images={images}
+            autoplayInterval={autoplayInterval}
+          />
         </div>
-        {d.ctaButtons && d.ctaButtons.length > 0 && (
+        {ctaButtons.length > 0 && (
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            {d.ctaButtons.map((btn, i) => (
+            {ctaButtons.map((btn, i) => (
               <Link
                 key={i}
                 href={btn.href}

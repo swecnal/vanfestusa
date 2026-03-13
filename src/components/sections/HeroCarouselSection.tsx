@@ -1,5 +1,5 @@
 import HeroCarousel from "@/components/HeroCarousel";
-import type { SectionSettings } from "@/lib/types";
+import type { HeroCarouselData, SectionSettings } from "@/lib/types";
 
 interface Props {
   data: Record<string, unknown>;
@@ -7,8 +7,12 @@ interface Props {
 }
 
 export default function HeroCarouselSection({ data }: Props) {
-  // HeroCarousel currently uses hardcoded data.
-  // Pass data through as props when HeroCarousel is refactored.
-  // For now, render the existing component.
-  return <HeroCarousel />;
+  const d = data as unknown as HeroCarouselData;
+  return (
+    <HeroCarousel
+      slides={d.slides || []}
+      overlay={d.overlay || { eventName: "Event" }}
+      autoplayInterval={d.autoplayInterval}
+    />
+  );
 }

@@ -7,33 +7,26 @@ interface HeroSlide {
   alt: string;
 }
 
-const slides: HeroSlide[] = [
-  { image: "/images/image127.jpg", alt: "VanFest gathering at Cape Cod" },
-  { image: "/images/image153.jpg", alt: "VanFest community event" },
-  { image: "/images/image154.jpg", alt: "VanFest vans lined up" },
-  { image: "/images/image155.jpg", alt: "VanFest sunset gathering" },
-  { image: "/images/image156.jpg", alt: "VanFest festival scene" },
-];
-
 interface EventOverlay {
+  label?: string;
   eventName: string;
-  tagline: string;
-  location: string;
-  locationUrl: string;
-  dates: string;
+  tagline?: string;
+  location?: string;
+  locationUrl?: string;
+  dates?: string;
+  primaryCta?: { text: string; href: string; external?: boolean };
+  secondaryCta?: { text: string; href: string };
 }
 
-const nextEvent: EventOverlay = {
-  eventName: "Escape to the Cape",
-  tagline: "The biggest vanlife celebration in New England!",
-  location: "Cape Cod Fairgrounds — East Falmouth, MA",
-  locationUrl: "https://www.google.com/maps/place/Cape+Cod+Fairgrounds/data=!4m2!3m1!1s0x89e4d7e5b8f3b8a7:0x4b3b8b8b8b8b8b8b",
-  dates: "August 20th - 24th, 2026",
-};
+interface HeroCarouselProps {
+  slides: HeroSlide[];
+  overlay: EventOverlay;
+  autoplayInterval?: number;
+}
 
 const textShadow = "0 2px 12px rgba(0,0,0,0.9), 0 0 40px rgba(0,0,0,0.6), 0 4px 20px rgba(0,0,0,0.5)";
 
-export default function HeroCarousel() {
+export default function HeroCarousel({ slides, overlay, autoplayInterval = 5000 }: HeroCarouselProps) {
   const [current, setCurrent] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const heroCTARef = useRef<HTMLAnchorElement>(null);
@@ -56,11 +49,14 @@ export default function HeroCarousel() {
   );
 
   useEffect(() => {
+    if (slides.length <= 1) return;
     const timer = setInterval(() => {
       goToSlide((current + 1) % slides.length);
-    }, 5000);
+    }, autoplayInterval);
     return () => clearInterval(timer);
-  }, [current, goToSlide]);
+  }, [current, goToSlide, slides.length, autoplayInterval]);
+
+  if (!slides.length) return null;
 
   return (
     <section className="relative h-screen w-full overflow-hidden">
@@ -86,12 +82,22 @@ export default function HeroCarousel() {
       {/* Event overlay content */}
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="text-center text-white px-6 sm:px-10 md:px-14 py-10 md:py-14 max-w-4xl bg-white/15 backdrop-blur-[2px] rounded-3xl border border-white/20">
-          <p
-            className="font-display font-semibold tracking-[0.3em] uppercase text-sm md:text-base mb-4"
-            style={{ textShadow, color: "#09B593" }}
-          >
-            Next Event
-          </p>
+          {overlay.label && (
+            <p
+              className="font-display font-semibold tracking-[0.3em] uppercase text-sm md:text-base mb-4"
+              style={{ textShadow, color: "#09B593" }}
+            >
+              {overlay.label}
+            </p>
+          )}
+          {!overlay.label && (
+            <p
+              className="font-display font-semibold tracking-[0.3em] uppercase text-sm md:text-base mb-4"
+              style={{ textShadow, color: "#09B593" }}
+            >
+              Next Event
+            </p>
+          )}
           <h1
             className="font-accent font-bold text-4xl sm:text-5xl md:text-7xl lg:text-8xl mb-4 leading-tight whitespace-nowrap"
             style={{
@@ -100,77 +106,91 @@ export default function HeroCarousel() {
               WebkitTextStroke: "1px rgba(255,255,255,0.1)",
             }}
           >
-            {nextEvent.eventName}
+            {overlay.eventName}
           </h1>
-          <p
-            className="text-xl md:text-2xl lg:text-3xl mb-8 font-bold tracking-wide"
-            style={{
-              textShadow,
-              color: "#09B593",
-              fontFamily: "'Poppins', sans-serif",
-            }}
-          >
-            {nextEvent.tagline}
-          </p>
+          {overlay.tagline && (
+            <p
+              className="text-xl md:text-2xl lg:text-3xl mb-8 font-bold tracking-wide"
+              style={{
+                textShadow,
+                color: "#09B593",
+                fontFamily: "'Poppins', sans-serif",
+              }}
+            >
+              {overlay.tagline}
+            </p>
+          )}
           <div
             className="flex flex-col sm:flex-row items-center justify-center gap-4 md:gap-6 text-base md:text-lg lg:text-xl mb-8 font-semibold"
             style={{ textShadow }}
           >
-            <a
-              href={nextEvent.locationUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 text-white hover:text-teal-light transition-colors"
-            >
-              <svg className="w-5 h-5 text-teal" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-              {nextEvent.location}
-            </a>
-            <span className="hidden sm:block text-white/40">|</span>
-            <span className="flex items-center gap-2 text-white">
-              <svg className="w-5 h-5 text-teal" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              {nextEvent.dates}
-            </span>
+            {overlay.location && (
+              <a
+                href={overlay.locationUrl || "#"}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-white hover:text-teal-light transition-colors"
+              >
+                <svg className="w-5 h-5 text-teal" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                {overlay.location}
+              </a>
+            )}
+            {overlay.location && overlay.dates && (
+              <span className="hidden sm:block text-white/40">|</span>
+            )}
+            {overlay.dates && (
+              <span className="flex items-center gap-2 text-white">
+                <svg className="w-5 h-5 text-teal" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                {overlay.dates}
+              </span>
+            )}
           </div>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <a
-              ref={heroCTARef}
-              href="https://vanfest.ticketspice.com/escape2026"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-teal hover:bg-teal-dark text-white font-bold px-10 py-4 rounded-xl text-xl shadow-[0_0_30px_rgba(9,181,147,0.5)] hover:shadow-[0_0_50px_rgba(9,181,147,0.7)] transition-all hover:scale-105 animate-pulse-subtle animate-bounce-attention"
-            >
-              Get Tickets
-            </a>
-            <a
-              href="/events"
-              className="border-2 border-white/40 hover:border-white text-white font-bold px-8 py-3 rounded-xl text-lg transition-all hover:bg-white/10"
-            >
-              Learn More
-            </a>
+            {overlay.primaryCta && (
+              <a
+                ref={heroCTARef}
+                href={overlay.primaryCta.href}
+                target={overlay.primaryCta.external !== false ? "_blank" : undefined}
+                rel={overlay.primaryCta.external !== false ? "noopener noreferrer" : undefined}
+                className="bg-teal hover:bg-teal-dark text-white font-bold px-10 py-4 rounded-xl text-xl shadow-[0_0_30px_rgba(9,181,147,0.5)] hover:shadow-[0_0_50px_rgba(9,181,147,0.7)] transition-all hover:scale-105 animate-pulse-subtle animate-bounce-attention"
+              >
+                {overlay.primaryCta.text}
+              </a>
+            )}
+            {overlay.secondaryCta && (
+              <a
+                href={overlay.secondaryCta.href}
+                className="border-2 border-white/40 hover:border-white text-white font-bold px-8 py-3 rounded-xl text-lg transition-all hover:bg-white/10"
+              >
+                {overlay.secondaryCta.text}
+              </a>
+            )}
           </div>
         </div>
       </div>
 
       {/* Slide indicators */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2">
-        {slides.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => goToSlide(i)}
-            className={`h-2 rounded-full transition-all duration-300 ${
-              i === current
-                ? "w-8 bg-teal"
-                : "w-2 bg-white/50 hover:bg-white/80"
-            }`}
-            aria-label={`Go to slide ${i + 1}`}
-          />
-        ))}
-      </div>
+      {slides.length > 1 && (
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2">
+          {slides.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => goToSlide(i)}
+              className={`h-2 rounded-full transition-all duration-300 ${
+                i === current
+                  ? "w-8 bg-teal"
+                  : "w-2 bg-white/50 hover:bg-white/80"
+              }`}
+              aria-label={`Go to slide ${i + 1}`}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Scroll indicator */}
       <div className="absolute bottom-20 left-1/2 -translate-x-1/2 animate-bounce">
