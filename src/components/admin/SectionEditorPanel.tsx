@@ -36,6 +36,7 @@ export default function SectionEditorPanel({ section, onSave, saving }: Props) {
         setSiteStyles({
           button_styles: s.button_styles || { main: [], secondary: [] },
           link_styles: s.link_styles || { primary: [], secondary: [] },
+          heading_styles: s.heading_styles || EMPTY_SITE_STYLES.heading_styles,
         });
       })
       .catch(() => {});

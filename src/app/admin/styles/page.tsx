@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
-import type { ButtonStyle, LinkStyle, SiteStyles } from "@/lib/styles";
+import type { ButtonStyle, LinkStyle, HeadingStyle, HeadingStyles, SiteStyles } from "@/lib/styles";
+import { DEFAULT_HEADING_STYLES } from "@/lib/styles";
 
 // ─── Defaults ───
 
@@ -66,6 +67,7 @@ export default function StylesPage() {
   const [data, setData] = useState<SiteStyles>({
     button_styles: { main: [], secondary: [] },
     link_styles: { primary: [], secondary: [] },
+    heading_styles: DEFAULT_HEADING_STYLES,
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -78,6 +80,7 @@ export default function StylesPage() {
         setData({
           button_styles: s.button_styles || { main: [], secondary: [] },
           link_styles: s.link_styles || { primary: [], secondary: [] },
+          heading_styles: s.heading_styles || DEFAULT_HEADING_STYLES,
         });
       })
       .catch(() => toast.error("Failed to load styles"))
@@ -93,6 +96,7 @@ export default function StylesPage() {
         body: JSON.stringify({
           button_styles: data.button_styles,
           link_styles: data.link_styles,
+          heading_styles: data.heading_styles,
         }),
       });
       if (res.ok) toast.success("Styles saved");
@@ -167,6 +171,32 @@ export default function StylesPage() {
               type={type}
               styles={data.button_styles[type]}
               onChange={(styles) => updateButtonStyles(type, styles)}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Heading Styles */}
+      <div className="mb-12">
+        <h3 className="font-display font-semibold text-lg text-charcoal mb-1">
+          Heading Styles
+        </h3>
+        <p className="text-gray-400 text-sm mb-6">
+          Configure default styles for H1, H2, and H3 headings across the site.
+        </p>
+
+        <div className="space-y-4">
+          {(["h1", "h2", "h3"] as const).map((level) => (
+            <HeadingStyleEditor
+              key={level}
+              level={level}
+              style={data.heading_styles[level]}
+              onChange={(updated) =>
+                setData((prev) => ({
+                  ...prev,
+                  heading_styles: { ...prev.heading_styles, [level]: updated },
+                }))
+              }
             />
           ))}
         </div>
@@ -771,6 +801,168 @@ function LinkStyleEditor({
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+// ─── Heading Style Editor ───
+
+function HeadingStyleEditor({
+  level,
+  style,
+  onChange,
+}: {
+  level: "h1" | "h2" | "h3";
+  style: HeadingStyle;
+  onChange: (style: HeadingStyle) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const update = (key: keyof HeadingStyle, value: string) => {
+    onChange({ ...style, [key]: value });
+  };
+
+  const levelLabels = { h1: "H1 — Primary Heading", h2: "H2 — Section Heading", h3: "H3 — Sub Heading" };
+  const levelColors = { h1: "bg-teal", h2: "bg-blue-500", h3: "bg-purple-500" };
+
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div
+        className="px-5 py-4 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors"
+        onClick={() => setOpen(!open)}
+      >
+        <div className="flex items-center gap-4">
+          <span className={`w-2.5 h-2.5 rounded-full ${levelColors[level]}`} />
+          <div className="flex items-center gap-4">
+            <h4 className="font-semibold text-sm text-charcoal">
+              {levelLabels[level]}
+            </h4>
+            {/* Live preview */}
+            <span
+              style={{
+                fontSize: level === "h1" ? "28px" : level === "h2" ? "22px" : "18px",
+                fontWeight: style.fontWeight,
+                fontFamily: style.fontFamily === "inherit" ? undefined : style.fontFamily,
+                color: style.color,
+                letterSpacing: style.letterSpacing === "normal" ? undefined : style.letterSpacing,
+                textTransform: style.textTransform as React.CSSProperties["textTransform"],
+                lineHeight: "1",
+              }}
+            >
+              Sample Text
+            </span>
+          </div>
+        </div>
+        <svg
+          className={`w-4 h-4 text-gray-400 transition-transform ${open ? "rotate-180" : ""}`}
+          fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </div>
+
+      {open && (
+        <div className="px-5 py-4 bg-gray-50/50 border-t border-gray-100">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+            <StyleField label="Font Family">
+              <select
+                value={style.fontFamily}
+                onChange={(e) => update("fontFamily", e.target.value)}
+                className="style-input"
+              >
+                {FONT_OPTIONS.map((f) => <option key={f} value={f}>{f}</option>)}
+              </select>
+            </StyleField>
+            <StyleField label="Font Size">
+              <input
+                type="text"
+                value={style.fontSize}
+                onChange={(e) => update("fontSize", e.target.value)}
+                className="style-input"
+                placeholder="clamp(1.5rem, 4vw, 2.25rem)"
+              />
+            </StyleField>
+
+            <StyleField label="Font Weight">
+              <select
+                value={style.fontWeight}
+                onChange={(e) => update("fontWeight", e.target.value)}
+                className="style-input"
+              >
+                {FONT_WEIGHT_OPTIONS.map((w) => (
+                  <option key={w.value} value={w.value}>{w.label}</option>
+                ))}
+              </select>
+            </StyleField>
+            <StyleField label="Color">
+              <ColorInput value={style.color} onChange={(v) => update("color", v)} />
+            </StyleField>
+
+            <StyleField label="Line Height">
+              <input
+                type="text"
+                value={style.lineHeight}
+                onChange={(e) => update("lineHeight", e.target.value)}
+                className="style-input"
+                placeholder="1.2"
+              />
+            </StyleField>
+            <StyleField label="Letter Spacing">
+              <input
+                type="text"
+                value={style.letterSpacing}
+                onChange={(e) => update("letterSpacing", e.target.value)}
+                className="style-input"
+                placeholder="normal or -0.02em"
+              />
+            </StyleField>
+
+            <StyleField label="Text Transform">
+              <select
+                value={style.textTransform}
+                onChange={(e) => update("textTransform", e.target.value)}
+                className="style-input"
+              >
+                {TEXT_TRANSFORM_OPTIONS.map((t) => (
+                  <option key={t.value} value={t.value}>{t.label}</option>
+                ))}
+              </select>
+            </StyleField>
+            <StyleField label="Margin Bottom">
+              <input
+                type="text"
+                value={style.marginBottom}
+                onChange={(e) => update("marginBottom", e.target.value)}
+                className="style-input"
+                placeholder="16px"
+              />
+            </StyleField>
+
+            {/* Full-width live preview */}
+            <div className="col-span-2 mt-2">
+              <p className="text-[10px] uppercase text-gray-400 font-semibold mb-2">Preview</p>
+              <div className="p-6 bg-white rounded-lg border border-gray-200">
+                <div
+                  style={{
+                    fontSize: style.fontSize,
+                    fontWeight: style.fontWeight,
+                    fontFamily: style.fontFamily === "inherit" ? undefined : style.fontFamily,
+                    color: style.color,
+                    lineHeight: style.lineHeight,
+                    letterSpacing: style.letterSpacing === "normal" ? undefined : style.letterSpacing,
+                    textTransform: style.textTransform as React.CSSProperties["textTransform"],
+                    marginBottom: style.marginBottom,
+                  }}
+                >
+                  The quick brown fox jumps over the lazy dog
+                </div>
+                <p className="text-sm text-gray-400">
+                  Body text for context — this is what content below the heading looks like.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

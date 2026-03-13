@@ -52,7 +52,7 @@ async function getSiteStyles(): Promise<SiteStyles> {
     const { data: rows } = await supabase
       .from("global_settings")
       .select("key, value")
-      .in("key", ["button_styles", "link_styles"]);
+      .in("key", ["button_styles", "link_styles", "heading_styles"]);
 
     if (!rows) return EMPTY_SITE_STYLES;
 
@@ -64,6 +64,7 @@ async function getSiteStyles(): Promise<SiteStyles> {
     return {
       button_styles: (map.button_styles as SiteStyles["button_styles"]) || EMPTY_SITE_STYLES.button_styles,
       link_styles: (map.link_styles as SiteStyles["link_styles"]) || EMPTY_SITE_STYLES.link_styles,
+      heading_styles: (map.heading_styles as SiteStyles["heading_styles"]) || EMPTY_SITE_STYLES.heading_styles,
     };
   } catch {
     return EMPTY_SITE_STYLES;

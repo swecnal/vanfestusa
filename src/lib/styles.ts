@@ -37,6 +37,58 @@ export interface LinkStyle {
   letterSpacing: string;
 }
 
+// ─── Heading Style ───
+
+export interface HeadingStyle {
+  fontSize: string;
+  fontWeight: string;
+  fontFamily: string;
+  color: string;
+  lineHeight: string;
+  letterSpacing: string;
+  textTransform: string;
+  marginBottom: string;
+}
+
+export type HeadingStyles = {
+  h1: HeadingStyle;
+  h2: HeadingStyle;
+  h3: HeadingStyle;
+};
+
+export const DEFAULT_HEADING_STYLES: HeadingStyles = {
+  h1: {
+    fontSize: "clamp(2.25rem, 5vw, 3.75rem)",
+    fontWeight: "900",
+    fontFamily: "Gothic A1",
+    color: "#1e293b",
+    lineHeight: "1.1",
+    letterSpacing: "-0.02em",
+    textTransform: "none",
+    marginBottom: "16px",
+  },
+  h2: {
+    fontSize: "clamp(1.875rem, 4vw, 2.25rem)",
+    fontWeight: "900",
+    fontFamily: "Gothic A1",
+    color: "#1e293b",
+    lineHeight: "1.2",
+    letterSpacing: "-0.01em",
+    textTransform: "none",
+    marginBottom: "12px",
+  },
+  h3: {
+    fontSize: "clamp(1.25rem, 3vw, 1.5rem)",
+    fontWeight: "700",
+    fontFamily: "Gothic A1",
+    color: "#1e293b",
+    lineHeight: "1.3",
+    letterSpacing: "normal",
+    textTransform: "none",
+    marginBottom: "8px",
+  },
+};
+
 // ─── Site Styles (fetched from global_settings) ───
 
 export interface SiteStyles {
@@ -48,11 +100,13 @@ export interface SiteStyles {
     primary: LinkStyle[];
     secondary: LinkStyle[];
   };
+  heading_styles: HeadingStyles;
 }
 
 export const EMPTY_SITE_STYLES: SiteStyles = {
   button_styles: { main: [], secondary: [] },
   link_styles: { primary: [], secondary: [] },
+  heading_styles: DEFAULT_HEADING_STYLES,
 };
 
 // ─── Convert ButtonStyle to inline CSS ───
@@ -116,6 +170,21 @@ export function linkStyleToCSS(style: LinkStyle): CSSProperties {
     textTransform: style.textTransform as CSSProperties["textTransform"],
     letterSpacing: style.letterSpacing === "normal" ? undefined : style.letterSpacing,
     transition: "all 0.2s ease",
+  };
+}
+
+// ─── Convert HeadingStyle to inline CSS ───
+
+export function headingStyleToCSS(style: HeadingStyle): CSSProperties {
+  return {
+    fontSize: style.fontSize,
+    fontWeight: style.fontWeight,
+    fontFamily: style.fontFamily === "inherit" ? undefined : style.fontFamily,
+    color: style.color,
+    lineHeight: style.lineHeight,
+    letterSpacing: style.letterSpacing === "normal" ? undefined : style.letterSpacing,
+    textTransform: style.textTransform as CSSProperties["textTransform"],
+    marginBottom: style.marginBottom,
   };
 }
 
