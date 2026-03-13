@@ -221,38 +221,7 @@ function SectionFields({
 
     case "feature_grid":
       return (
-        <div className="space-y-3">
-          <Field label="Heading Title">
-            <input
-              type="text"
-              value={((data.heading as Record<string, unknown>)?.title as string) || ""}
-              onChange={(e) =>
-                updateData("heading", {
-                  ...(data.heading as Record<string, unknown>),
-                  title: e.target.value,
-                })
-              }
-              className="input-sm"
-            />
-          </Field>
-          <Field label="Columns">
-            <select
-              value={String(data.columns || 3)}
-              onChange={(e) => updateData("columns", Number(e.target.value))}
-              className="input-sm"
-            >
-              <option value="2">2</option>
-              <option value="3">3</option>
-            </select>
-          </Field>
-          <Field label="Items">
-            <ArrayEditor
-              items={(data.items as Array<Record<string, string>>) || []}
-              onChange={(items) => updateData("items", items)}
-              fields={["title", "description"]}
-            />
-          </Field>
-        </div>
+        <FeatureGridEditor data={data} updateData={updateData} siteStyles={siteStyles} />
       );
 
     case "faq_accordion":
@@ -1300,6 +1269,166 @@ function TextBlockEditor({
         />
         Apply prose typography
       </label>
+    </div>
+  );
+}
+
+function FeatureGridEditor({
+  data,
+  updateData,
+  siteStyles,
+}: {
+  data: Record<string, unknown>;
+  updateData: (key: string, value: unknown) => void;
+  siteStyles: SiteStyles;
+}) {
+  const heading = (data.heading as Record<string, unknown>) || {};
+  const items = (data.items as Array<Record<string, unknown>>) || [];
+
+  const updateItem = (index: number, key: string, value: unknown) => {
+    const next = [...items];
+    next[index] = { ...next[index], [key]: value };
+    updateData("items", next);
+  };
+
+  const updateItemAction = (index: number, key: string, value: unknown) => {
+    const next = [...items];
+    const action = (next[index].action as Record<string, unknown>) || { type: "button", text: "", href: "" };
+    next[index] = { ...next[index], action: { ...action, [key]: value } };
+    updateData("items", next);
+  };
+
+  return (
+    <div className="space-y-3">
+      <Field label="Heading Title">
+        <input
+          type="text"
+          value={(heading.title as string) || ""}
+          onChange={(e) => updateData("heading", { ...heading, title: e.target.value })}
+          className="input-sm"
+        />
+      </Field>
+      <Field label="Heading Subtitle">
+        <input
+          type="text"
+          value={(heading.subtitle as string) || ""}
+          onChange={(e) => updateData("heading", { ...heading, subtitle: e.target.value })}
+          className="input-sm"
+        />
+      </Field>
+      <label className="flex items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          checked={(heading.light as boolean) || false}
+          onChange={(e) => updateData("heading", { ...heading, light: e.target.checked })}
+        />
+        Light text (dark background)
+      </label>
+      <Field label="Columns">
+        <select
+          value={String(data.columns || 3)}
+          onChange={(e) => updateData("columns", Number(e.target.value))}
+          className="input-sm"
+        >
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+        </select>
+      </Field>
+
+      {items.map((item, i) => (
+        <details key={i} className="border border-gray-200 rounded-lg">
+          <summary className="px-3 py-2 text-xs font-semibold text-gray-600 cursor-pointer hover:bg-gray-50">
+            Item {i + 1}: {(item.title as string) || "Untitled"}
+          </summary>
+          <div className="p-3 space-y-3 border-t border-gray-100">
+            <Field label="Title">
+              <input type="text" value={(item.title as string) || ""} onChange={(e) => updateItem(i, "title", e.target.value)} className="input-sm" />
+            </Field>
+            <TextStyleEditor label="Title Style" value={(item.titleStyle as TextStyleConfig) || {}} onChange={(s) => updateItem(i, "titleStyle", s)} />
+            <Field label="Subtitle">
+              <input type="text" value={(item.subtitle as string) || ""} onChange={(e) => updateItem(i, "subtitle", e.target.value)} className="input-sm" />
+            </Field>
+            <TextStyleEditor label="Subtitle Style" value={(item.subtitleStyle as TextStyleConfig) || {}} onChange={(s) => updateItem(i, "subtitleStyle", s)} />
+            <Field label="Description">
+              <textarea value={(item.description as string) || ""} onChange={(e) => updateItem(i, "description", e.target.value)} className="input-sm" rows={2} />
+            </Field>
+            <TextStyleEditor label="Description Style" value={(item.descriptionStyle as TextStyleConfig) || {}} onChange={(s) => updateItem(i, "descriptionStyle", s)} />
+
+            {/* Icon */}
+            <Field label="Icon SVG">
+              <textarea
+                value={(item.iconSvg as string) || ""}
+                onChange={(e) => updateItem(i, "iconSvg", e.target.value)}
+                className="input-sm font-mono"
+                rows={2}
+                placeholder='<svg>...</svg>'
+              />
+            </Field>
+            <Field label="Icon Image (alternative to SVG)">
+              <ImagePicker value={(item.iconImage as string) || ""} onChange={(url) => updateItem(i, "iconImage", url)} />
+            </Field>
+            <p className="text-[10px] text-gray-400 italic">Recommended: 64x64px. Icon image overrides SVG if both set.</p>
+
+            {/* Action */}
+            <details className="border border-gray-100 rounded-lg">
+              <summary className="px-2 py-1.5 text-[10px] font-semibold text-gray-400 uppercase cursor-pointer hover:bg-gray-50">
+                Action (Button/Link)
+              </summary>
+              <div className="p-2 space-y-2 border-t border-gray-100">
+                <Field label="Type">
+                  <select
+                    value={((item.action as Record<string, unknown>)?.type as string) || "button"}
+                    onChange={(e) => updateItemAction(i, "type", e.target.value)}
+                    className="input-sm"
+                  >
+                    <option value="button">Button</option>
+                    <option value="link">Link</option>
+                  </select>
+                </Field>
+                <Field label="Text">
+                  <input type="text" value={((item.action as Record<string, unknown>)?.text as string) || ""} onChange={(e) => updateItemAction(i, "text", e.target.value)} className="input-sm" />
+                </Field>
+                <Field label="URL">
+                  <input type="text" value={((item.action as Record<string, unknown>)?.href as string) || ""} onChange={(e) => updateItemAction(i, "href", e.target.value)} className="input-sm" />
+                </Field>
+                <label className="flex items-center gap-2 text-xs">
+                  <input type="checkbox" checked={((item.action as Record<string, unknown>)?.external as boolean) || false} onChange={(e) => updateItemAction(i, "external", e.target.checked)} />
+                  Open in new tab
+                </label>
+                {((item.action as Record<string, unknown>)?.type as string) === "button" && (
+                  <ButtonStylePicker
+                    value={(item.action as Record<string, unknown>)?.styleId as string | undefined}
+                    onChange={(id) => updateItemAction(i, "styleId", id)}
+                    siteStyles={siteStyles}
+                  />
+                )}
+                {((item.action as Record<string, unknown>)?.text as string) && (
+                  <button
+                    onClick={() => updateItem(i, "action", undefined)}
+                    className="text-red-400 hover:text-red-600 text-[10px] font-semibold"
+                  >
+                    Remove Action
+                  </button>
+                )}
+              </div>
+            </details>
+
+            <button
+              onClick={() => updateData("items", items.filter((_, idx) => idx !== i))}
+              className="text-red-400 hover:text-red-600 text-xs font-semibold"
+            >
+              Remove Item
+            </button>
+          </div>
+        </details>
+      ))}
+      <button
+        onClick={() => updateData("items", [...items, { title: "New Feature", description: "" }])}
+        className="text-teal hover:text-teal-dark text-xs font-semibold transition-colors"
+      >
+        + Add Item
+      </button>
     </div>
   );
 }

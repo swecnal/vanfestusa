@@ -160,11 +160,23 @@ export interface TwoColumnCardsData {
 
 export interface FeatureGridData {
   heading?: { title: string; subtitle?: string; light?: boolean };
-  columns?: 2 | 3;
+  columns?: 2 | 3 | 4;
   items: Array<{
     iconSvg?: string;
+    iconImage?: string;
     title: string;
+    subtitle?: string;
     description: string;
+    titleStyle?: import("@/lib/styles").TextStyleConfig;
+    subtitleStyle?: import("@/lib/styles").TextStyleConfig;
+    descriptionStyle?: import("@/lib/styles").TextStyleConfig;
+    action?: {
+      type: "button" | "link";
+      text: string;
+      href: string;
+      external?: boolean;
+      styleId?: string;
+    };
   }>;
 }
 
