@@ -31,7 +31,7 @@ interface VehicleStreamConfig {
   // Vehicle stream fields
   seed: number;
   count: number;
-  signs: string[];
+  signs: Array<{ text: string; scale: number }>;
   // Wave/zigzag/curve/straight fields
   fromColor: string;
   toColor: string;
@@ -97,7 +97,12 @@ const EMPTY_STREAM: VehicleStreamConfig = {
   marginBottom: "0px",
   seed: 777,
   count: 14,
-  signs: ["COMMUNITY", "MUSIC", "MEMORIES", "VANFEST"],
+  signs: [
+    { text: "COMMUNITY", scale: 1 },
+    { text: "MUSIC", scale: 1 },
+    { text: "MEMORIES", scale: 1 },
+    { text: "VANFEST", scale: 2 },
+  ],
   fromColor: "#ffffff",
   toColor: "#1a1a1a",
   height: 60,
@@ -132,7 +137,12 @@ export default function FooterEditorPage() {
           setConfig(s.footer_config as FooterConfig);
         }
         if (s.vehicle_stream_config) {
-          setStream({ ...EMPTY_STREAM, ...(s.vehicle_stream_config as VehicleStreamConfig) });
+          const raw = s.vehicle_stream_config as Record<string, unknown>;
+          // Normalize old string[] signs to new object format
+          if (Array.isArray(raw.signs) && raw.signs.length > 0 && typeof raw.signs[0] === "string") {
+            raw.signs = (raw.signs as string[]).map((t: string) => ({ text: t, scale: 1 }));
+          }
+          setStream({ ...EMPTY_STREAM, ...(raw as unknown as VehicleStreamConfig) });
         }
       })
       .catch(() => toast.error("Failed to load footer config"))
@@ -199,10 +209,10 @@ export default function FooterEditorPage() {
     });
   };
 
-  const updateSign = (index: number, value: string) => {
+  const updateSign = (index: number, key: "text" | "scale", value: string | number) => {
     setStream((prev) => {
       const signs = [...prev.signs];
-      signs[index] = value;
+      signs[index] = { ...signs[index], [key]: value };
       return { ...prev, signs };
     });
   };
@@ -337,7 +347,7 @@ export default function FooterEditorPage() {
                   <div className="flex items-center justify-between mb-1">
                     <label className="block text-xs text-gray-500">Road Signs</label>
                     <button
-                      onClick={() => setStream((prev) => ({ ...prev, signs: [...prev.signs, "NEW"] }))}
+                      onClick={() => setStream((prev) => ({ ...prev, signs: [...prev.signs, { text: "NEW", scale: 1 }] }))}
                       className="text-teal hover:text-teal-dark text-xs font-semibold"
                     >
                       + Add Sign
@@ -348,10 +358,23 @@ export default function FooterEditorPage() {
                       <div key={i} className="flex items-center gap-2">
                         <input
                           type="text"
-                          value={sign}
-                          onChange={(e) => updateSign(i, e.target.value)}
+                          value={sign.text}
+                          onChange={(e) => updateSign(i, "text", e.target.value)}
                           className="flex-1 px-2 py-1.5 border border-gray-200 rounded text-xs uppercase"
+                          placeholder="Sign text"
                         />
+                        <div className="flex items-center gap-1">
+                          <label className="text-[10px] text-gray-400 whitespace-nowrap">Size</label>
+                          <input
+                            type="number"
+                            value={sign.scale}
+                            min={0.5}
+                            max={4}
+                            step={0.25}
+                            onChange={(e) => updateSign(i, "scale", Number(e.target.value))}
+                            className="w-16 px-1.5 py-1.5 border border-gray-200 rounded text-xs text-center"
+                          />
+                        </div>
                         <button
                           onClick={() => setStream((prev) => ({ ...prev, signs: prev.signs.filter((_, idx) => idx !== i) }))}
                           className="text-gray-300 hover:text-red-500 p-1"

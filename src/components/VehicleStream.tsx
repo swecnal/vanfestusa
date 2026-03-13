@@ -364,7 +364,7 @@ export interface VehicleStreamConfig {
   // Vehicle stream fields
   seed?: number;
   count?: number;
-  signs?: string[];
+  signs?: Array<string | { text: string; scale?: number }>;
   // Wave/zigzag/curve/straight fields
   fromColor?: string;
   toColor?: string;
@@ -387,52 +387,84 @@ export interface VehicleStreamConfig {
   festivalSeed?: number;
 }
 
+export interface NormalizedSign {
+  text: string;
+  scale: number;
+}
+
+function normalizeSigns(signs: VehicleStreamConfig["signs"]): NormalizedSign[] {
+  const raw = signs ?? ["COMMUNITY", "MUSIC", "MEMORIES", "VANFEST"];
+  return raw.map((s) =>
+    typeof s === "string" ? { text: s, scale: 1 } : { text: s.text, scale: s.scale ?? 1 }
+  );
+}
+
+// Estimate sign height in px for a given scale (bottom offset + pole + arrow + text)
+function estimateSignHeight(scale: number): number {
+  return 12 + Math.round(20 * scale) + Math.round(16 * scale) + Math.round(34 * scale) + 4;
+}
+
 export default function VehicleStream({ config }: { config?: VehicleStreamConfig | null }) {
   const enabled = config?.enabled ?? true;
   const seed = config?.seed ?? 777;
   const count = config?.count ?? 14;
-  const signs = config?.signs ?? ["COMMUNITY", "MUSIC", "MEMORIES", "VANFEST"];
+
+  const normalizedSigns = useMemo(() => normalizeSigns(config?.signs), [config?.signs]);
 
   const vehicles = useMemo(() => generateStream(seed, count), [seed, count]);
 
-  // Total cycle time = max delay + longest duration, so we can
-  // set negative delays to pre-distribute vehicles across the viewport
-  const cycleTime = useMemo(() => {
-    const maxDelay = vehicles[vehicles.length - 1]?.delay ?? 0;
-    return maxDelay + 4; // add buffer
-  }, [vehicles]);
+  // Section height = enough for the tallest sign, minimum 90px for vehicles
+  const sectionHeight = useMemo(() => {
+    const maxSignH = Math.max(...normalizedSigns.map((s) => estimateSignHeight(s.scale)));
+    return Math.max(90, maxSignH);
+  }, [normalizedSigns]);
 
   if (!enabled) return null;
 
   return (
     <section
-      className="relative overflow-hidden bg-sand"
-      style={{ height: "90px" }}
+      className="relative bg-sand"
+      style={{ height: sectionHeight }}
     >
-      {/* Road signs */}
-      {signs.map((text, i) => {
-        const big = i === signs.length - 1;
-        const spacing = signs.length > 1 ? 70 / (signs.length - 1) : 0;
-        const leftPct = signs.length === 1 ? 50 : 15 + i * spacing;
+      {/* Road signs — outside overflow container so they're never clipped */}
+      {normalizedSigns.map((sign, i) => {
+        const s = sign.scale;
+        const spacing = normalizedSigns.length > 1 ? 70 / (normalizedSigns.length - 1) : 0;
+        const leftPct = normalizedSigns.length === 1 ? 50 : 15 + i * spacing;
+        const fontSize = Math.round(9 * s);
+        const arrowW = Math.round(18 * s);
+        const arrowH = Math.round(8 * s);
+        const poleH = Math.round(12 * s);
+        const poleW = Math.max(1, Math.round(s));
         return (
           <div
-            key={`${text}-${i}`}
-            className="absolute bottom-3 flex flex-col items-center"
+            key={`${sign.text}-${i}`}
+            className="absolute bottom-3 flex flex-col items-center z-10"
             style={{ left: `${leftPct}%` }}
           >
-            <div className={`bg-teal/90 text-white font-display font-bold tracking-widest rounded-sm shadow-sm ${big ? "text-[18px] px-5 py-2" : "text-[9px] px-2.5 py-1"}`}>
-              {text}
+            <div
+              className="bg-teal/90 text-white font-display font-bold tracking-widest rounded-sm shadow-sm whitespace-nowrap"
+              style={{ fontSize, padding: `${Math.round(4 * s)}px ${Math.round(10 * s)}px` }}
+            >
+              {sign.text}
             </div>
-            <svg width={big ? 36 : 18} height={big ? 16 : 8} viewBox={big ? "0 0 36 16" : "0 0 18 8"} className="mt-0.5">
-              <path d={big ? "M4 8 L24 8 M20 3 L28 8 L20 13" : "M2 4 L12 4 M10 1.5 L14 4 L10 6.5"} stroke="#1CA288" strokeWidth={big ? 2.5 : 1.5} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+            <svg width={arrowW} height={arrowH} viewBox={`0 0 ${arrowW} ${arrowH}`} className="mt-0.5">
+              <path
+                d={`M${arrowW * 0.11} ${arrowH * 0.5} L${arrowW * 0.67} ${arrowH * 0.5} M${arrowW * 0.56} ${arrowH * 0.19} L${arrowW * 0.78} ${arrowH * 0.5} L${arrowW * 0.56} ${arrowH * 0.81}`}
+                stroke="#1CA288"
+                strokeWidth={Math.max(1, 1.5 * s)}
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
-            <div className={big ? "w-1 h-5 bg-teal/40" : "w-0.5 h-3 bg-teal/40"} />
+            <div style={{ width: poleW, height: poleH }} className="bg-teal/40" />
           </div>
         );
       })}
 
       {/* Dashed road line */}
-      <div className="absolute bottom-3 left-0 w-full">
+      <div className="absolute bottom-3 left-0 w-full z-[5]">
         <svg width="100%" height="4" className="block">
           <line
             x1="0"
@@ -447,21 +479,24 @@ export default function VehicleStream({ config }: { config?: VehicleStreamConfig
         </svg>
       </div>
 
-      {vehicles.map((v, i) => {
-        const vRng = seededRandom(v.rngSeed);
-        return (
-          <div
-            key={i}
-            className="absolute bottom-4"
-            style={{
-              animation: `vehicle-stream ${v.duration}s linear -${v.delay}s infinite`,
-              willChange: "transform",
-            }}
-          >
-            {renderVehicle(v.type, v.color, vRng)}
-          </div>
-        );
-      })}
+      {/* Vehicles — in their own overflow-hidden container */}
+      <div className="absolute inset-0 overflow-hidden">
+        {vehicles.map((v, i) => {
+          const vRng = seededRandom(v.rngSeed);
+          return (
+            <div
+              key={i}
+              className="absolute bottom-4"
+              style={{
+                animation: `vehicle-stream ${v.duration}s linear -${v.delay}s infinite`,
+                willChange: "transform",
+              }}
+            >
+              {renderVehicle(v.type, v.color, vRng)}
+            </div>
+          );
+        })}
+      </div>
 
       <style>{`
         @keyframes vehicle-stream {
