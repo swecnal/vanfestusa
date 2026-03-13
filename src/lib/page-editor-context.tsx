@@ -9,21 +9,16 @@ interface PageEditorContextValue {
   addSection: AddSectionFn | null;
   registerHandler: (fn: AddSectionFn) => void;
   unregisterHandler: () => void;
-  editPaneMode: "floating" | "static";
-  setEditPaneMode: (mode: "floating" | "static") => void;
 }
 
 const PageEditorContext = createContext<PageEditorContextValue>({
   addSection: null,
   registerHandler: () => {},
   unregisterHandler: () => {},
-  editPaneMode: "floating",
-  setEditPaneMode: () => {},
 });
 
 export function PageEditorProvider({ children }: { children: React.ReactNode }) {
   const [handler, setHandler] = useState<AddSectionFn | null>(null);
-  const [editPaneMode, setEditPaneMode] = useState<"floating" | "static">("floating");
 
   const registerHandler = useCallback((fn: AddSectionFn) => {
     setHandler(() => fn);
@@ -34,7 +29,7 @@ export function PageEditorProvider({ children }: { children: React.ReactNode }) 
   }, []);
 
   return (
-    <PageEditorContext.Provider value={{ addSection: handler, registerHandler, unregisterHandler, editPaneMode, setEditPaneMode }}>
+    <PageEditorContext.Provider value={{ addSection: handler, registerHandler, unregisterHandler }}>
       {children}
     </PageEditorContext.Provider>
   );

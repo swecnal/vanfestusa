@@ -147,6 +147,41 @@ export default function SettingsPage() {
           </SettingsField>
         </SettingsCard>
 
+        {/* Editor Preferences */}
+        <SettingsCard title="Editor">
+          <SettingsField label="Edit Pane Mode">
+            <div className="flex gap-3">
+              {(["floating", "static"] as const).map((mode) => (
+                <label
+                  key={mode}
+                  className={`flex-1 flex items-center gap-2 p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                    (settings.edit_pane_mode as string || "floating") === mode
+                      ? "border-teal bg-teal/5"
+                      : "border-gray-200 hover:border-gray-300"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="edit_pane_mode"
+                    value={mode}
+                    checked={(settings.edit_pane_mode as string || "floating") === mode}
+                    onChange={() => updateSetting("edit_pane_mode", mode)}
+                    className="accent-teal"
+                  />
+                  <div>
+                    <p className="text-sm font-semibold text-charcoal capitalize">{mode}</p>
+                    <p className="text-xs text-gray-400">
+                      {mode === "floating"
+                        ? "Editor overlays page content"
+                        : "Editor docks to side, content resizes"}
+                    </p>
+                  </div>
+                </label>
+              ))}
+            </div>
+          </SettingsField>
+        </SettingsCard>
+
         {/* Raw JSON editor for advanced settings */}
         <SettingsCard title="Advanced (JSON)">
           <textarea

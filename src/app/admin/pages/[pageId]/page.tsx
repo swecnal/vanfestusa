@@ -226,7 +226,8 @@ export default function PageEditorPage() {
   const [editingSettings, setEditingSettings] = useState<Record<string, unknown> | null>(null);
   const dragCounter = useRef(0);
 
-  const { registerHandler, unregisterHandler, editPaneMode } = usePageEditor();
+  const { registerHandler, unregisterHandler } = usePageEditor();
+  const [editPaneMode, setEditPaneMode] = useState<"floating" | "static">("floating");
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -247,7 +248,7 @@ export default function PageEditorPage() {
     fetchPage();
   }, [fetchPage]);
 
-  // Fetch site styles for live section rendering
+  // Fetch site styles + editor preferences
   useEffect(() => {
     fetch("/api/global-settings")
       .then((r) => r.json())
@@ -258,6 +259,8 @@ export default function PageEditorPage() {
           link_styles: s.link_styles || { primary: [], secondary: [] },
           heading_styles: s.heading_styles || EMPTY_SITE_STYLES.heading_styles,
         });
+        const mode = s.edit_pane_mode;
+        if (mode === "floating" || mode === "static") setEditPaneMode(mode);
       })
       .catch(() => {});
   }, []);

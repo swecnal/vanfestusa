@@ -106,7 +106,6 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [elementsOpen, setElementsOpen] = useState(true);
   const [sidebarHover, setSidebarHover] = useState(false);
-  const { editPaneMode, setEditPaneMode } = usePageEditor();
 
   const isLoginPage = pathname === "/admin/login" || pathname === "/admin/change-password";
   const isPageEditor = pathname.startsWith("/admin/pages/") && pathname !== "/admin/pages";
@@ -126,30 +125,12 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   useEffect(() => {
     if (!isLoginPage) {
       fetchUser();
-      // Load edit pane mode preference
-      fetch("/api/global-settings")
-        .then((r) => r.json())
-        .then((res) => {
-          const mode = res.settings?.edit_pane_mode;
-          if (mode === "floating" || mode === "static") setEditPaneMode(mode);
-        })
-        .catch(() => {});
     }
-  }, [isLoginPage, fetchUser, setEditPaneMode]);
+  }, [isLoginPage, fetchUser]);
 
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
     router.push("/admin/login");
-  };
-
-  const toggleEditPaneMode = async () => {
-    const next = editPaneMode === "floating" ? "static" : "floating";
-    setEditPaneMode(next);
-    await fetch("/api/global-settings", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ edit_pane_mode: next }),
-    });
   };
 
   // Login / change-password gets no shell
@@ -329,22 +310,6 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
           <h1 className="text-lg font-display font-semibold text-charcoal">
             {getTopBarTitle()}
           </h1>
-          {isPageEditor && (
-            <button
-              onClick={toggleEditPaneMode}
-              className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-charcoal transition-colors px-2 py-1 rounded hover:bg-gray-100"
-              title={`Switch to ${editPaneMode === "floating" ? "static" : "floating"} editor pane`}
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                {editPaneMode === "floating" ? (
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 8.25V18a2.25 2.25 0 002.25 2.25h13.5A2.25 2.25 0 0021 18V8.25m-18 0V6a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 6v2.25m-18 0h18M5.25 6h.008v.008H5.25V6zM7.5 6h.008v.008H7.5V6zm2.25 0h.008v.008H9.75V6z" />
-                ) : (
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 4.5v15m6-15v15m-10.875 0h15.75c.621 0 1.125-.504 1.125-1.125V5.625c0-.621-.504-1.125-1.125-1.125H4.125C3.504 4.5 3 5.004 3 5.625v12.75c0 .621.504 1.125 1.125 1.125z" />
-                )}
-              </svg>
-              {editPaneMode === "floating" ? "Floating" : "Static"}
-            </button>
-          )}
         </header>
 
         {/* Page content */}
