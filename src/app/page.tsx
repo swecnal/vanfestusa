@@ -2,6 +2,7 @@ import HeroCarousel from "@/components/HeroCarousel";
 import VehicleConvoy from "@/components/VehicleConvoy";
 import SponsorMarquee from "@/components/SponsorMarquee";
 import SectionHeading from "@/components/SectionHeading";
+import BuildsCarousel from "@/components/BuildsCarousel";
 import BounceCTA from "@/components/BounceCTA";
 import Link from "next/link";
 
@@ -189,10 +190,11 @@ export default function Home() {
             {upcomingEvents.map((ev) => (
               <div
                 key={ev.name}
-                className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl hover:scale-[1.03] transition-all duration-300"
+                className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl hover:scale-[1.03] transition-all duration-300 flex flex-col"
               >
-                <div
-                  className={`relative bg-gradient-to-r ${ev.color} p-8 text-white overflow-hidden`}
+                <Link
+                  href={ev.href}
+                  className={`relative bg-gradient-to-r ${ev.color} p-10 text-white overflow-hidden block`}
                 >
                   <img src={ev.image} alt="" className="absolute inset-0 w-full h-full object-cover opacity-20 mix-blend-overlay" />
                   <div className="relative">
@@ -207,9 +209,9 @@ export default function Home() {
                       {ev.dates}
                     </p>
                   </div>
-                </div>
-                <div className="p-6">
-                  <p className="text-charcoal/70 text-sm leading-relaxed mb-4">
+                </Link>
+                <div className="p-8 flex flex-col flex-grow">
+                  <p className="text-charcoal/70 text-sm leading-relaxed mb-6 flex-grow">
                     {ev.description}
                   </p>
                   <div className="flex items-center justify-between">
@@ -296,19 +298,8 @@ export default function Home() {
             subtitle="VanFest has dozens of amazing, unique conversions open for tours at each event."
             light
           />
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-10">
-            <div className="rounded-xl overflow-hidden">
-              <img src="/images/image07.jpg" alt="Van build" className="w-full h-40 object-cover hover:scale-105 transition-transform duration-300" />
-            </div>
-            <div className="rounded-xl overflow-hidden">
-              <img src="/images/image12.jpg" alt="Van interior" className="w-full h-40 object-cover hover:scale-105 transition-transform duration-300" />
-            </div>
-            <div className="rounded-xl overflow-hidden">
-              <img src="/images/image14.jpg" alt="Van conversion" className="w-full h-40 object-cover hover:scale-105 transition-transform duration-300" />
-            </div>
-            <div className="rounded-xl overflow-hidden">
-              <img src="/images/image19.jpg" alt="Van touring" className="w-full h-40 object-cover hover:scale-105 transition-transform duration-300" />
-            </div>
+          <div className="mb-10">
+            <BuildsCarousel />
           </div>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link

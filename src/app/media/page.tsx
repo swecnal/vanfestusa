@@ -109,6 +109,8 @@ export default function MediaPage() {
                   alt={img.alt}
                   className="w-full h-auto group-hover:scale-105 transition-transform duration-300"
                   loading="lazy"
+                  decoding="async"
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                 />
               </div>
             ))}
