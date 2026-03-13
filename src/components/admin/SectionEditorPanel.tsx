@@ -4,6 +4,12 @@ import { useState, useEffect } from "react";
 import type { Section } from "@/lib/types";
 import RichTextEditor from "./RichTextEditor";
 import ImagePicker from "./ImagePicker";
+import {
+  type SiteStyles,
+  type ButtonStyle,
+  EMPTY_SITE_STYLES,
+  buttonStyleToCSS,
+} from "@/lib/styles";
 
 interface Props {
   section: Section;
@@ -14,11 +20,26 @@ interface Props {
 export default function SectionEditorPanel({ section, onSave, saving }: Props) {
   const [data, setData] = useState<Record<string, unknown>>(section.data);
   const [settings, setSettings] = useState<Record<string, unknown>>(section.settings as unknown as Record<string, unknown>);
+  const [siteStyles, setSiteStyles] = useState<SiteStyles>(EMPTY_SITE_STYLES);
 
   useEffect(() => {
     setData(section.data);
     setSettings(section.settings as unknown as Record<string, unknown>);
   }, [section.id, section.data, section.settings]);
+
+  // Fetch saved button/link styles once
+  useEffect(() => {
+    fetch("/api/global-settings")
+      .then((r) => r.json())
+      .then((res) => {
+        const s = res.settings || {};
+        setSiteStyles({
+          button_styles: s.button_styles || { main: [], secondary: [] },
+          link_styles: s.link_styles || { primary: [], secondary: [] },
+        });
+      })
+      .catch(() => {});
+  }, []);
 
   const updateData = (key: string, value: unknown) => {
     setData((prev) => ({ ...prev, [key]: value }));
@@ -39,6 +60,7 @@ export default function SectionEditorPanel({ section, onSave, saving }: Props) {
         type={section.section_type}
         data={data}
         updateData={updateData}
+        siteStyles={siteStyles}
       />
 
       {/* Common settings */}
@@ -140,15 +162,17 @@ function SectionFields({
   type,
   data,
   updateData,
+  siteStyles,
 }: {
   type: string;
   data: Record<string, unknown>;
   updateData: (key: string, value: unknown) => void;
+  siteStyles: SiteStyles;
 }) {
   switch (type) {
     case "hero_carousel":
       return (
-        <HeroCarouselEditor data={data} updateData={updateData} />
+        <HeroCarouselEditor data={data} updateData={updateData} siteStyles={siteStyles} />
       );
 
     case "hero_simple":
@@ -249,7 +273,13 @@ function SectionFields({
         </div>
       );
 
-    case "cta_section":
+    case "cta_section": {
+      const ctaButtons = (data.buttons as Array<Record<string, unknown>>) || [];
+      const updateCtaButton = (index: number, key: string, value: unknown) => {
+        const next = [...ctaButtons];
+        next[index] = { ...next[index], [key]: value };
+        updateData("buttons", next);
+      };
       return (
         <div className="space-y-3">
           <Field label="Title">
@@ -276,8 +306,48 @@ function SectionFields({
             />
             Light text
           </label>
+          {ctaButtons.map((btn, i) => (
+            <details key={i} open={i === 0} className="border border-gray-200 rounded-lg">
+              <summary className="px-3 py-2 text-xs font-semibold text-gray-600 cursor-pointer hover:bg-gray-50">
+                Button {i + 1}: {(btn.text as string) || "Untitled"}
+              </summary>
+              <div className="p-3 space-y-3 border-t border-gray-100">
+                <Field label="Text">
+                  <input type="text" value={(btn.text as string) || ""} onChange={(e) => updateCtaButton(i, "text", e.target.value)} className="input-sm" />
+                </Field>
+                <Field label="URL">
+                  <input type="text" value={(btn.href as string) || ""} onChange={(e) => updateCtaButton(i, "href", e.target.value)} className="input-sm" />
+                </Field>
+                <Field label="Variant">
+                  <select value={(btn.variant as string) || "primary"} onChange={(e) => updateCtaButton(i, "variant", e.target.value)} className="input-sm">
+                    <option value="primary">Primary</option>
+                    <option value="secondary">Secondary</option>
+                    <option value="outline">Outline</option>
+                  </select>
+                </Field>
+                <ButtonStylePicker
+                  value={btn.styleId as string | undefined}
+                  onChange={(id) => updateCtaButton(i, "styleId", id)}
+                  siteStyles={siteStyles}
+                />
+                <button
+                  onClick={() => updateData("buttons", ctaButtons.filter((_, idx) => idx !== i))}
+                  className="text-red-400 hover:text-red-600 text-xs font-semibold"
+                >
+                  Remove Button
+                </button>
+              </div>
+            </details>
+          ))}
+          <button
+            onClick={() => updateData("buttons", [...ctaButtons, { text: "Button", href: "#", variant: "primary" }])}
+            className="text-teal hover:text-teal-dark text-xs font-semibold"
+          >
+            + Add Button
+          </button>
         </div>
       );
+    }
 
     case "wave_divider":
       return (
@@ -891,9 +961,11 @@ function ImageArrayEditor({
 function HeroCarouselEditor({
   data,
   updateData,
+  siteStyles,
 }: {
   data: Record<string, unknown>;
   updateData: (key: string, value: unknown) => void;
+  siteStyles: SiteStyles;
 }) {
   const [showJson, setShowJson] = useState(false);
   const slides = (data.slides as Array<{ image: string; alt: string }>) || [];
@@ -1068,6 +1140,11 @@ function HeroCarouselEditor({
             />
             Open in new tab
           </label>
+          <ButtonStylePicker
+            value={primaryCta.styleId as string | undefined}
+            onChange={(id) => updatePrimaryCta("styleId", id)}
+            siteStyles={siteStyles}
+          />
         </div>
       </details>
 
@@ -1095,6 +1172,11 @@ function HeroCarouselEditor({
               placeholder="/events/escape"
             />
           </Field>
+          <ButtonStylePicker
+            value={secondaryCta.styleId as string | undefined}
+            onChange={(id) => updateSecondaryCta("styleId", id)}
+            siteStyles={siteStyles}
+          />
         </div>
       </details>
 
@@ -1198,6 +1280,69 @@ function TextBlockEditor({
         />
         Apply prose typography
       </label>
+    </div>
+  );
+}
+
+function ButtonStylePicker({
+  value,
+  onChange,
+  siteStyles,
+  label,
+}: {
+  value: string | undefined;
+  onChange: (styleId: string | undefined) => void;
+  siteStyles: SiteStyles;
+  label?: string;
+}) {
+  const allStyles = [
+    ...siteStyles.button_styles.main.map((s) => ({ ...s, group: "Main" })),
+    ...siteStyles.button_styles.secondary.map((s) => ({ ...s, group: "Secondary" })),
+  ];
+
+  const selected = allStyles.find((s) => s.id === value);
+
+  return (
+    <div className="space-y-1.5">
+      <label className="block text-xs font-medium text-gray-500">
+        {label || "Button Style"}
+      </label>
+      <select
+        value={value || ""}
+        onChange={(e) => onChange(e.target.value || undefined)}
+        className="input-sm"
+      >
+        <option value="">Default (no style)</option>
+        {siteStyles.button_styles.main.length > 0 && (
+          <optgroup label="Main Styles">
+            {siteStyles.button_styles.main.map((s) => (
+              <option key={s.id} value={s.id}>{s.name}</option>
+            ))}
+          </optgroup>
+        )}
+        {siteStyles.button_styles.secondary.length > 0 && (
+          <optgroup label="Secondary Styles">
+            {siteStyles.button_styles.secondary.map((s) => (
+              <option key={s.id} value={s.id}>{s.name}</option>
+            ))}
+          </optgroup>
+        )}
+      </select>
+      {selected && (
+        <div className="mt-1">
+          <span
+            style={buttonStyleToCSS(selected)}
+            className="pointer-events-none"
+          >
+            {selected.name}
+          </span>
+        </div>
+      )}
+      {allStyles.length === 0 && (
+        <p className="text-[10px] text-gray-400 italic">
+          No styles defined yet. Create them in Styles settings.
+        </p>
+      )}
     </div>
   );
 }

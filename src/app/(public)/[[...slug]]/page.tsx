@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { getSupabaseServer } from "@/lib/supabase/server";
 import SectionRenderer from "@/components/sections/SectionRenderer";
 import type { Section } from "@/lib/types";
+import { type SiteStyles, EMPTY_SITE_STYLES } from "@/lib/styles";
 
 // No caching — CMS changes appear immediately
 export const dynamic = "force-dynamic";
@@ -45,6 +46,30 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
+async function getSiteStyles(): Promise<SiteStyles> {
+  try {
+    const supabase = getSupabaseServer();
+    const { data: rows } = await supabase
+      .from("global_settings")
+      .select("key, value")
+      .in("key", ["button_styles", "link_styles"]);
+
+    if (!rows) return EMPTY_SITE_STYLES;
+
+    const map: Record<string, unknown> = {};
+    for (const row of rows) {
+      map[row.key] = row.value;
+    }
+
+    return {
+      button_styles: (map.button_styles as SiteStyles["button_styles"]) || EMPTY_SITE_STYLES.button_styles,
+      link_styles: (map.link_styles as SiteStyles["link_styles"]) || EMPTY_SITE_STYLES.link_styles,
+    };
+  } catch {
+    return EMPTY_SITE_STYLES;
+  }
+}
+
 export default async function DynamicPage({ params }: PageProps) {
   const { slug } = await params;
   const pageSlug = "/" + (slug?.join("/") || "");
@@ -53,11 +78,12 @@ export default async function DynamicPage({ params }: PageProps) {
   if (!page) notFound();
 
   const sections = (page.sections as Section[]).filter((s) => s.is_visible);
+  const siteStyles = await getSiteStyles();
 
   return (
     <>
       {sections.map((section) => (
-        <SectionRenderer key={section.id} section={section} />
+        <SectionRenderer key={section.id} section={section} siteStyles={siteStyles} />
       ))}
     </>
   );

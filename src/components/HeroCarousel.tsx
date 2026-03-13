@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { type SiteStyles, EMPTY_SITE_STYLES, findButtonStyle, buttonStyleToCSS } from "@/lib/styles";
 
 interface HeroSlide {
   image: string;
@@ -14,19 +15,20 @@ interface EventOverlay {
   location?: string;
   locationUrl?: string;
   dates?: string;
-  primaryCta?: { text: string; href: string; external?: boolean };
-  secondaryCta?: { text: string; href: string };
+  primaryCta?: { text: string; href: string; external?: boolean; styleId?: string };
+  secondaryCta?: { text: string; href: string; styleId?: string };
 }
 
 interface HeroCarouselProps {
   slides: HeroSlide[];
   overlay: EventOverlay;
   autoplayInterval?: number;
+  siteStyles?: SiteStyles;
 }
 
 const textShadow = "0 2px 12px rgba(0,0,0,0.9), 0 0 40px rgba(0,0,0,0.6), 0 4px 20px rgba(0,0,0,0.5)";
 
-export default function HeroCarousel({ slides, overlay, autoplayInterval = 5000 }: HeroCarouselProps) {
+export default function HeroCarousel({ slides, overlay, autoplayInterval = 5000, siteStyles = EMPTY_SITE_STYLES }: HeroCarouselProps) {
   const [current, setCurrent] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const heroCTARef = useRef<HTMLAnchorElement>(null);
@@ -151,25 +153,37 @@ export default function HeroCarousel({ slides, overlay, autoplayInterval = 5000 
             )}
           </div>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            {overlay.primaryCta && (
-              <a
-                ref={heroCTARef}
-                href={overlay.primaryCta.href}
-                target={overlay.primaryCta.external !== false ? "_blank" : undefined}
-                rel={overlay.primaryCta.external !== false ? "noopener noreferrer" : undefined}
-                className="bg-teal hover:bg-teal-dark text-white font-bold px-10 py-4 rounded-xl text-xl shadow-[0_0_30px_rgba(9,181,147,0.5)] hover:shadow-[0_0_50px_rgba(9,181,147,0.7)] transition-all hover:scale-105 animate-pulse-subtle animate-bounce-attention"
-              >
-                {overlay.primaryCta.text}
-              </a>
-            )}
-            {overlay.secondaryCta && (
-              <a
-                href={overlay.secondaryCta.href}
-                className="border-2 border-white/40 hover:border-white text-white font-bold px-8 py-3 rounded-xl text-lg transition-all hover:bg-white/10"
-              >
-                {overlay.secondaryCta.text}
-              </a>
-            )}
+            {overlay.primaryCta && (() => {
+              const style = overlay.primaryCta.styleId
+                ? findButtonStyle(overlay.primaryCta.styleId, siteStyles)
+                : null;
+              return (
+                <a
+                  ref={heroCTARef}
+                  href={overlay.primaryCta.href}
+                  target={overlay.primaryCta.external !== false ? "_blank" : undefined}
+                  rel={overlay.primaryCta.external !== false ? "noopener noreferrer" : undefined}
+                  className={style ? "transition-all hover:scale-105" : "bg-teal hover:bg-teal-dark text-white font-bold px-10 py-4 rounded-xl text-xl shadow-[0_0_30px_rgba(9,181,147,0.5)] hover:shadow-[0_0_50px_rgba(9,181,147,0.7)] transition-all hover:scale-105 animate-pulse-subtle animate-bounce-attention"}
+                  style={style ? buttonStyleToCSS(style) : undefined}
+                >
+                  {overlay.primaryCta.text}
+                </a>
+              );
+            })()}
+            {overlay.secondaryCta && (() => {
+              const style = overlay.secondaryCta.styleId
+                ? findButtonStyle(overlay.secondaryCta.styleId, siteStyles)
+                : null;
+              return (
+                <a
+                  href={overlay.secondaryCta.href}
+                  className={style ? "transition-all" : "border-2 border-white/40 hover:border-white text-white font-bold px-8 py-3 rounded-xl text-lg transition-all hover:bg-white/10"}
+                  style={style ? buttonStyleToCSS(style) : undefined}
+                >
+                  {overlay.secondaryCta.text}
+                </a>
+              );
+            })()}
           </div>
         </div>
       </div>

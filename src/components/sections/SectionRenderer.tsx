@@ -1,4 +1,5 @@
 import type { Section } from "@/lib/types";
+import { type SiteStyles, EMPTY_SITE_STYLES } from "@/lib/styles";
 import HeroCarouselSection from "./HeroCarouselSection";
 import HeroSimpleSection from "./HeroSimpleSection";
 import TextBlockSection from "./TextBlockSection";
@@ -23,9 +24,10 @@ import HtmlBlockSection from "./HtmlBlockSection";
 
 interface Props {
   section: Section;
+  siteStyles?: SiteStyles;
 }
 
-export default function SectionRenderer({ section }: Props) {
+export default function SectionRenderer({ section, siteStyles = EMPTY_SITE_STYLES }: Props) {
   if (!section.is_visible) return null;
 
   const { section_type, data, settings } = section;
@@ -34,7 +36,7 @@ export default function SectionRenderer({ section }: Props) {
   const content = (() => {
     switch (section_type) {
       case "hero_carousel":
-        return <HeroCarouselSection data={data} settings={settings} />;
+        return <HeroCarouselSection data={data} settings={settings} siteStyles={siteStyles} />;
       case "hero_simple":
         return <HeroSimpleSection data={data} settings={settings} />;
       case "text_block":
@@ -48,7 +50,7 @@ export default function SectionRenderer({ section }: Props) {
       case "cta_cards":
         return <CtaCardsSection data={data} settings={settings} />;
       case "cta_section":
-        return <CtaSectionSection data={data} settings={settings} />;
+        return <CtaSectionSection data={data} settings={settings} siteStyles={siteStyles} />;
       case "faq_accordion":
         return <FaqAccordionSection data={data} settings={settings} />;
       case "schedule_accordion":

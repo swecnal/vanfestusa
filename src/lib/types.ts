@@ -361,7 +361,7 @@ export const SECTION_TYPE_LABELS: Record<SectionType, string> = {
   schedule_accordion: "Schedule",
   sponsor_tiers: "Sponsor Tiers",
   sponsor_list: "Sponsor List",
-  sponsor_marquee: "Sponsor Marquee",
+  sponsor_marquee: "Marquee",
   image_carousel: "Image Carousel",
   photo_strip: "Photo Strip",
   image_gallery: "Image Gallery",

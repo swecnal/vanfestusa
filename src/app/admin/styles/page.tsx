@@ -2,52 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
-
-// ─── Types ───
-
-interface ButtonStyle {
-  id: string;
-  name: string;
-  fontSize: string;
-  fontWeight: string;
-  fontFamily: string;
-  textColor: string;
-  bgColor: string;
-  hoverBgColor: string;
-  borderWidth: string;
-  borderColor: string;
-  borderRadius: string;
-  paddingX: string;
-  paddingY: string;
-  shadow: string;
-  hoverShadow: string;
-  textTransform: string;
-}
-
-interface LinkStyle {
-  id: string;
-  name: string;
-  color: string;
-  hoverColor: string;
-  fontSize: string;
-  fontWeight: string;
-  fontFamily: string;
-  textDecoration: string;
-  hoverTextDecoration: string;
-  textTransform: string;
-  letterSpacing: string;
-}
-
-interface StylesData {
-  button_styles: {
-    main: ButtonStyle[];
-    secondary: ButtonStyle[];
-  };
-  link_styles: {
-    primary: LinkStyle[];
-    secondary: LinkStyle[];
-  };
-}
+import type { ButtonStyle, LinkStyle, SiteStyles } from "@/lib/styles";
 
 // ─── Defaults ───
 
@@ -108,7 +63,7 @@ const TEXT_TRANSFORM_OPTIONS = [
 // ─── Main Page ───
 
 export default function StylesPage() {
-  const [data, setData] = useState<StylesData>({
+  const [data, setData] = useState<SiteStyles>({
     button_styles: { main: [], secondary: [] },
     link_styles: { primary: [], secondary: [] },
   });

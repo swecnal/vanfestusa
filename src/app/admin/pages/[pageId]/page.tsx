@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams } from "next/navigation";
 import { toast } from "sonner";
+import { usePageEditor } from "@/lib/page-editor-context";
 import {
   DndContext,
   closestCenter,
@@ -348,14 +349,65 @@ function SortablePreviewItem({
   );
 }
 
-/* ─── Section Type Palette ─── */
-const ALL_SECTION_TYPES: SectionType[] = [
-  "hero_carousel", "hero_simple", "text_block", "two_column_cards",
-  "feature_grid", "event_cards", "cta_cards", "cta_section",
-  "faq_accordion", "schedule_accordion", "sponsor_tiers", "sponsor_marquee",
-  "image_carousel", "photo_strip", "image_gallery", "wave_divider",
-  "vehicle_convoy", "vehicle_stream", "contact_form", "html_block",
-];
+/* ─── Drop Zone for external element drops ─── */
+function DropZone({
+  index,
+  onDrop,
+  isActive,
+}: {
+  index: number;
+  onDrop: (type: SectionType, index: number) => void;
+  isActive: boolean;
+}) {
+  const [isOver, setIsOver] = useState(false);
+
+  if (!isActive) return null;
+
+  return (
+    <div
+      className={`relative transition-all duration-150 rounded-lg ${
+        isOver
+          ? "h-14 bg-teal/10 border-2 border-dashed border-teal/50 mx-0"
+          : "h-6 mx-4"
+      }`}
+      onDragOver={(e) => {
+        if (e.dataTransfer.types.includes("application/section-type")) {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = "copy";
+          setIsOver(true);
+        }
+      }}
+      onDragEnter={(e) => {
+        if (e.dataTransfer.types.includes("application/section-type")) {
+          e.preventDefault();
+          setIsOver(true);
+        }
+      }}
+      onDragLeave={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+          setIsOver(false);
+        }
+      }}
+      onDrop={(e) => {
+        e.preventDefault();
+        setIsOver(false);
+        const type = e.dataTransfer.getData("application/section-type") as SectionType;
+        if (type) onDrop(type, index);
+      }}
+    >
+      {isOver && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="flex items-center gap-2 text-teal text-xs font-semibold">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            Drop here
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 /* ─── Main Page Editor ─── */
 export default function PageEditorPage() {
@@ -366,8 +418,11 @@ export default function PageEditorPage() {
   const [sections, setSections] = useState<Section[]>([]);
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showPalette, setShowPalette] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [externalDragActive, setExternalDragActive] = useState(false);
+  const dragCounter = useRef(0);
+
+  const { registerHandler, unregisterHandler } = usePageEditor();
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -438,9 +493,7 @@ export default function PageEditorPage() {
     toast.success("Section deleted");
   };
 
-  const handleAddSection = async (type: SectionType) => {
-    setShowPalette(false);
-
+  const handleAddSectionAtIndex = useCallback(async (type: SectionType, index?: number) => {
     const res = await fetch(`/api/pages/${pageId}/sections`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -452,11 +505,37 @@ export default function PageEditorPage() {
 
     if (res.ok) {
       const { section } = await res.json();
-      setSections((prev) => [...prev, section]);
-      setSelectedSectionId(section.id);
+
+      if (index !== undefined && index < sections.length) {
+        // Insert at specific index and reorder
+        const newSections = [...sections];
+        newSections.splice(index, 0, section);
+        const reordered = newSections.map((s, i) => ({ ...s, sort_order: i }));
+        setSections(reordered);
+        setSelectedSectionId(section.id);
+
+        await fetch(`/api/pages/${pageId}/sections/reorder`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            sections: reordered.map((s) => ({ id: s.id, sort_order: s.sort_order })),
+          }),
+        });
+      } else {
+        // Append to end
+        setSections((prev) => [...prev, section]);
+        setSelectedSectionId(section.id);
+      }
+
       toast.success(`Added ${SECTION_TYPE_LABELS[type]}`);
     }
-  };
+  }, [pageId, sections]);
+
+  // Register handler with context for sidebar ElementPalette
+  useEffect(() => {
+    registerHandler(handleAddSectionAtIndex);
+    return () => unregisterHandler();
+  }, [registerHandler, unregisterHandler, handleAddSectionAtIndex]);
 
   const handleSaveSection = async (sectionId: string, data: Record<string, unknown>, settings?: Record<string, unknown>) => {
     setSaving(true);
@@ -504,94 +583,98 @@ export default function PageEditorPage() {
               {page.is_published ? "Published" : "Draft"}
             </span>
           </div>
-          <div className="flex items-center gap-2">
-            <a
-              href={page.slug}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-gray-400 hover:text-gray-600 transition-colors"
-              title="Preview page"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
-              </svg>
-            </a>
-            <button
-              onClick={() => setShowPalette(!showPalette)}
-              className="bg-teal hover:bg-teal-dark text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-              </svg>
-              Add Section
-            </button>
-          </div>
+          <a
+            href={page.slug}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-gray-400 hover:text-gray-600 transition-colors"
+            title="Preview page"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+            </svg>
+          </a>
         </div>
 
-        {/* Section palette modal */}
-        {showPalette && (
-          <div className="sticky top-[41px] z-10 bg-white border-b border-gray-200 p-4 shadow-lg">
-            <div className="flex items-center justify-between mb-3">
-              <h4 className="font-display font-semibold text-sm text-charcoal">Choose a section type</h4>
-              <button onClick={() => setShowPalette(false)} className="text-gray-400 hover:text-gray-600">
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            <div className="grid grid-cols-4 sm:grid-cols-5 lg:grid-cols-7 gap-2">
-              {ALL_SECTION_TYPES.map((type) => (
-                <button
-                  key={type}
-                  onClick={() => handleAddSection(type)}
-                  className="bg-gray-50 hover:bg-teal/5 hover:border-teal border border-gray-200 rounded-lg p-2 transition-all text-center"
-                >
-                  <p className="text-[10px] font-semibold text-charcoal leading-tight">
-                    {SECTION_TYPE_LABELS[type]}
-                  </p>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
         {/* Visual sections */}
-        <div className="p-4 max-w-4xl mx-auto space-y-3">
+        <div
+          className="p-4 max-w-4xl mx-auto"
+          onDragEnter={(e) => {
+            if (e.dataTransfer.types.includes("application/section-type")) {
+              dragCounter.current++;
+              setExternalDragActive(true);
+            }
+          }}
+          onDragLeave={(e) => {
+            if (e.dataTransfer.types.includes("application/section-type")) {
+              dragCounter.current--;
+              if (dragCounter.current <= 0) {
+                dragCounter.current = 0;
+                setExternalDragActive(false);
+              }
+            }
+          }}
+          onDragOver={(e) => {
+            if (e.dataTransfer.types.includes("application/section-type")) {
+              e.preventDefault();
+            }
+          }}
+          onDrop={() => {
+            dragCounter.current = 0;
+            setExternalDragActive(false);
+          }}
+        >
           {sections.length === 0 ? (
-            <div className="text-center py-20">
+            <div
+              className={`text-center py-20 rounded-xl transition-all ${
+                externalDragActive ? "bg-teal/5 border-2 border-dashed border-teal/40" : ""
+              }`}
+              onDragOver={(e) => {
+                if (e.dataTransfer.types.includes("application/section-type")) {
+                  e.preventDefault();
+                  e.dataTransfer.dropEffect = "copy";
+                }
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                const type = e.dataTransfer.getData("application/section-type") as SectionType;
+                if (type) handleAddSectionAtIndex(type, 0);
+              }}
+            >
               <svg className="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m3.75 9v6m3-3H9m1.5-12H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
               </svg>
-              <p className="text-gray-400 text-sm mb-3">This page has no sections yet.</p>
-              <button
-                onClick={() => setShowPalette(true)}
-                className="bg-teal hover:bg-teal-dark text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
-              >
-                Add Your First Section
-              </button>
+              <p className="text-gray-400 text-sm mb-3">
+                {externalDragActive ? "Drop element here" : "Drag an element from the sidebar to get started."}
+              </p>
             </div>
           ) : (
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragEnd={handleDragEnd}
-            >
-              <SortableContext
-                items={sections.map((s) => s.id)}
-                strategy={verticalListSortingStrategy}
+            <div className="space-y-0">
+              <DropZone index={0} onDrop={handleAddSectionAtIndex} isActive={externalDragActive} />
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
               >
-                {sections.map((section) => (
-                  <SortablePreviewItem
-                    key={section.id}
-                    section={section}
-                    isSelected={selectedSectionId === section.id}
-                    onSelect={() => setSelectedSectionId(section.id)}
-                    onToggleVisibility={() => handleToggleVisibility(section)}
-                    onDelete={() => handleDeleteSection(section.id)}
-                  />
-                ))}
-              </SortableContext>
-            </DndContext>
+                <SortableContext
+                  items={sections.map((s) => s.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  {sections.map((section, idx) => (
+                    <div key={section.id}>
+                      <SortablePreviewItem
+                        section={section}
+                        isSelected={selectedSectionId === section.id}
+                        onSelect={() => setSelectedSectionId(section.id)}
+                        onToggleVisibility={() => handleToggleVisibility(section)}
+                        onDelete={() => handleDeleteSection(section.id)}
+                      />
+                      <DropZone index={idx + 1} onDrop={handleAddSectionAtIndex} isActive={externalDragActive} />
+                    </div>
+                  ))}
+                </SortableContext>
+              </DndContext>
+            </div>
           )}
         </div>
       </div>
