@@ -1,6 +1,6 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import VehicleStream from "@/components/VehicleStream";
+import FooterDivider from "@/components/FooterDivider";
 import type { VehicleStreamConfig } from "@/components/VehicleStream";
 import { getSupabaseServer } from "@/lib/supabase/server";
 
@@ -34,7 +34,7 @@ export default async function PublicLayout({
       {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
       <Navbar config={navbarConfig as any} />
       <main>{children}</main>
-      <VehicleStream config={vehicleStreamConfig as VehicleStreamConfig | null} />
+      <FooterDivider config={vehicleStreamConfig as VehicleStreamConfig | null} />
       {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
       <Footer config={footerConfig as any} />
     </>

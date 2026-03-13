@@ -356,9 +356,35 @@ function generateStream(seed: number, count: number): StreamVehicle[] {
 
 export interface VehicleStreamConfig {
   enabled?: boolean;
+  dividerType?: "vehicle_stream" | "wave" | "zigzag" | "curve" | "straight" | "convoy" | "festival";
+  paddingTop?: string;
+  paddingBottom?: string;
+  marginTop?: string;
+  marginBottom?: string;
+  // Vehicle stream fields
   seed?: number;
   count?: number;
   signs?: string[];
+  // Wave/zigzag/curve/straight fields
+  fromColor?: string;
+  toColor?: string;
+  height?: number;
+  frequency?: number;
+  intensity?: number;
+  // Convoy fields
+  reverse?: boolean;
+  // Festival fields
+  festivalElements?: {
+    vendorBooths?: boolean;
+    stage?: boolean;
+    dancing?: boolean;
+    campfireWithPeople?: boolean;
+    campfireSolo?: boolean;
+    tents?: boolean;
+    peopleMeandering?: boolean;
+  };
+  festivalBgColor?: string;
+  festivalSeed?: number;
 }
 
 export default function VehicleStream({ config }: { config?: VehicleStreamConfig | null }) {

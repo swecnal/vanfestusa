@@ -23,9 +23,35 @@ interface FooterConfig {
 
 interface VehicleStreamConfig {
   enabled: boolean;
+  dividerType: string;
+  paddingTop: string;
+  paddingBottom: string;
+  marginTop: string;
+  marginBottom: string;
+  // Vehicle stream fields
   seed: number;
   count: number;
   signs: string[];
+  // Wave/zigzag/curve/straight fields
+  fromColor: string;
+  toColor: string;
+  height: number;
+  frequency: number;
+  intensity: number;
+  // Convoy fields
+  reverse: boolean;
+  // Festival fields
+  festivalElements: {
+    vendorBooths: boolean;
+    stage: boolean;
+    dancing: boolean;
+    campfireWithPeople: boolean;
+    campfireSolo: boolean;
+    tents: boolean;
+    peopleMeandering: boolean;
+  };
+  festivalBgColor: string;
+  festivalSeed: number;
 }
 
 const EMPTY_CONFIG: FooterConfig = {
@@ -64,9 +90,31 @@ const EMPTY_CONFIG: FooterConfig = {
 
 const EMPTY_STREAM: VehicleStreamConfig = {
   enabled: true,
+  dividerType: "vehicle_stream",
+  paddingTop: "0px",
+  paddingBottom: "0px",
+  marginTop: "0px",
+  marginBottom: "0px",
   seed: 777,
   count: 14,
   signs: ["COMMUNITY", "MUSIC", "MEMORIES", "VANFEST"],
+  fromColor: "#ffffff",
+  toColor: "#1a1a1a",
+  height: 60,
+  frequency: 2,
+  intensity: 50,
+  reverse: false,
+  festivalElements: {
+    vendorBooths: true,
+    stage: true,
+    dancing: true,
+    campfireWithPeople: true,
+    campfireSolo: true,
+    tents: true,
+    peopleMeandering: true,
+  },
+  festivalBgColor: "#F5F0E8",
+  festivalSeed: 42,
 };
 
 export default function FooterEditorPage() {
@@ -183,10 +231,10 @@ export default function FooterEditorPage() {
         </button>
       </div>
 
-      {/* Vehicle Stream (above footer) */}
+      {/* Footer Divider */}
       <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-3">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-gray-700">Vehicle Stream (above footer)</h3>
+          <h3 className="text-sm font-semibold text-gray-700">Footer Divider</h3>
           <label className="flex items-center gap-2 text-sm text-gray-600">
             <input
               type="checkbox"
@@ -198,57 +246,301 @@ export default function FooterEditorPage() {
         </div>
         {stream.enabled && (
           <>
+            {/* Divider Type */}
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Divider Type</label>
+              <select
+                value={stream.dividerType}
+                onChange={(e) => setStream((prev) => ({ ...prev, dividerType: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+              >
+                <option value="vehicle_stream">Vehicle Stream</option>
+                <option value="wave">Wave</option>
+                <option value="zigzag">Zigzag</option>
+                <option value="curve">Curve</option>
+                <option value="straight">Straight</option>
+                <option value="convoy">Vehicle Convoy</option>
+                <option value="festival">Festival Scene</option>
+              </select>
+            </div>
+
+            {/* Padding & Margin */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Seed</label>
+                <label className="block text-xs text-gray-500 mb-1">Padding Top</label>
                 <input
-                  type="number"
-                  value={stream.seed}
-                  onChange={(e) => setStream((prev) => ({ ...prev, seed: Number(e.target.value) }))}
+                  type="text"
+                  value={stream.paddingTop}
+                  onChange={(e) => setStream((prev) => ({ ...prev, paddingTop: e.target.value }))}
                   className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                  placeholder="0px"
                 />
               </div>
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Vehicle Count</label>
+                <label className="block text-xs text-gray-500 mb-1">Padding Bottom</label>
                 <input
-                  type="number"
-                  value={stream.count}
-                  min={1}
-                  max={30}
-                  onChange={(e) => setStream((prev) => ({ ...prev, count: Number(e.target.value) }))}
+                  type="text"
+                  value={stream.paddingBottom}
+                  onChange={(e) => setStream((prev) => ({ ...prev, paddingBottom: e.target.value }))}
                   className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                  placeholder="0px"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Margin Top</label>
+                <input
+                  type="text"
+                  value={stream.marginTop}
+                  onChange={(e) => setStream((prev) => ({ ...prev, marginTop: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                  placeholder="0px"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Margin Bottom</label>
+                <input
+                  type="text"
+                  value={stream.marginBottom}
+                  onChange={(e) => setStream((prev) => ({ ...prev, marginBottom: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                  placeholder="0px"
                 />
               </div>
             </div>
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <label className="block text-xs text-gray-500">Road Signs</label>
-                <button
-                  onClick={() => setStream((prev) => ({ ...prev, signs: [...prev.signs, "NEW"] }))}
-                  className="text-teal hover:text-teal-dark text-xs font-semibold"
-                >
-                  + Add Sign
-                </button>
-              </div>
-              <div className="space-y-1.5">
-                {stream.signs.map((sign, i) => (
-                  <div key={i} className="flex items-center gap-2">
+
+            {/* Vehicle Stream fields */}
+            {stream.dividerType === "vehicle_stream" && (
+              <>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">Seed</label>
                     <input
-                      type="text"
-                      value={sign}
-                      onChange={(e) => updateSign(i, e.target.value)}
-                      className="flex-1 px-2 py-1.5 border border-gray-200 rounded text-xs uppercase"
+                      type="number"
+                      value={stream.seed}
+                      onChange={(e) => setStream((prev) => ({ ...prev, seed: Number(e.target.value) }))}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
                     />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">Vehicle Count</label>
+                    <input
+                      type="number"
+                      value={stream.count}
+                      min={1}
+                      max={30}
+                      onChange={(e) => setStream((prev) => ({ ...prev, count: Number(e.target.value) }))}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs text-gray-500">Road Signs</label>
                     <button
-                      onClick={() => setStream((prev) => ({ ...prev, signs: prev.signs.filter((_, idx) => idx !== i) }))}
-                      className="text-gray-300 hover:text-red-500 p-1"
+                      onClick={() => setStream((prev) => ({ ...prev, signs: [...prev.signs, "NEW"] }))}
+                      className="text-teal hover:text-teal-dark text-xs font-semibold"
                     >
-                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                      + Add Sign
                     </button>
                   </div>
-                ))}
+                  <div className="space-y-1.5">
+                    {stream.signs.map((sign, i) => (
+                      <div key={i} className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={sign}
+                          onChange={(e) => updateSign(i, e.target.value)}
+                          className="flex-1 px-2 py-1.5 border border-gray-200 rounded text-xs uppercase"
+                        />
+                        <button
+                          onClick={() => setStream((prev) => ({ ...prev, signs: prev.signs.filter((_, idx) => idx !== i) }))}
+                          className="text-gray-300 hover:text-red-500 p-1"
+                        >
+                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* Wave / Zigzag / Curve / Straight fields */}
+            {(stream.dividerType === "wave" || stream.dividerType === "zigzag" || stream.dividerType === "curve" || stream.dividerType === "straight") && (
+              <>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">From Color</label>
+                    <div className="flex gap-2">
+                      <input
+                        type="color"
+                        value={stream.fromColor}
+                        onChange={(e) => setStream((prev) => ({ ...prev, fromColor: e.target.value }))}
+                        className="w-8 h-8 rounded border border-gray-200 cursor-pointer p-0.5"
+                      />
+                      <input
+                        type="text"
+                        value={stream.fromColor}
+                        onChange={(e) => setStream((prev) => ({ ...prev, fromColor: e.target.value }))}
+                        className="flex-1 px-2 py-1.5 border border-gray-200 rounded text-xs"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">To Color</label>
+                    <div className="flex gap-2">
+                      <input
+                        type="color"
+                        value={stream.toColor}
+                        onChange={(e) => setStream((prev) => ({ ...prev, toColor: e.target.value }))}
+                        className="w-8 h-8 rounded border border-gray-200 cursor-pointer p-0.5"
+                      />
+                      <input
+                        type="text"
+                        value={stream.toColor}
+                        onChange={(e) => setStream((prev) => ({ ...prev, toColor: e.target.value }))}
+                        className="flex-1 px-2 py-1.5 border border-gray-200 rounded text-xs"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">Height ({stream.height}px)</label>
+                  <input
+                    type="range"
+                    min={20}
+                    max={200}
+                    value={stream.height}
+                    onChange={(e) => setStream((prev) => ({ ...prev, height: Number(e.target.value) }))}
+                    className="w-full"
+                  />
+                </div>
+                {(stream.dividerType === "wave" || stream.dividerType === "zigzag") && (
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">Frequency ({stream.frequency})</label>
+                    <input
+                      type="range"
+                      min={1}
+                      max={5}
+                      value={stream.frequency}
+                      onChange={(e) => setStream((prev) => ({ ...prev, frequency: Number(e.target.value) }))}
+                      className="w-full"
+                    />
+                  </div>
+                )}
+                {stream.dividerType !== "straight" && (
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">Intensity ({stream.intensity}%)</label>
+                    <input
+                      type="range"
+                      min={1}
+                      max={100}
+                      value={stream.intensity}
+                      onChange={(e) => setStream((prev) => ({ ...prev, intensity: Number(e.target.value) }))}
+                      className="w-full"
+                    />
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* Convoy fields */}
+            {stream.dividerType === "convoy" && (
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">Seed</label>
+                  <input
+                    type="number"
+                    value={stream.seed}
+                    onChange={(e) => setStream((prev) => ({ ...prev, seed: Number(e.target.value) }))}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">Vehicle Count</label>
+                  <input
+                    type="number"
+                    value={stream.count}
+                    min={1}
+                    max={20}
+                    onChange={(e) => setStream((prev) => ({ ...prev, count: Number(e.target.value) }))}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                  />
+                </div>
+                <div className="flex items-end pb-1">
+                  <label className="flex items-center gap-2 text-xs text-gray-600">
+                    <input
+                      type="checkbox"
+                      checked={stream.reverse}
+                      onChange={(e) => setStream((prev) => ({ ...prev, reverse: e.target.checked }))}
+                    />
+                    Reverse
+                  </label>
+                </div>
               </div>
-            </div>
+            )}
+
+            {/* Festival fields */}
+            {stream.dividerType === "festival" && (
+              <>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">Seed</label>
+                    <input
+                      type="number"
+                      value={stream.festivalSeed}
+                      onChange={(e) => setStream((prev) => ({ ...prev, festivalSeed: Number(e.target.value) }))}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">Background Color</label>
+                    <div className="flex gap-2">
+                      <input
+                        type="color"
+                        value={stream.festivalBgColor}
+                        onChange={(e) => setStream((prev) => ({ ...prev, festivalBgColor: e.target.value }))}
+                        className="w-8 h-8 rounded border border-gray-200 cursor-pointer p-0.5"
+                      />
+                      <input
+                        type="text"
+                        value={stream.festivalBgColor}
+                        onChange={(e) => setStream((prev) => ({ ...prev, festivalBgColor: e.target.value }))}
+                        className="flex-1 px-2 py-1.5 border border-gray-200 rounded text-xs"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">Elements</label>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {([
+                      ["vendorBooths", "Vendor Booths"],
+                      ["stage", "Stage / Band"],
+                      ["dancing", "Dancing"],
+                      ["campfireWithPeople", "Campfire w/ People"],
+                      ["campfireSolo", "Campfire Solo"],
+                      ["tents", "Tents"],
+                      ["peopleMeandering", "People Meandering"],
+                    ] as const).map(([key, label]) => (
+                      <label key={key} className="flex items-center gap-2 text-xs text-gray-600">
+                        <input
+                          type="checkbox"
+                          checked={stream.festivalElements[key]}
+                          onChange={(e) =>
+                            setStream((prev) => ({
+                              ...prev,
+                              festivalElements: { ...prev.festivalElements, [key]: e.target.checked },
+                            }))
+                          }
+                        />
+                        {label}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
           </>
         )}
       </div>
