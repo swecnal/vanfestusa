@@ -18,9 +18,10 @@ interface Props {
   onSave: (data: Record<string, unknown>, settings?: Record<string, unknown>) => void;
   saving: boolean;
   onChange?: (data: Record<string, unknown>, settings: Record<string, unknown>) => void;
+  stickyButtons?: boolean;
 }
 
-export default function SectionEditorPanel({ section, onSave, saving, onChange }: Props) {
+export default function SectionEditorPanel({ section, onSave, saving, onChange, stickyButtons }: Props) {
   const [data, setData] = useState<Record<string, unknown>>(section.data);
   const [settings, setSettings] = useState<Record<string, unknown>>(section.settings as unknown as Record<string, unknown>);
   const [siteStyles, setSiteStyles] = useState<SiteStyles>(EMPTY_SITE_STYLES);
@@ -133,13 +134,15 @@ export default function SectionEditorPanel({ section, onSave, saving, onChange }
       </details>
 
       {/* Save button */}
-      <button
-        onClick={handleSave}
-        disabled={saving}
-        className="w-full bg-teal hover:bg-teal-dark text-white font-semibold py-2.5 rounded-lg transition-colors disabled:opacity-50 text-sm"
-      >
-        {saving ? "Saving..." : "Save Changes"}
-      </button>
+      <div className={stickyButtons ? "sticky bottom-0 bg-white pt-2 pb-1 border-t border-gray-100 -mx-4 px-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]" : ""}>
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="w-full bg-teal hover:bg-teal-dark text-white font-semibold py-2.5 rounded-lg transition-colors disabled:opacity-50 text-sm"
+        >
+          {saving ? "Saving..." : "Save Changes"}
+        </button>
+      </div>
 
       <style jsx>{`
         .input-sm {

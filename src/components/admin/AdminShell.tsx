@@ -105,6 +105,8 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   const [user, setUser] = useState<User | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [elementsOpen, setElementsOpen] = useState(true);
+  const [sidebarHover, setSidebarHover] = useState(false);
+  const { editPaneMode, setEditPaneMode } = usePageEditor();
 
   const isLoginPage = pathname === "/admin/login" || pathname === "/admin/change-password";
   const isPageEditor = pathname.startsWith("/admin/pages/") && pathname !== "/admin/pages";
@@ -124,12 +126,30 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   useEffect(() => {
     if (!isLoginPage) {
       fetchUser();
+      // Load edit pane mode preference
+      fetch("/api/global-settings")
+        .then((r) => r.json())
+        .then((res) => {
+          const mode = res.settings?.edit_pane_mode;
+          if (mode === "floating" || mode === "static") setEditPaneMode(mode);
+        })
+        .catch(() => {});
     }
-  }, [isLoginPage, fetchUser]);
+  }, [isLoginPage, fetchUser, setEditPaneMode]);
 
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
     router.push("/admin/login");
+  };
+
+  const toggleEditPaneMode = async () => {
+    const next = editPaneMode === "floating" ? "static" : "floating";
+    setEditPaneMode(next);
+    await fetch("/api/global-settings", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ edit_pane_mode: next }),
+    });
   };
 
   // Login / change-password gets no shell
@@ -161,123 +181,146 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
 
       {/* Sidebar */}
       <aside
-        className={`${sidebarOpen ? "w-64" : "w-16"} bg-charcoal text-white flex flex-col transition-all duration-200 flex-shrink-0`}
+        className={`bg-charcoal text-white flex flex-col transition-all duration-200 flex-shrink-0 ${
+          sidebarOpen
+            ? "w-64 relative"
+            : sidebarHover
+              ? "w-64 fixed top-0 left-0 bottom-0 z-50 shadow-2xl"
+              : "w-16 relative"
+        }`}
+        onMouseEnter={() => { if (!sidebarOpen) setSidebarHover(true); }}
+        onMouseLeave={() => { if (!sidebarOpen) setSidebarHover(false); }}
       >
-        {/* Logo */}
-        <div className="p-4 flex items-center gap-3 border-b border-white/10">
-          <img src="/images/vanfest-logo.png" alt="VanFest" className="h-8 w-8 object-contain flex-shrink-0" />
-          {sidebarOpen && (
-            <span className="font-display font-bold text-lg">VanFest</span>
-          )}
-        </div>
-
-        {/* Nav */}
-        <nav className="py-2">
-          {navItems.map((item) => {
-            const isActive = pathname === item.href || (item.href !== "/admin" && pathname.startsWith(item.href));
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex items-center gap-3 px-4 py-2 text-sm transition-colors ${
-                  isActive
-                    ? "bg-teal text-white"
-                    : "text-white/60 hover:text-white hover:bg-white/5"
-                }`}
-              >
-                <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d={item.icon} />
-                </svg>
-                {sidebarOpen && <span>{item.label}</span>}
-              </Link>
-            );
-          })}
-        </nav>
-
-        {/* Scrollable area: Site Pages + Elements */}
-        <div className="flex-1 min-h-0 overflow-y-auto scrollbar-thin">
-          {/* SITE PAGES */}
-          <div className="px-4 pt-2 pb-1">
-            {sidebarOpen ? (
-              <p className="text-[10px] uppercase tracking-wider text-white/30 font-semibold">
-                Site Pages
-              </p>
-            ) : (
-              <div className="border-t border-white/10" />
-            )}
-          </div>
-          <div className="px-1" onClick={() => { if (!sidebarOpen) setSidebarOpen(true); }}>
-            <PageTree collapsed={!sidebarOpen} />
-          </div>
-
-          {/* ELEMENTS */}
-          {sidebarOpen && (
+        {(() => {
+          const showFull = sidebarOpen || sidebarHover;
+          return (
             <>
-              <button
-                onClick={() => setElementsOpen(!elementsOpen)}
-                className="w-full flex items-center gap-1.5 px-4 pt-4 pb-1 group"
-              >
-                <svg
-                  className={`w-3 h-3 text-white/30 transition-transform flex-shrink-0 ${elementsOpen ? "rotate-90" : ""}`}
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z" />
-                </svg>
-                <p className="text-[10px] uppercase tracking-wider text-white/30 font-semibold group-hover:text-white/50 transition-colors">
-                  Elements
-                </p>
-              </button>
-              {elementsOpen && (
-                <div className="px-1 pb-2">
-                  <InlineElementPalette />
-                </div>
-              )}
-            </>
-          )}
-        </div>
-
-        {/* Bottom */}
-        <div className="border-t border-white/10 p-4">
-          <a
-            href="https://vanfestusa.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 text-white/40 hover:text-white text-xs transition-colors mb-3"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
-            </svg>
-            {sidebarOpen && <span>View Site</span>}
-          </a>
-          {user && sidebarOpen && (
-            <div className="flex items-center justify-between">
-              <div className="text-xs">
-                <p className="text-white/80 font-medium">{user.display_name}</p>
-                <p className="text-white/40">{user.role}</p>
+              {/* Logo */}
+              <div className="p-4 flex items-center gap-3 border-b border-white/10">
+                <img src="/images/vanfest-logo.png" alt="VanFest" className="h-8 w-8 object-contain flex-shrink-0" />
+                {showFull && (
+                  <span className="font-display font-bold text-lg">VanFest</span>
+                )}
               </div>
-              <button
-                onClick={handleLogout}
-                className="text-white/40 hover:text-white transition-colors"
-                title="Logout"
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
-                </svg>
-              </button>
-            </div>
-          )}
-          {/* Sidebar toggle */}
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="mt-3 text-white/30 hover:text-white transition-colors"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d={sidebarOpen ? "M18.75 19.5l-7.5-7.5 7.5-7.5m-6 15L5.25 12l7.5-7.5" : "M11.25 4.5l7.5 7.5-7.5 7.5m-6-15l7.5 7.5-7.5 7.5"} />
-            </svg>
-          </button>
-        </div>
+
+              {/* Nav */}
+              <nav className="py-2">
+                {navItems.map((item) => {
+                  const isActive = pathname === item.href || (item.href !== "/admin" && pathname.startsWith(item.href));
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={`flex items-center gap-3 px-4 py-2 text-sm transition-colors ${
+                        isActive
+                          ? "bg-teal text-white"
+                          : "text-white/60 hover:text-white hover:bg-white/5"
+                      }`}
+                    >
+                      <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d={item.icon} />
+                      </svg>
+                      {showFull && <span>{item.label}</span>}
+                    </Link>
+                  );
+                })}
+              </nav>
+
+              {/* Scrollable area: Site Pages + Elements */}
+              <div className="flex-1 min-h-0 overflow-y-auto admin-scrollbar">
+                {/* SITE PAGES */}
+                <div className="px-4 pt-2 pb-1">
+                  {showFull ? (
+                    <p className="text-[10px] uppercase tracking-wider text-white/30 font-semibold">
+                      Site Pages
+                    </p>
+                  ) : (
+                    <div className="border-t border-white/10" />
+                  )}
+                </div>
+                <div className="px-1" onClick={() => { if (!sidebarOpen && !sidebarHover) setSidebarOpen(true); }}>
+                  <PageTree collapsed={!showFull} />
+                </div>
+
+                {/* ELEMENTS */}
+                {showFull && (
+                  <>
+                    <button
+                      onClick={() => setElementsOpen(!elementsOpen)}
+                      className="w-full flex items-center gap-1.5 px-4 pt-4 pb-1 group"
+                    >
+                      <svg
+                        className={`w-3 h-3 text-white/30 transition-transform flex-shrink-0 ${elementsOpen ? "rotate-90" : ""}`}
+                        fill="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z" />
+                      </svg>
+                      <p className="text-[10px] uppercase tracking-wider text-white/30 font-semibold group-hover:text-white/50 transition-colors">
+                        Elements
+                      </p>
+                    </button>
+                    {elementsOpen && (
+                      <div className="px-1 pb-2">
+                        <InlineElementPalette />
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+
+              {/* Bottom */}
+              <div className="border-t border-white/10 p-4">
+                <a
+                  href="https://vanfestusa.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-white/40 hover:text-white text-xs transition-colors mb-3"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                  </svg>
+                  {showFull && <span>View Site</span>}
+                </a>
+                {user && showFull && (
+                  <div className="flex items-center justify-between">
+                    <div className="text-xs">
+                      <p className="text-white/80 font-medium">{user.display_name}</p>
+                      <p className="text-white/40">{user.role}</p>
+                    </div>
+                    <button
+                      onClick={handleLogout}
+                      className="text-white/40 hover:text-white transition-colors"
+                      title="Logout"
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
+                      </svg>
+                    </button>
+                  </div>
+                )}
+                {/* Sidebar toggle */}
+                <button
+                  onClick={() => { setSidebarOpen(!sidebarOpen); setSidebarHover(false); }}
+                  className="mt-3 text-white/30 hover:text-white transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d={sidebarOpen ? "M18.75 19.5l-7.5-7.5 7.5-7.5m-6 15L5.25 12l7.5-7.5" : "M11.25 4.5l7.5 7.5-7.5 7.5m-6-15l7.5 7.5-7.5 7.5"} />
+                  </svg>
+                </button>
+              </div>
+            </>
+          );
+        })()}
       </aside>
+
+      {/* Overlay backdrop when sidebar hovers over content */}
+      {!sidebarOpen && sidebarHover && (
+        <div
+          className="fixed inset-0 z-40 bg-black/20"
+          onClick={() => setSidebarHover(false)}
+        />
+      )}
 
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -286,6 +329,22 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
           <h1 className="text-lg font-display font-semibold text-charcoal">
             {getTopBarTitle()}
           </h1>
+          {isPageEditor && (
+            <button
+              onClick={toggleEditPaneMode}
+              className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-charcoal transition-colors px-2 py-1 rounded hover:bg-gray-100"
+              title={`Switch to ${editPaneMode === "floating" ? "static" : "floating"} editor pane`}
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                {editPaneMode === "floating" ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 8.25V18a2.25 2.25 0 002.25 2.25h13.5A2.25 2.25 0 0021 18V8.25m-18 0V6a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 6v2.25m-18 0h18M5.25 6h.008v.008H5.25V6zM7.5 6h.008v.008H7.5V6zm2.25 0h.008v.008H9.75V6z" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 4.5v15m6-15v15m-10.875 0h15.75c.621 0 1.125-.504 1.125-1.125V5.625c0-.621-.504-1.125-1.125-1.125H4.125C3.504 4.5 3 5.004 3 5.625v12.75c0 .621.504 1.125 1.125 1.125z" />
+                )}
+              </svg>
+              {editPaneMode === "floating" ? "Floating" : "Static"}
+            </button>
+          )}
         </header>
 
         {/* Page content */}

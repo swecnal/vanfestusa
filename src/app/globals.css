@@ -54,3 +54,28 @@
 .animate-marquee:hover {
   animation-play-state: paused;
 }
+
+/* Admin themed scrollbar */
+.admin-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+.admin-scrollbar:hover {
+  scrollbar-color: rgba(28, 162, 136, 0.4) transparent;
+}
+.admin-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.admin-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.admin-scrollbar::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 3px;
+}
+.admin-scrollbar:hover::-webkit-scrollbar-thumb {
+  background: rgba(28, 162, 136, 0.4);
+}
+.admin-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(28, 162, 136, 0.7);
+}

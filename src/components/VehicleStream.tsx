@@ -419,14 +419,51 @@ export default function VehicleStream({ config }: { config?: VehicleStreamConfig
     return Math.max(90, maxSignH);
   }, [normalizedSigns]);
 
+  // Split vehicles into "behind signs" and "in front of signs" layers
+  const { behindVehicles, frontVehicles } = useMemo(() => {
+    const rng = seededRandom(seed + 999);
+    const behind: typeof vehicles = [];
+    const front: typeof vehicles = [];
+    for (const v of vehicles) {
+      if (rng() > 0.5) {
+        front.push(v);
+      } else {
+        behind.push(v);
+      }
+    }
+    return { behindVehicles: behind, frontVehicles: front };
+  }, [vehicles, seed]);
+
   if (!enabled) return null;
+
+  const renderVehicleLayer = (vList: typeof vehicles) =>
+    vList.map((v, i) => {
+      const vRng = seededRandom(v.rngSeed);
+      return (
+        <div
+          key={i}
+          className="absolute bottom-4"
+          style={{
+            animation: `vehicle-stream ${v.duration}s linear -${v.delay}s infinite`,
+            willChange: "transform",
+          }}
+        >
+          {renderVehicle(v.type, v.color, vRng)}
+        </div>
+      );
+    });
 
   return (
     <section
-      className="relative bg-sand"
+      className="relative bg-sand overflow-hidden"
       style={{ height: sectionHeight }}
     >
-      {/* Road signs — outside overflow container so they're never clipped */}
+      {/* Vehicles behind signs */}
+      <div className="absolute inset-0 overflow-hidden z-[5]">
+        {renderVehicleLayer(behindVehicles)}
+      </div>
+
+      {/* Road signs */}
       {normalizedSigns.map((sign, i) => {
         const s = sign.scale;
         const spacing = normalizedSigns.length > 1 ? 70 / (normalizedSigns.length - 1) : 0;
@@ -440,7 +477,7 @@ export default function VehicleStream({ config }: { config?: VehicleStreamConfig
           <div
             key={`${sign.text}-${i}`}
             className="absolute bottom-3 flex flex-col items-center z-10"
-            style={{ left: `${leftPct}%` }}
+            style={{ left: `${leftPct}%`, transform: "translateX(-50%)" }}
           >
             <div
               className="bg-teal/90 text-white font-display font-bold tracking-widest rounded-sm shadow-sm whitespace-nowrap"
@@ -464,7 +501,7 @@ export default function VehicleStream({ config }: { config?: VehicleStreamConfig
       })}
 
       {/* Dashed road line */}
-      <div className="absolute bottom-3 left-0 w-full z-[5]">
+      <div className="absolute bottom-3 left-0 w-full z-[12]">
         <svg width="100%" height="4" className="block">
           <line
             x1="0"
@@ -479,23 +516,9 @@ export default function VehicleStream({ config }: { config?: VehicleStreamConfig
         </svg>
       </div>
 
-      {/* Vehicles — in their own overflow-hidden container */}
-      <div className="absolute inset-0 overflow-hidden">
-        {vehicles.map((v, i) => {
-          const vRng = seededRandom(v.rngSeed);
-          return (
-            <div
-              key={i}
-              className="absolute bottom-4"
-              style={{
-                animation: `vehicle-stream ${v.duration}s linear -${v.delay}s infinite`,
-                willChange: "transform",
-              }}
-            >
-              {renderVehicle(v.type, v.color, vRng)}
-            </div>
-          );
-        })}
+      {/* Vehicles in front of signs */}
+      <div className="absolute inset-0 overflow-hidden z-[15]" style={{ pointerEvents: "none" }}>
+        {renderVehicleLayer(frontVehicles)}
       </div>
 
       <style>{`

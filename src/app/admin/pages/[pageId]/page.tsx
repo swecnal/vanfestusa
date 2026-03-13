@@ -226,7 +226,7 @@ export default function PageEditorPage() {
   const [editingSettings, setEditingSettings] = useState<Record<string, unknown> | null>(null);
   const dragCounter = useRef(0);
 
-  const { registerHandler, unregisterHandler } = usePageEditor();
+  const { registerHandler, unregisterHandler, editPaneMode } = usePageEditor();
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -385,12 +385,16 @@ export default function PageEditorPage() {
     setEditingSettings(settings);
   }, []);
 
-  // Clear editing state when selection changes
+  // Click-to-toggle: clicking the same section deselects it, clicking a different one switches
   const handleSelectSection = useCallback((id: string | null) => {
-    setSelectedSectionId(id);
+    if (id !== null && id === selectedSectionId) {
+      setSelectedSectionId(null);
+    } else {
+      setSelectedSectionId(id);
+    }
     setEditingData(null);
     setEditingSettings(null);
-  }, []);
+  }, [selectedSectionId]);
 
   if (loading) {
     return <div className="text-center text-gray-400 py-12">Loading...</div>;
@@ -400,10 +404,12 @@ export default function PageEditorPage() {
     return <div className="text-center text-gray-400 py-12">Page not found</div>;
   }
 
+  const isStatic = editPaneMode === "static" && selectedSection;
+
   return (
     <div className="flex gap-0 -m-6 h-[calc(100vh-57px)]">
       {/* Center: Live preview */}
-      <div className="flex-1 overflow-auto bg-white">
+      <div className={`overflow-auto bg-white transition-all ${isStatic ? "flex-1 min-w-0" : "flex-1"}`}>
         {/* Page header bar */}
         <div className="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-gray-200 px-4 py-2 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -515,10 +521,14 @@ export default function PageEditorPage() {
         </div>
       </div>
 
-      {/* Floating editor panel */}
+      {/* Editor panel — floating (overlay) or static (side column) */}
       {selectedSection && (
-        <div className="fixed top-[57px] right-0 bottom-0 w-96 z-40 bg-white border-l border-gray-200 shadow-2xl overflow-y-auto">
-          <div className="sticky top-0 z-10 bg-white p-4 border-b border-gray-100 flex items-center justify-between">
+        <div className={
+          editPaneMode === "static"
+            ? "w-96 flex-shrink-0 bg-white border-l border-gray-200 flex flex-col h-full"
+            : "fixed top-[57px] right-0 bottom-0 w-96 z-40 bg-white border-l border-gray-200 shadow-2xl flex flex-col"
+        }>
+          <div className="flex-shrink-0 bg-white p-4 border-b border-gray-100 flex items-center justify-between z-10">
             <h3 className="font-display font-semibold text-sm text-charcoal">
               {SECTION_TYPE_LABELS[selectedSection.section_type as SectionType]}
             </h3>
@@ -531,12 +541,15 @@ export default function PageEditorPage() {
               </svg>
             </button>
           </div>
-          <SectionEditorPanel
-            section={selectedSection}
-            onSave={(data, settings) => handleSaveSection(selectedSection.id, data, settings)}
-            saving={saving}
-            onChange={handleEditorChange}
-          />
+          <div className="flex-1 overflow-y-auto admin-scrollbar">
+            <SectionEditorPanel
+              section={selectedSection}
+              onSave={(data, settings) => handleSaveSection(selectedSection.id, data, settings)}
+              saving={saving}
+              onChange={handleEditorChange}
+              stickyButtons
+            />
+          </div>
         </div>
       )}
     </div>
