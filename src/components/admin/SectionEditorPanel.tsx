@@ -146,6 +146,11 @@ function SectionFields({
   updateData: (key: string, value: unknown) => void;
 }) {
   switch (type) {
+    case "hero_carousel":
+      return (
+        <HeroCarouselEditor data={data} updateData={updateData} />
+      );
+
     case "hero_simple":
       return (
         <div className="space-y-3">
@@ -396,6 +401,335 @@ function SectionFields({
         </div>
       );
 
+    case "two_column_cards":
+      return (
+        <div className="space-y-3">
+          <Field label="Heading">
+            <input
+              type="text"
+              value={(data.heading as string) || ""}
+              onChange={(e) => updateData("heading", e.target.value)}
+              className="input-sm"
+            />
+          </Field>
+          <Field label="Cards">
+            <ArrayEditor
+              items={(data.cards as Array<Record<string, string>>) || []}
+              onChange={(items) => updateData("cards", items)}
+              fields={["title", "subtitle", "body"]}
+            />
+          </Field>
+        </div>
+      );
+
+    case "event_cards":
+      return (
+        <div className="space-y-3">
+          <Field label="Heading Title">
+            <input
+              type="text"
+              value={((data.heading as Record<string, unknown>)?.title as string) || ""}
+              onChange={(e) =>
+                updateData("heading", { ...(data.heading as Record<string, unknown>), title: e.target.value })
+              }
+              className="input-sm"
+            />
+          </Field>
+          <Field label="Events">
+            <ArrayEditor
+              items={(data.events as Array<Record<string, string>>) || []}
+              onChange={(items) => updateData("events", items)}
+              fields={["name", "location", "dates", "description", "tag", "href", "ticketUrl"]}
+            />
+          </Field>
+        </div>
+      );
+
+    case "cta_cards":
+      return (
+        <div className="space-y-3">
+          <Field label="Heading Title">
+            <input
+              type="text"
+              value={((data.heading as Record<string, unknown>)?.title as string) || ""}
+              onChange={(e) =>
+                updateData("heading", { ...(data.heading as Record<string, unknown>), title: e.target.value })
+              }
+              className="input-sm"
+            />
+          </Field>
+          <Field label="Columns">
+            <select
+              value={String(data.columns || 3)}
+              onChange={(e) => updateData("columns", Number(e.target.value))}
+              className="input-sm"
+            >
+              <option value="2">2</option>
+              <option value="3">3</option>
+            </select>
+          </Field>
+          <Field label="Cards">
+            <ArrayEditor
+              items={(data.cards as Array<Record<string, string>>) || []}
+              onChange={(items) => updateData("cards", items)}
+              fields={["title", "description", "href"]}
+            />
+          </Field>
+        </div>
+      );
+
+    case "sponsor_marquee":
+      return (
+        <div className="space-y-3">
+          <Field label="Heading">
+            <input
+              type="text"
+              value={(data.heading as string) || "Our Sponsors"}
+              onChange={(e) => updateData("heading", e.target.value)}
+              className="input-sm"
+            />
+          </Field>
+          <Field label="Subheading">
+            <input
+              type="text"
+              value={(data.subheading as string) || ""}
+              onChange={(e) => updateData("subheading", e.target.value)}
+              className="input-sm"
+            />
+          </Field>
+          <Field label="CTA Text">
+            <input
+              type="text"
+              value={(data.ctaText as string) || "Become a Sponsor"}
+              onChange={(e) => updateData("ctaText", e.target.value)}
+              className="input-sm"
+            />
+          </Field>
+          <Field label="CTA Link">
+            <input
+              type="text"
+              value={(data.ctaHref as string) || "/get-involved#sponsors"}
+              onChange={(e) => updateData("ctaHref", e.target.value)}
+              className="input-sm"
+            />
+          </Field>
+          <Field label="Sponsors">
+            <ArrayEditor
+              items={(data.sponsors as Array<Record<string, string>>) || []}
+              onChange={(items) => updateData("sponsors", items)}
+              fields={["name", "logo", "websiteUrl"]}
+            />
+          </Field>
+        </div>
+      );
+
+    case "image_carousel":
+      return (
+        <div className="space-y-3">
+          <Field label="Heading">
+            <input
+              type="text"
+              value={typeof data.heading === "string" ? data.heading : ((data.heading as Record<string, unknown>)?.title as string) || ""}
+              onChange={(e) => updateData("heading", e.target.value)}
+              className="input-sm"
+            />
+          </Field>
+          <Field label="Subheading">
+            <input
+              type="text"
+              value={(data.subheading as string) || ""}
+              onChange={(e) => updateData("subheading", e.target.value)}
+              className="input-sm"
+            />
+          </Field>
+          <Field label="Background Image">
+            <ImagePicker
+              value={(data.bgImage as string) || ""}
+              onChange={(url) => updateData("bgImage", url)}
+            />
+          </Field>
+          <Field label="Autoplay (ms)">
+            <input
+              type="number"
+              value={(data.autoplayInterval as number) || 4000}
+              onChange={(e) => updateData("autoplayInterval", Number(e.target.value))}
+              className="input-sm"
+              min={1000}
+              step={500}
+            />
+          </Field>
+          <Field label="Images">
+            <ImageArrayEditor
+              images={(data.images as Array<{ src: string; alt: string }>) || []}
+              onChange={(images) => updateData("images", images)}
+            />
+          </Field>
+          <Field label="CTA Buttons">
+            <ArrayEditor
+              items={(data.ctaButtons as Array<Record<string, string>>) || []}
+              onChange={(items) => updateData("ctaButtons", items)}
+              fields={["text", "href", "variant"]}
+            />
+          </Field>
+        </div>
+      );
+
+    case "photo_strip":
+      return (
+        <div className="space-y-3">
+          <Field label="Height">
+            <input
+              type="text"
+              value={(data.height as string) || ""}
+              onChange={(e) => updateData("height", e.target.value)}
+              className="input-sm"
+              placeholder="e.g. 200px"
+            />
+          </Field>
+          <Field label="Columns">
+            <input
+              type="number"
+              value={(data.columns as number) || 4}
+              onChange={(e) => updateData("columns", Number(e.target.value))}
+              className="input-sm"
+              min={1}
+              max={8}
+            />
+          </Field>
+          <Field label="Images">
+            <ImageArrayEditor
+              images={(data.images as Array<{ src: string; alt: string }>) || []}
+              onChange={(images) => updateData("images", images)}
+            />
+          </Field>
+        </div>
+      );
+
+    case "contact_form":
+      return (
+        <div className="space-y-3">
+          <Field label="Recipient Email">
+            <input
+              type="email"
+              value={(data.recipientEmail as string) || ""}
+              onChange={(e) => updateData("recipientEmail", e.target.value)}
+              className="input-sm"
+            />
+          </Field>
+          <Field label="Form Heading">
+            <input
+              type="text"
+              value={(data.formHeading as string) || ""}
+              onChange={(e) => updateData("formHeading", e.target.value)}
+              className="input-sm"
+            />
+          </Field>
+          <Field label="Intro Text">
+            <textarea
+              value={(data.introText as string) || ""}
+              onChange={(e) => updateData("introText", e.target.value)}
+              className="input-sm"
+              rows={3}
+            />
+          </Field>
+        </div>
+      );
+
+    case "schedule_accordion":
+      return (
+        <div className="space-y-3">
+          <Field label="Heading">
+            <input
+              type="text"
+              value={(data.heading as string) || ""}
+              onChange={(e) => updateData("heading", e.target.value)}
+              className="input-sm"
+            />
+          </Field>
+          <Field label="Disclaimer">
+            <input
+              type="text"
+              value={(data.disclaimer as string) || ""}
+              onChange={(e) => updateData("disclaimer", e.target.value)}
+              className="input-sm"
+            />
+          </Field>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={(data.showExpandAll as boolean) !== false}
+              onChange={(e) => updateData("showExpandAll", e.target.checked)}
+            />
+            Show expand all button
+          </label>
+          <details className="border border-gray-200 rounded-lg">
+            <summary className="px-3 py-2 text-xs font-semibold text-gray-500 cursor-pointer">
+              Days (JSON)
+            </summary>
+            <textarea
+              value={JSON.stringify(data.days || [], null, 2)}
+              onChange={(e) => {
+                try { updateData("days", JSON.parse(e.target.value)); } catch {}
+              }}
+              className="w-full p-3 border-t border-gray-200 font-mono text-xs"
+              rows={12}
+            />
+          </details>
+        </div>
+      );
+
+    case "sponsor_tiers":
+      return (
+        <div className="space-y-3">
+          <Field label="Heading">
+            <input
+              type="text"
+              value={(data.heading as string) || ""}
+              onChange={(e) => updateData("heading", e.target.value)}
+              className="input-sm"
+            />
+          </Field>
+          <Field label="Intro Text">
+            <textarea
+              value={(data.introText as string) || ""}
+              onChange={(e) => updateData("introText", e.target.value)}
+              className="input-sm"
+              rows={2}
+            />
+          </Field>
+          <Field label="CTA Text">
+            <input
+              type="text"
+              value={(data.ctaText as string) || ""}
+              onChange={(e) => updateData("ctaText", e.target.value)}
+              className="input-sm"
+            />
+          </Field>
+          <Field label="Accent Color">
+            <input
+              type="text"
+              value={(data.accentColor as string) || ""}
+              onChange={(e) => updateData("accentColor", e.target.value)}
+              className="input-sm"
+              placeholder="#hex or color name"
+            />
+          </Field>
+          <details className="border border-gray-200 rounded-lg">
+            <summary className="px-3 py-2 text-xs font-semibold text-gray-500 cursor-pointer">
+              Tiers (JSON)
+            </summary>
+            <textarea
+              value={JSON.stringify(data.tiers || [], null, 2)}
+              onChange={(e) => {
+                try { updateData("tiers", JSON.parse(e.target.value)); } catch {}
+              }}
+              className="w-full p-3 border-t border-gray-200 font-mono text-xs"
+              rows={15}
+            />
+          </details>
+        </div>
+      );
+
     default:
       return (
         <div className="space-y-3">
@@ -485,6 +819,314 @@ function ArrayEditor({
       >
         + Add Item
       </button>
+    </div>
+  );
+}
+
+function ImageArrayEditor({
+  images,
+  onChange,
+}: {
+  images: Array<{ src: string; alt: string }>;
+  onChange: (images: Array<{ src: string; alt: string }>) => void;
+}) {
+  const updateImage = (index: number, field: "src" | "alt", value: string) => {
+    const next = [...images];
+    next[index] = { ...next[index], [field]: value };
+    onChange(next);
+  };
+
+  const moveImage = (from: number, to: number) => {
+    if (to < 0 || to >= images.length) return;
+    const next = [...images];
+    const [moved] = next.splice(from, 1);
+    next.splice(to, 0, moved);
+    onChange(next);
+  };
+
+  return (
+    <div className="space-y-2">
+      {images.map((img, i) => (
+        <div key={i} className="bg-gray-50 rounded-lg p-2 relative">
+          <div className="flex items-start gap-2">
+            {img.src && (
+              <img src={img.src} alt={img.alt} className="w-16 h-12 object-cover rounded flex-shrink-0" />
+            )}
+            <div className="flex-1 space-y-1">
+              <ImagePicker
+                value={img.src}
+                onChange={(url) => updateImage(i, "src", url)}
+              />
+              <input
+                type="text"
+                value={img.alt}
+                onChange={(e) => updateImage(i, "alt", e.target.value)}
+                className="w-full p-1.5 border border-gray-200 rounded text-xs"
+                placeholder="Alt text"
+              />
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <button
+                onClick={() => moveImage(i, i - 1)}
+                disabled={i === 0}
+                className="text-gray-400 hover:text-gray-600 disabled:opacity-20 p-0.5"
+              >
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
+                </svg>
+              </button>
+              <button
+                onClick={() => moveImage(i, i + 1)}
+                disabled={i === images.length - 1}
+                className="text-gray-400 hover:text-gray-600 disabled:opacity-20 p-0.5"
+              >
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              <button
+                onClick={() => onChange(images.filter((_, idx) => idx !== i))}
+                className="text-gray-300 hover:text-red-500 p-0.5"
+              >
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      ))}
+      <button
+        onClick={() => onChange([...images, { src: "", alt: "" }])}
+        className="text-teal hover:text-teal-dark text-xs font-semibold transition-colors"
+      >
+        + Add Image
+      </button>
+    </div>
+  );
+}
+
+function HeroCarouselEditor({
+  data,
+  updateData,
+}: {
+  data: Record<string, unknown>;
+  updateData: (key: string, value: unknown) => void;
+}) {
+  const [showJson, setShowJson] = useState(false);
+  const slides = (data.slides as Array<{ image: string; alt: string }>) || [];
+  const overlay = (data.overlay as Record<string, unknown>) || {};
+  const primaryCta = (overlay.primaryCta as Record<string, unknown>) || {};
+  const secondaryCta = (overlay.secondaryCta as Record<string, unknown>) || {};
+
+  const updateOverlay = (key: string, value: unknown) => {
+    updateData("overlay", { ...overlay, [key]: value });
+  };
+
+  const updatePrimaryCta = (key: string, value: unknown) => {
+    updateData("overlay", {
+      ...overlay,
+      primaryCta: { ...primaryCta, [key]: value },
+    });
+  };
+
+  const updateSecondaryCta = (key: string, value: unknown) => {
+    updateData("overlay", {
+      ...overlay,
+      secondaryCta: { ...secondaryCta, [key]: value },
+    });
+  };
+
+  if (showJson) {
+    return (
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-semibold text-gray-500">JSON Editor</p>
+          <button
+            onClick={() => setShowJson(false)}
+            className="text-xs text-teal hover:text-teal-dark font-semibold"
+          >
+            Switch to UI
+          </button>
+        </div>
+        <textarea
+          value={JSON.stringify(data, null, 2)}
+          onChange={(e) => {
+            try {
+              const parsed = JSON.parse(e.target.value);
+              Object.keys(parsed).forEach((key) => updateData(key, parsed[key]));
+            } catch {}
+          }}
+          className="w-full p-3 border border-gray-200 rounded-lg font-mono text-xs"
+          rows={20}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-semibold text-gray-500">Hero Carousel</p>
+        <button
+          onClick={() => setShowJson(true)}
+          className="text-xs text-teal hover:text-teal-dark font-semibold"
+        >
+          Edit as JSON
+        </button>
+      </div>
+
+      {/* Slides */}
+      <details open className="border border-gray-200 rounded-lg">
+        <summary className="px-3 py-2 text-xs font-semibold text-gray-600 cursor-pointer hover:bg-gray-50">
+          Slides ({slides.length})
+        </summary>
+        <div className="p-3 border-t border-gray-100">
+          <ImageArrayEditor
+            images={slides.map((s) => ({ src: s.image, alt: s.alt }))}
+            onChange={(imgs) =>
+              updateData(
+                "slides",
+                imgs.map((img) => ({ image: img.src, alt: img.alt }))
+              )
+            }
+          />
+        </div>
+      </details>
+
+      {/* Overlay */}
+      <details open className="border border-gray-200 rounded-lg">
+        <summary className="px-3 py-2 text-xs font-semibold text-gray-600 cursor-pointer hover:bg-gray-50">
+          Overlay Content
+        </summary>
+        <div className="p-3 space-y-3 border-t border-gray-100">
+          <Field label="Label (above title)">
+            <input
+              type="text"
+              value={(overlay.label as string) || "Next Event"}
+              onChange={(e) => updateOverlay("label", e.target.value)}
+              className="input-sm"
+              placeholder="e.g. Next Event"
+            />
+          </Field>
+          <Field label="Event Name">
+            <input
+              type="text"
+              value={(overlay.eventName as string) || ""}
+              onChange={(e) => updateOverlay("eventName", e.target.value)}
+              className="input-sm"
+            />
+          </Field>
+          <Field label="Tagline">
+            <input
+              type="text"
+              value={(overlay.tagline as string) || ""}
+              onChange={(e) => updateOverlay("tagline", e.target.value)}
+              className="input-sm"
+            />
+          </Field>
+          <Field label="Location">
+            <input
+              type="text"
+              value={(overlay.location as string) || ""}
+              onChange={(e) => updateOverlay("location", e.target.value)}
+              className="input-sm"
+            />
+          </Field>
+          <Field label="Location URL (Google Maps)">
+            <input
+              type="url"
+              value={(overlay.locationUrl as string) || ""}
+              onChange={(e) => updateOverlay("locationUrl", e.target.value)}
+              className="input-sm"
+              placeholder="https://www.google.com/maps/..."
+            />
+          </Field>
+          <Field label="Dates">
+            <input
+              type="text"
+              value={(overlay.dates as string) || ""}
+              onChange={(e) => updateOverlay("dates", e.target.value)}
+              className="input-sm"
+              placeholder="e.g. August 20th - 24th, 2026"
+            />
+          </Field>
+        </div>
+      </details>
+
+      {/* Primary CTA */}
+      <details open className="border border-gray-200 rounded-lg">
+        <summary className="px-3 py-2 text-xs font-semibold text-gray-600 cursor-pointer hover:bg-gray-50">
+          Primary Button
+        </summary>
+        <div className="p-3 space-y-3 border-t border-gray-100">
+          <Field label="Button Text">
+            <input
+              type="text"
+              value={(primaryCta.text as string) || ""}
+              onChange={(e) => updatePrimaryCta("text", e.target.value)}
+              className="input-sm"
+              placeholder="Get Tickets"
+            />
+          </Field>
+          <Field label="Button URL">
+            <input
+              type="url"
+              value={(primaryCta.href as string) || ""}
+              onChange={(e) => updatePrimaryCta("href", e.target.value)}
+              className="input-sm"
+              placeholder="https://..."
+            />
+          </Field>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={(primaryCta.external as boolean) !== false}
+              onChange={(e) => updatePrimaryCta("external", e.target.checked)}
+            />
+            Open in new tab
+          </label>
+        </div>
+      </details>
+
+      {/* Secondary CTA */}
+      <details className="border border-gray-200 rounded-lg">
+        <summary className="px-3 py-2 text-xs font-semibold text-gray-600 cursor-pointer hover:bg-gray-50">
+          Secondary Button
+        </summary>
+        <div className="p-3 space-y-3 border-t border-gray-100">
+          <Field label="Button Text">
+            <input
+              type="text"
+              value={(secondaryCta.text as string) || ""}
+              onChange={(e) => updateSecondaryCta("text", e.target.value)}
+              className="input-sm"
+              placeholder="Learn More"
+            />
+          </Field>
+          <Field label="Button URL">
+            <input
+              type="text"
+              value={(secondaryCta.href as string) || ""}
+              onChange={(e) => updateSecondaryCta("href", e.target.value)}
+              className="input-sm"
+              placeholder="/events/escape"
+            />
+          </Field>
+        </div>
+      </details>
+
+      {/* Autoplay */}
+      <Field label="Autoplay Interval (ms)">
+        <input
+          type="number"
+          value={(data.autoplayInterval as number) || 5000}
+          onChange={(e) => updateData("autoplayInterval", Number(e.target.value))}
+          className="input-sm"
+          min={1000}
+          step={500}
+        />
+      </Field>
     </div>
   );
 }
