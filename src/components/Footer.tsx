@@ -55,8 +55,6 @@ export default function Footer() {
                 ["About", "/about"],
                 ["FAQ", "/faq"],
                 ["Contact", "/contact"],
-                ["Terms & Conduct", "/terms"],
-                ["Privacy Policy", "/privacy"],
               ].map(([label, href]) => (
                 <li key={label}>
                   <Link
@@ -116,7 +114,34 @@ export default function Footer() {
                   805.826.3378
                 </a>
               </li>
-              <li className="text-white/40">@vanfestusa</li>
+              <li>
+                <a
+                  href="https://instagram.com/vanfestusa"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-white transition-colors"
+                >
+                  @vanfestusa
+                </a>
+              </li>
+            </ul>
+            <ul className="space-y-2 text-sm text-white/40 mt-5">
+              <li>
+                <Link
+                  href="/terms"
+                  className="hover:text-white transition-colors"
+                >
+                  Terms &amp; Conduct
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/privacy"
+                  className="hover:text-white transition-colors"
+                >
+                  Privacy Policy
+                </Link>
+              </li>
             </ul>
           </div>
         </div>
