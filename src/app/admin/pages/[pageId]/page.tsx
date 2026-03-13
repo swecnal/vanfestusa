@@ -21,9 +21,11 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import type { Section, SectionType } from "@/lib/types";
+import type { Section, SectionType, SectionSettings } from "@/lib/types";
 import { SECTION_TYPE_LABELS } from "@/lib/types";
 import { SECTION_DEFAULTS } from "@/lib/section-defaults";
+import { type SiteStyles, EMPTY_SITE_STYLES } from "@/lib/styles";
+import SectionRenderer from "@/components/sections/SectionRenderer";
 import SectionEditorPanel from "@/components/admin/SectionEditorPanel";
 
 interface PageData {
@@ -35,262 +37,25 @@ interface PageData {
   sections: Section[];
 }
 
-/* ─── Visual Section Preview Card ─── */
-function SectionPreview({
-  section,
-  isSelected,
-  onSelect,
-}: {
-  section: Section;
-  isSelected: boolean;
-  onSelect: () => void;
-}) {
-  const d = section.data as Record<string, unknown>;
-  const type = section.section_type;
-
-  const renderPreviewContent = () => {
-    switch (type) {
-      case "hero_carousel":
-      case "hero_simple": {
-        const bgImage = d.bgImage as string;
-        const slides = d.slides as Array<Record<string, unknown>> | undefined;
-        const firstSlide = slides?.[0];
-        return (
-          <div
-            className="relative h-40 rounded-lg overflow-hidden flex items-center justify-center"
-            style={{
-              background: bgImage
-                ? `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url(${bgImage}) center/cover`
-                : "linear-gradient(135deg, #1a1a1a 0%, #2d3748 100%)",
-            }}
-          >
-            <div className="text-center px-4">
-              <p className="text-white font-display font-bold text-lg leading-tight">
-                {(d.title as string) || (firstSlide?.title as string) || "Hero Section"}
-              </p>
-              {((d.subtitle as string) || (firstSlide?.subtitle as string)) && (
-                <p className="text-white/70 text-xs mt-1">
-                  {(d.subtitle as string) || (firstSlide?.subtitle as string)}
-                </p>
-              )}
-            </div>
-          </div>
-        );
-      }
-
-      case "text_block": {
-        const html = d.html as string;
-        return (
-          <div className="p-4 bg-white rounded-lg">
-            <div
-              className="prose prose-sm max-w-none line-clamp-4 text-xs text-gray-600"
-              dangerouslySetInnerHTML={{ __html: html || "<p>Text content...</p>" }}
-            />
-          </div>
-        );
-      }
-
-      case "feature_grid": {
-        const items = (d.items as Array<Record<string, string>>) || [];
-        const cols = (d.columns as number) || 3;
-        return (
-          <div className={`grid gap-2 p-3 ${cols === 2 ? "grid-cols-2" : "grid-cols-3"}`}>
-            {items.slice(0, 6).map((item, i) => (
-              <div key={i} className="bg-gray-50 rounded-lg p-2 text-center">
-                <div className="w-6 h-6 bg-teal/10 rounded-full mx-auto mb-1" />
-                <p className="text-[10px] font-semibold text-charcoal truncate">{item.title}</p>
-              </div>
-            ))}
-          </div>
-        );
-      }
-
-      case "event_cards": {
-        const cards = (d.cards as Array<Record<string, unknown>>) || [];
-        return (
-          <div className="grid grid-cols-2 gap-2 p-3">
-            {cards.slice(0, 2).map((card, i) => (
-              <div
-                key={i}
-                className="rounded-lg h-20 flex items-end p-2 overflow-hidden"
-                style={{
-                  background: (card.gradient as string) || "linear-gradient(135deg, #1CA288 0%, #0d6b5c 100%)",
-                }}
-              >
-                <p className="text-white text-xs font-bold truncate">{card.title as string}</p>
-              </div>
-            ))}
-          </div>
-        );
-      }
-
-      case "faq_accordion": {
-        const items = (d.items as Array<Record<string, string>>) || [];
-        return (
-          <div className="p-3 space-y-1">
-            {items.slice(0, 4).map((item, i) => (
-              <div key={i} className="bg-gray-50 rounded px-3 py-2 flex items-center gap-2">
-                <svg className="w-3 h-3 text-teal flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                </svg>
-                <p className="text-[11px] text-charcoal truncate">{item.question}</p>
-              </div>
-            ))}
-            {items.length > 4 && (
-              <p className="text-[10px] text-gray-400 text-center">+{items.length - 4} more</p>
-            )}
-          </div>
-        );
-      }
-
-      case "cta_section": {
-        return (
-          <div className="p-6 text-center rounded-lg" style={{ background: "linear-gradient(135deg, #1CA288, #0d6b5c)" }}>
-            <p className="text-white font-display font-bold text-sm">{(d.title as string) || "Call to Action"}</p>
-            {(d.subtitle as string) && <p className="text-white/70 text-xs mt-1">{d.subtitle as string}</p>}
-          </div>
-        );
-      }
-
-      case "sponsor_marquee":
-      case "sponsor_list":
-      case "sponsor_tiers": {
-        return (
-          <div className="p-4 text-center bg-gray-50 rounded-lg">
-            <div className="flex justify-center gap-3 mb-2">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="w-10 h-10 bg-gray-200 rounded-lg" />
-              ))}
-            </div>
-            <p className="text-[10px] text-gray-400">Sponsors</p>
-          </div>
-        );
-      }
-
-      case "image_carousel":
-      case "photo_strip":
-      case "image_gallery": {
-        const images = (d.images as Array<Record<string, string>>) || [];
-        return (
-          <div className="flex gap-1 p-2 overflow-hidden rounded-lg bg-gray-50">
-            {(images.length > 0 ? images.slice(0, 4) : [{}, {}, {}, {}]).map((img, i) => (
-              <div key={i} className="flex-1 h-16 bg-gray-200 rounded overflow-hidden">
-                {img.src && (
-                  <img src={img.src} alt="" className="w-full h-full object-cover" />
-                )}
-              </div>
-            ))}
-          </div>
-        );
-      }
-
-      case "wave_divider": {
-        return (
-          <div className="h-12 rounded-lg overflow-hidden relative">
-            <div className="absolute inset-0" style={{ background: (d.fromColor as string) || "white" }} />
-            <svg viewBox="0 0 1440 100" className="absolute bottom-0 w-full">
-              <path
-                d="M0,50 C360,100 720,0 1080,50 C1260,75 1380,60 1440,50 L1440,100 L0,100 Z"
-                fill={(d.toColor as string) || "#1a1a1a"}
-              />
-            </svg>
-          </div>
-        );
-      }
-
-      case "contact_form": {
-        return (
-          <div className="p-4 bg-gray-50 rounded-lg">
-            <div className="space-y-2">
-              <div className="h-6 bg-gray-200 rounded w-2/3" />
-              <div className="h-6 bg-gray-200 rounded" />
-              <div className="h-16 bg-gray-200 rounded" />
-              <div className="h-8 bg-teal rounded w-24" />
-            </div>
-          </div>
-        );
-      }
-
-      case "two_column_cards":
-      case "cta_cards": {
-        const cards = (d.cards as Array<Record<string, string>>) || [];
-        return (
-          <div className="grid grid-cols-2 gap-2 p-3">
-            {(cards.length > 0 ? cards.slice(0, 2) : [{ title: "Card 1" }, { title: "Card 2" }]).map((card, i) => (
-              <div key={i} className="bg-gray-50 rounded-lg p-3">
-                <p className="text-[11px] font-semibold text-charcoal truncate">{card.title || `Card ${i + 1}`}</p>
-                {card.description && (
-                  <p className="text-[10px] text-gray-400 mt-1 line-clamp-2">{card.description}</p>
-                )}
-              </div>
-            ))}
-          </div>
-        );
-      }
-
-      case "schedule_accordion": {
-        const days = (d.days as Array<Record<string, unknown>>) || [];
-        return (
-          <div className="p-3 space-y-1">
-            {days.slice(0, 3).map((day, i) => (
-              <div key={i} className="bg-gray-50 rounded px-3 py-2">
-                <p className="text-[11px] font-semibold text-charcoal">{(day.label as string) || `Day ${i + 1}`}</p>
-              </div>
-            ))}
-          </div>
-        );
-      }
-
-      default: {
-        return (
-          <div className="p-4 bg-gray-50 rounded-lg text-center">
-            <p className="text-xs text-gray-400">{SECTION_TYPE_LABELS[type as SectionType] || type}</p>
-          </div>
-        );
-      }
-    }
-  };
-
-  return (
-    <div
-      onClick={onSelect}
-      className={`group relative rounded-xl border-2 transition-all cursor-pointer overflow-hidden ${
-        isSelected
-          ? "border-teal shadow-lg shadow-teal/10"
-          : "border-transparent hover:border-gray-300"
-      } ${!section.is_visible ? "opacity-40" : ""}`}
-    >
-      {/* Section type label */}
-      <div className={`flex items-center justify-between px-3 py-1.5 text-[10px] uppercase tracking-wider font-semibold ${
-        isSelected ? "bg-teal text-white" : "bg-gray-100 text-gray-500 group-hover:bg-gray-200"
-      }`}>
-        <span>{SECTION_TYPE_LABELS[type as SectionType] || type}</span>
-        {!section.is_visible && (
-          <span className="text-[9px] normal-case tracking-normal font-normal">Hidden</span>
-        )}
-      </div>
-
-      {/* Preview content */}
-      <div className="bg-white">
-        {renderPreviewContent()}
-      </div>
-    </div>
-  );
-}
-
-/* ─── Drag handle for reorder mode ─── */
-function SortablePreviewItem({
+/* ─── Sortable live section wrapper ─── */
+function SortableLiveSection({
   section,
   isSelected,
   onSelect,
   onToggleVisibility,
   onDelete,
+  siteStyles,
+  editingData,
+  editingSettings,
 }: {
   section: Section;
   isSelected: boolean;
   onSelect: () => void;
   onToggleVisibility: () => void;
   onDelete: () => void;
+  siteStyles: SiteStyles;
+  editingData?: Record<string, unknown>;
+  editingSettings?: Record<string, unknown>;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({ id: section.id });
@@ -300,15 +65,51 @@ function SortablePreviewItem({
     transition,
   };
 
+  // Use editing data if this section is being edited, otherwise use saved data
+  // Force is_visible=true so SectionRenderer always renders (we handle dimming ourselves)
+  const displaySection: Section = editingData
+    ? {
+        ...section,
+        is_visible: true,
+        data: editingData,
+        settings: (editingSettings || section.settings) as SectionSettings,
+      }
+    : { ...section, is_visible: true };
+
   return (
-    <div ref={setNodeRef} style={style} className="relative group/sort">
+    <div ref={setNodeRef} style={style} className="relative group/section">
+      {/* Click target overlay - captures clicks without interfering with section rendering */}
+      <div
+        onClick={onSelect}
+        className={`absolute inset-0 z-10 cursor-pointer transition-all ${
+          isSelected
+            ? "ring-2 ring-teal ring-inset shadow-lg shadow-teal/10"
+            : "hover:ring-1 hover:ring-gray-400 hover:ring-inset"
+        } ${!section.is_visible ? "bg-white/60" : ""}`}
+      />
+
+      {/* Section type label — appears on hover */}
+      <div className={`absolute top-2 left-2 z-20 transition-opacity ${
+        isSelected ? "opacity-100" : "opacity-0 group-hover/section:opacity-100"
+      }`}>
+        <span className={`text-[10px] uppercase tracking-wider font-semibold px-2 py-1 rounded shadow-sm ${
+          isSelected ? "bg-teal text-white" : "bg-charcoal/80 text-white"
+        }`}>
+          {SECTION_TYPE_LABELS[section.section_type as SectionType] || section.section_type}
+          {!section.is_visible && " (Hidden)"}
+        </span>
+      </div>
+
       {/* Floating action bar */}
-      <div className="absolute -top-3 right-2 z-10 flex items-center gap-1 opacity-0 group-hover/sort:opacity-100 transition-opacity">
+      <div className={`absolute top-2 right-2 z-20 flex items-center gap-1 transition-opacity ${
+        isSelected ? "opacity-100" : "opacity-0 group-hover/section:opacity-100"
+      }`}>
         <button
           className="bg-charcoal text-white rounded-full p-1.5 shadow-lg cursor-grab active:cursor-grabbing"
           title="Drag to reorder"
           {...attributes}
           {...listeners}
+          onClick={(e) => e.stopPropagation()}
         >
           <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
             <path d="M8 6a2 2 0 11-4 0 2 2 0 014 0zm0 6a2 2 0 11-4 0 2 2 0 014 0zm0 6a2 2 0 11-4 0 2 2 0 014 0zm8-12a2 2 0 11-4 0 2 2 0 014 0zm0 6a2 2 0 11-4 0 2 2 0 014 0zm0 6a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -340,11 +141,10 @@ function SortablePreviewItem({
         </button>
       </div>
 
-      <SectionPreview
-        section={section}
-        isSelected={isSelected}
-        onSelect={onSelect}
-      />
+      {/* Live section render */}
+      <div className={!section.is_visible ? "opacity-30" : ""}>
+        <SectionRenderer section={displaySection} siteStyles={siteStyles} />
+      </div>
     </div>
   );
 }
@@ -367,8 +167,8 @@ function DropZone({
     <div
       className={`relative transition-all duration-150 rounded-lg ${
         isOver
-          ? "h-14 bg-teal/10 border-2 border-dashed border-teal/50 mx-0"
-          : "h-6 mx-4"
+          ? "h-14 bg-teal/10 border-2 border-dashed border-teal/50 mx-4"
+          : "h-4"
       }`}
       onDragOver={(e) => {
         if (e.dataTransfer.types.includes("application/section-type")) {
@@ -420,6 +220,10 @@ export default function PageEditorPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [externalDragActive, setExternalDragActive] = useState(false);
+  const [siteStyles, setSiteStyles] = useState<SiteStyles>(EMPTY_SITE_STYLES);
+  // In-progress editing state for real-time preview
+  const [editingData, setEditingData] = useState<Record<string, unknown> | null>(null);
+  const [editingSettings, setEditingSettings] = useState<Record<string, unknown> | null>(null);
   const dragCounter = useRef(0);
 
   const { registerHandler, unregisterHandler } = usePageEditor();
@@ -442,6 +246,21 @@ export default function PageEditorPage() {
   useEffect(() => {
     fetchPage();
   }, [fetchPage]);
+
+  // Fetch site styles for live section rendering
+  useEffect(() => {
+    fetch("/api/global-settings")
+      .then((r) => r.json())
+      .then((res) => {
+        const s = res.settings || {};
+        setSiteStyles({
+          button_styles: s.button_styles || { main: [], secondary: [] },
+          link_styles: s.link_styles || { primary: [], secondary: [] },
+          heading_styles: s.heading_styles || EMPTY_SITE_STYLES.heading_styles,
+        });
+      })
+      .catch(() => {});
+  }, []);
 
   const selectedSection = sections.find((s) => s.id === selectedSectionId);
 
@@ -484,7 +303,11 @@ export default function PageEditorPage() {
     if (!confirm("Delete this section?")) return;
 
     setSections((prev) => prev.filter((s) => s.id !== sectionId));
-    if (selectedSectionId === sectionId) setSelectedSectionId(null);
+    if (selectedSectionId === sectionId) {
+      setSelectedSectionId(null);
+      setEditingData(null);
+      setEditingSettings(null);
+    }
 
     await fetch(`/api/pages/${pageId}/sections/${sectionId}`, {
       method: "DELETE",
@@ -507,7 +330,6 @@ export default function PageEditorPage() {
       const { section } = await res.json();
 
       if (index !== undefined && index < sections.length) {
-        // Insert at specific index and reorder
         const newSections = [...sections];
         newSections.splice(index, 0, section);
         const reordered = newSections.map((s, i) => ({ ...s, sort_order: i }));
@@ -522,7 +344,6 @@ export default function PageEditorPage() {
           }),
         });
       } else {
-        // Append to end
         setSections((prev) => [...prev, section]);
         setSelectedSectionId(section.id);
       }
@@ -558,6 +379,19 @@ export default function PageEditorPage() {
     setSaving(false);
   };
 
+  // Handle real-time editing changes
+  const handleEditorChange = useCallback((data: Record<string, unknown>, settings: Record<string, unknown>) => {
+    setEditingData(data);
+    setEditingSettings(settings);
+  }, []);
+
+  // Clear editing state when selection changes
+  const handleSelectSection = useCallback((id: string | null) => {
+    setSelectedSectionId(id);
+    setEditingData(null);
+    setEditingSettings(null);
+  }, []);
+
   if (loading) {
     return <div className="text-center text-gray-400 py-12">Loading...</div>;
   }
@@ -568,10 +402,10 @@ export default function PageEditorPage() {
 
   return (
     <div className="flex gap-0 -m-6 h-[calc(100vh-57px)]">
-      {/* Center: Visual preview */}
-      <div className="flex-1 bg-gray-100 overflow-auto">
+      {/* Center: Live preview */}
+      <div className="flex-1 overflow-auto bg-white">
         {/* Page header bar */}
-        <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between">
+        <div className="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-gray-200 px-4 py-2 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <h3 className="font-display font-bold text-sm text-charcoal">
               {page.title}
@@ -596,9 +430,8 @@ export default function PageEditorPage() {
           </a>
         </div>
 
-        {/* Visual sections */}
+        {/* Live sections */}
         <div
-          className="p-4 max-w-4xl mx-auto"
           onDragEnter={(e) => {
             if (e.dataTransfer.types.includes("application/section-type")) {
               dragCounter.current++;
@@ -626,8 +459,8 @@ export default function PageEditorPage() {
         >
           {sections.length === 0 ? (
             <div
-              className={`text-center py-20 rounded-xl transition-all ${
-                externalDragActive ? "bg-teal/5 border-2 border-dashed border-teal/40" : ""
+              className={`text-center py-20 transition-all ${
+                externalDragActive ? "bg-teal/5 border-2 border-dashed border-teal/40 mx-4 mt-4 rounded-xl" : ""
               }`}
               onDragOver={(e) => {
                 if (e.dataTransfer.types.includes("application/section-type")) {
@@ -649,7 +482,7 @@ export default function PageEditorPage() {
               </p>
             </div>
           ) : (
-            <div className="space-y-0">
+            <div>
               <DropZone index={0} onDrop={handleAddSectionAtIndex} isActive={externalDragActive} />
               <DndContext
                 sensors={sensors}
@@ -662,12 +495,15 @@ export default function PageEditorPage() {
                 >
                   {sections.map((section, idx) => (
                     <div key={section.id}>
-                      <SortablePreviewItem
+                      <SortableLiveSection
                         section={section}
                         isSelected={selectedSectionId === section.id}
-                        onSelect={() => setSelectedSectionId(section.id)}
+                        onSelect={() => handleSelectSection(section.id)}
                         onToggleVisibility={() => handleToggleVisibility(section)}
                         onDelete={() => handleDeleteSection(section.id)}
+                        siteStyles={siteStyles}
+                        editingData={selectedSectionId === section.id && editingData ? editingData : undefined}
+                        editingSettings={selectedSectionId === section.id && editingSettings ? editingSettings : undefined}
                       />
                       <DropZone index={idx + 1} onDrop={handleAddSectionAtIndex} isActive={externalDragActive} />
                     </div>
@@ -679,15 +515,15 @@ export default function PageEditorPage() {
         </div>
       </div>
 
-      {/* Right panel: Section editor */}
+      {/* Floating editor panel */}
       {selectedSection && (
-        <div className="w-96 bg-white border-l border-gray-200 overflow-y-auto flex-shrink-0">
-          <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+        <div className="fixed top-[57px] right-0 bottom-0 w-96 z-40 bg-white border-l border-gray-200 shadow-2xl overflow-y-auto">
+          <div className="sticky top-0 z-10 bg-white p-4 border-b border-gray-100 flex items-center justify-between">
             <h3 className="font-display font-semibold text-sm text-charcoal">
               {SECTION_TYPE_LABELS[selectedSection.section_type as SectionType]}
             </h3>
             <button
-              onClick={() => setSelectedSectionId(null)}
+              onClick={() => handleSelectSection(null)}
               className="text-gray-400 hover:text-gray-600"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -699,6 +535,7 @@ export default function PageEditorPage() {
             section={selectedSection}
             onSave={(data, settings) => handleSaveSection(selectedSection.id, data, settings)}
             saving={saving}
+            onChange={handleEditorChange}
           />
         </div>
       )}

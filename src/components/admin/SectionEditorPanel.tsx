@@ -17,9 +17,10 @@ interface Props {
   section: Section;
   onSave: (data: Record<string, unknown>, settings?: Record<string, unknown>) => void;
   saving: boolean;
+  onChange?: (data: Record<string, unknown>, settings: Record<string, unknown>) => void;
 }
 
-export default function SectionEditorPanel({ section, onSave, saving }: Props) {
+export default function SectionEditorPanel({ section, onSave, saving, onChange }: Props) {
   const [data, setData] = useState<Record<string, unknown>>(section.data);
   const [settings, setSettings] = useState<Record<string, unknown>>(section.settings as unknown as Record<string, unknown>);
   const [siteStyles, setSiteStyles] = useState<SiteStyles>(EMPTY_SITE_STYLES);
@@ -45,11 +46,19 @@ export default function SectionEditorPanel({ section, onSave, saving }: Props) {
   }, []);
 
   const updateData = (key: string, value: unknown) => {
-    setData((prev) => ({ ...prev, [key]: value }));
+    setData((prev) => {
+      const next = { ...prev, [key]: value };
+      onChange?.(next, settings);
+      return next;
+    });
   };
 
   const updateSettings = (key: string, value: unknown) => {
-    setSettings((prev) => ({ ...prev, [key]: value }));
+    setSettings((prev) => {
+      const next = { ...prev, [key]: value };
+      onChange?.(data, next);
+      return next;
+    });
   };
 
   const handleSave = () => {
