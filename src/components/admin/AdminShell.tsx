@@ -103,6 +103,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [elementsOpen, setElementsOpen] = useState(true);
 
   const isLoginPage = pathname === "/admin/login" || pathname === "/admin/change-password";
   const isPageEditor = pathname.startsWith("/admin/pages/") && pathname !== "/admin/pages";
@@ -192,22 +193,8 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
           })}
         </nav>
 
-        {/* Scrollable area: Elements + Site Pages */}
+        {/* Scrollable area: Site Pages + Elements */}
         <div className="flex-1 min-h-0 overflow-y-auto scrollbar-thin">
-          {/* ELEMENTS */}
-          {sidebarOpen && (
-            <>
-              <div className="px-4 pt-2 pb-1">
-                <p className="text-[10px] uppercase tracking-wider text-white/30 font-semibold">
-                  Elements
-                </p>
-              </div>
-              <div className="px-1 pb-2">
-                <InlineElementPalette />
-              </div>
-            </>
-          )}
-
           {/* SITE PAGES */}
           <div className="px-4 pt-2 pb-1">
             {sidebarOpen ? (
@@ -218,9 +205,35 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
               <div className="border-t border-white/10" />
             )}
           </div>
-          <div className="px-1">
+          <div className="px-1" onClick={() => { if (!sidebarOpen) setSidebarOpen(true); }}>
             <PageTree collapsed={!sidebarOpen} />
           </div>
+
+          {/* ELEMENTS */}
+          {sidebarOpen && (
+            <>
+              <button
+                onClick={() => setElementsOpen(!elementsOpen)}
+                className="w-full flex items-center gap-1.5 px-4 pt-4 pb-1 group"
+              >
+                <svg
+                  className={`w-3 h-3 text-white/30 transition-transform flex-shrink-0 ${elementsOpen ? "rotate-90" : ""}`}
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z" />
+                </svg>
+                <p className="text-[10px] uppercase tracking-wider text-white/30 font-semibold group-hover:text-white/50 transition-colors">
+                  Elements
+                </p>
+              </button>
+              {elementsOpen && (
+                <div className="px-1 pb-2">
+                  <InlineElementPalette />
+                </div>
+              )}
+            </>
+          )}
         </div>
 
         {/* Bottom */}
