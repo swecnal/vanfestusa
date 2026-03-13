@@ -79,8 +79,12 @@ export const SECTION_DEFAULTS: Record<SectionType, Record<string, unknown>> = {
     enableLightbox: true,
   },
   wave_divider: {
+    dividerType: "wave",
     fromColor: "white",
     toColor: "#1a1a1a",
+    height: 60,
+    frequency: 2,
+    intensity: 50,
   },
   vehicle_convoy: {
     seed: 42,

@@ -326,10 +326,30 @@ export interface ImageGalleryData {
 }
 
 export interface WaveDividerData {
+  dividerType?: "wave" | "zigzag" | "curve" | "straight" | "convoy" | "festival";
   fromColor: string;
   toColor: string;
   height?: number;
   svgPath?: string;
+  // Wave/zigzag
+  frequency?: number;  // 1-5
+  intensity?: number;  // 1-100
+  // Convoy
+  seed?: number;
+  count?: number;
+  reverse?: boolean;
+  // Festival
+  festivalElements?: {
+    vendorBooths?: boolean;
+    stage?: boolean;
+    dancing?: boolean;
+    campfireWithPeople?: boolean;
+    campfireSolo?: boolean;
+    tents?: boolean;
+    peopleMeandering?: boolean;
+  };
+  festivalSeed?: number;
+  festivalBgColor?: string;
 }
 
 export interface VehicleConvoyData {

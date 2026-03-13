@@ -321,29 +321,168 @@ function SectionFields({
       );
     }
 
-    case "wave_divider":
+    case "wave_divider": {
+      const dividerType = (data.dividerType as string) || "wave";
+      const showShapeColors = ["wave", "zigzag", "curve", "straight"].includes(dividerType);
+      const showFrequency = ["wave", "zigzag"].includes(dividerType);
+      const showIntensity = ["wave", "zigzag", "curve"].includes(dividerType);
+      const showConvoyFields = dividerType === "convoy";
+      const showFestivalFields = dividerType === "festival";
+      const festivalEls = (data.festivalElements as Record<string, boolean>) || {};
       return (
         <div className="space-y-3">
-          <Field label="From Color">
-            <input
-              type="text"
-              value={(data.fromColor as string) || "white"}
-              onChange={(e) => updateData("fromColor", e.target.value)}
+          <Field label="Divider Type">
+            <select
+              value={dividerType}
+              onChange={(e) => updateData("dividerType", e.target.value)}
               className="input-sm"
-              placeholder="white or #hex"
-            />
+            >
+              <option value="wave">Wave</option>
+              <option value="zigzag">Zigzag</option>
+              <option value="curve">Curve</option>
+              <option value="straight">Straight</option>
+              <option value="convoy">Vehicle Convoy</option>
+              <option value="festival">Festival Scene</option>
+            </select>
           </Field>
-          <Field label="To Color">
-            <input
-              type="text"
-              value={(data.toColor as string) || "#1a1a1a"}
-              onChange={(e) => updateData("toColor", e.target.value)}
-              className="input-sm"
-              placeholder="#1a1a1a or color name"
-            />
-          </Field>
+
+          {showShapeColors && (
+            <>
+              <Field label="From Color">
+                <input
+                  type="text"
+                  value={(data.fromColor as string) || "white"}
+                  onChange={(e) => updateData("fromColor", e.target.value)}
+                  className="input-sm"
+                  placeholder="white or #hex"
+                />
+              </Field>
+              <Field label="To Color">
+                <input
+                  type="text"
+                  value={(data.toColor as string) || "#1a1a1a"}
+                  onChange={(e) => updateData("toColor", e.target.value)}
+                  className="input-sm"
+                  placeholder="#1a1a1a or color name"
+                />
+              </Field>
+              <Field label={`Height: ${(data.height as number) || 60}px`}>
+                <input
+                  type="range"
+                  min={20}
+                  max={200}
+                  value={(data.height as number) || 60}
+                  onChange={(e) => updateData("height", Number(e.target.value))}
+                  className="w-full"
+                />
+              </Field>
+            </>
+          )}
+
+          {showFrequency && (
+            <Field label={`Frequency: ${(data.frequency as number) || 2}`}>
+              <input
+                type="range"
+                min={1}
+                max={5}
+                step={1}
+                value={(data.frequency as number) || 2}
+                onChange={(e) => updateData("frequency", Number(e.target.value))}
+                className="w-full"
+              />
+            </Field>
+          )}
+
+          {showIntensity && (
+            <Field label={`Intensity: ${(data.intensity as number) || 50}%`}>
+              <input
+                type="range"
+                min={1}
+                max={100}
+                value={(data.intensity as number) || 50}
+                onChange={(e) => updateData("intensity", Number(e.target.value))}
+                className="w-full"
+              />
+            </Field>
+          )}
+
+          {showConvoyFields && (
+            <>
+              <Field label="Seed">
+                <input
+                  type="number"
+                  value={(data.seed as number) || 42}
+                  onChange={(e) => updateData("seed", Number(e.target.value))}
+                  className="input-sm"
+                />
+              </Field>
+              <Field label="Vehicle Count">
+                <input
+                  type="number"
+                  value={(data.count as number) || 6}
+                  onChange={(e) => updateData("count", Number(e.target.value))}
+                  className="input-sm"
+                  min={1}
+                  max={20}
+                />
+              </Field>
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={(data.reverse as boolean) || false}
+                  onChange={(e) => updateData("reverse", e.target.checked)}
+                />
+                Reverse direction
+              </label>
+            </>
+          )}
+
+          {showFestivalFields && (
+            <>
+              <Field label="Seed">
+                <input
+                  type="number"
+                  value={(data.festivalSeed as number) || 42}
+                  onChange={(e) => updateData("festivalSeed", Number(e.target.value))}
+                  className="input-sm"
+                />
+              </Field>
+              <Field label="Background Color">
+                <input
+                  type="text"
+                  value={(data.festivalBgColor as string) || "#F5F0E8"}
+                  onChange={(e) => updateData("festivalBgColor", e.target.value)}
+                  className="input-sm"
+                  placeholder="#F5F0E8"
+                />
+              </Field>
+              <p className="text-xs text-gray-500 font-semibold mt-1">Scene Elements</p>
+              {([
+                ["tents", "Camping Tents"],
+                ["vendorBooths", "Vendor Booths"],
+                ["stage", "Stage & Band"],
+                ["dancing", "Dancing People"],
+                ["campfireWithPeople", "Campfire w/ People"],
+                ["campfireSolo", "Solo Campfire"],
+                ["peopleMeandering", "People Walking"],
+              ] as const).map(([key, label]) => (
+                <label key={key} className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={festivalEls[key] ?? (key !== "campfireSolo")}
+                    onChange={(e) => {
+                      const els = { ...festivalEls, [key]: e.target.checked };
+                      updateData("festivalElements", els);
+                    }}
+                  />
+                  {label}
+                </label>
+              ))}
+            </>
+          )}
         </div>
       );
+    }
 
     case "vehicle_convoy":
       return (
