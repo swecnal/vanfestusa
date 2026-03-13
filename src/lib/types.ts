@@ -141,12 +141,19 @@ export interface TextBlockData {
 export interface TwoColumnCardsData {
   heading?: string;
   headingSubtitle?: string;
+  columns?: 1 | 2 | 3 | 4;
   cards: Array<{
     title: string;
     subtitle?: string;
     body: string;
     bgColor?: string;
     icon?: string;
+    image?: string;
+    imagePosition?: "small-left" | "small-right" | "small-center" | "full-width" | "background";
+    titleStyle?: import("@/lib/styles").TextStyleConfig;
+    subtitleStyle?: import("@/lib/styles").TextStyleConfig;
+    bodyStyle?: import("@/lib/styles").TextStyleConfig;
+    button?: { text: string; href: string; external?: boolean; styleId?: string };
   }>;
   ctaButton?: { text: string; href: string; external?: boolean };
 }

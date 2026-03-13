@@ -42,7 +42,7 @@ export default function SectionRenderer({ section, siteStyles = EMPTY_SITE_STYLE
       case "text_block":
         return <TextBlockSection data={data} settings={settings} />;
       case "two_column_cards":
-        return <TwoColumnCardsSection data={data} settings={settings} />;
+        return <TwoColumnCardsSection data={data} settings={settings} siteStyles={siteStyles} />;
       case "feature_grid":
         return <FeatureGridSection data={data} settings={settings} />;
       case "event_cards":

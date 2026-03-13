@@ -458,23 +458,7 @@ function SectionFields({
 
     case "two_column_cards":
       return (
-        <div className="space-y-3">
-          <Field label="Heading">
-            <input
-              type="text"
-              value={(data.heading as string) || ""}
-              onChange={(e) => updateData("heading", e.target.value)}
-              className="input-sm"
-            />
-          </Field>
-          <Field label="Cards">
-            <ArrayEditor
-              items={(data.cards as Array<Record<string, string>>) || []}
-              onChange={(items) => updateData("cards", items)}
-              fields={["title", "subtitle", "body"]}
-            />
-          </Field>
-        </div>
+        <ColumnCardsEditor data={data} updateData={updateData} siteStyles={siteStyles} />
       );
 
     case "event_cards":
@@ -1316,6 +1300,156 @@ function TextBlockEditor({
         />
         Apply prose typography
       </label>
+    </div>
+  );
+}
+
+function ColumnCardsEditor({
+  data,
+  updateData,
+  siteStyles,
+}: {
+  data: Record<string, unknown>;
+  updateData: (key: string, value: unknown) => void;
+  siteStyles: SiteStyles;
+}) {
+  const cards = (data.cards as Array<Record<string, unknown>>) || [];
+
+  const updateCard = (index: number, key: string, value: unknown) => {
+    const next = [...cards];
+    next[index] = { ...next[index], [key]: value };
+    updateData("cards", next);
+  };
+
+  const updateCardButton = (index: number, key: string, value: unknown) => {
+    const next = [...cards];
+    const btn = (next[index].button as Record<string, unknown>) || {};
+    next[index] = { ...next[index], button: { ...btn, [key]: value } };
+    updateData("cards", next);
+  };
+
+  const removeCard = (index: number) => {
+    updateData("cards", cards.filter((_, i) => i !== index));
+  };
+
+  const addCard = () => {
+    updateData("cards", [...cards, { title: "New Card", body: "" }]);
+  };
+
+  return (
+    <div className="space-y-3">
+      <Field label="Heading">
+        <input
+          type="text"
+          value={(data.heading as string) || ""}
+          onChange={(e) => updateData("heading", e.target.value)}
+          className="input-sm"
+        />
+      </Field>
+      <Field label="Heading Subtitle">
+        <input
+          type="text"
+          value={(data.headingSubtitle as string) || ""}
+          onChange={(e) => updateData("headingSubtitle", e.target.value)}
+          className="input-sm"
+        />
+      </Field>
+      <Field label="Columns">
+        <select
+          value={String(data.columns || 2)}
+          onChange={(e) => updateData("columns", Number(e.target.value))}
+          className="input-sm"
+        >
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+        </select>
+      </Field>
+
+      {cards.map((card, i) => (
+        <details key={i} className="border border-gray-200 rounded-lg">
+          <summary className="px-3 py-2 text-xs font-semibold text-gray-600 cursor-pointer hover:bg-gray-50 flex items-center justify-between">
+            <span>Card {i + 1}: {(card.title as string) || "Untitled"}</span>
+          </summary>
+          <div className="p-3 space-y-3 border-t border-gray-100">
+            <Field label="Title">
+              <input type="text" value={(card.title as string) || ""} onChange={(e) => updateCard(i, "title", e.target.value)} className="input-sm" />
+            </Field>
+            <TextStyleEditor label="Title Style" value={(card.titleStyle as TextStyleConfig) || {}} onChange={(s) => updateCard(i, "titleStyle", s)} />
+            <Field label="Subtitle">
+              <input type="text" value={(card.subtitle as string) || ""} onChange={(e) => updateCard(i, "subtitle", e.target.value)} className="input-sm" />
+            </Field>
+            <TextStyleEditor label="Subtitle Style" value={(card.subtitleStyle as TextStyleConfig) || {}} onChange={(s) => updateCard(i, "subtitleStyle", s)} />
+            <Field label="Body">
+              <textarea value={(card.body as string) || ""} onChange={(e) => updateCard(i, "body", e.target.value)} className="input-sm" rows={3} />
+            </Field>
+            <TextStyleEditor label="Body Style" value={(card.bodyStyle as TextStyleConfig) || {}} onChange={(s) => updateCard(i, "bodyStyle", s)} />
+            <Field label="Background Color">
+              <input type="text" value={(card.bgColor as string) || ""} onChange={(e) => updateCard(i, "bgColor", e.target.value)} className="input-sm" placeholder="e.g. bg-sand, #hex" />
+            </Field>
+            <Field label="Card Image">
+              <ImagePicker value={(card.image as string) || ""} onChange={(url) => updateCard(i, "image", url)} />
+            </Field>
+            {(card.image as string) && (
+              <Field label="Image Position">
+                <select value={(card.imagePosition as string) || "full-width"} onChange={(e) => updateCard(i, "imagePosition", e.target.value)} className="input-sm">
+                  <option value="full-width">Full Width (top)</option>
+                  <option value="small-left">Small Left</option>
+                  <option value="small-right">Small Right</option>
+                  <option value="small-center">Small Center</option>
+                  <option value="background">Background</option>
+                </select>
+              </Field>
+            )}
+
+            {/* Card Button */}
+            <details className="border border-gray-100 rounded-lg">
+              <summary className="px-2 py-1.5 text-[10px] font-semibold text-gray-400 uppercase cursor-pointer hover:bg-gray-50">
+                Card Button
+              </summary>
+              <div className="p-2 space-y-2 border-t border-gray-100">
+                <Field label="Text">
+                  <input type="text" value={((card.button as Record<string, unknown>)?.text as string) || ""} onChange={(e) => updateCardButton(i, "text", e.target.value)} className="input-sm" placeholder="Button text" />
+                </Field>
+                <Field label="URL">
+                  <input type="text" value={((card.button as Record<string, unknown>)?.href as string) || ""} onChange={(e) => updateCardButton(i, "href", e.target.value)} className="input-sm" placeholder="/page or https://..." />
+                </Field>
+                <label className="flex items-center gap-2 text-xs">
+                  <input type="checkbox" checked={((card.button as Record<string, unknown>)?.external as boolean) || false} onChange={(e) => updateCardButton(i, "external", e.target.checked)} />
+                  Open in new tab
+                </label>
+                <ButtonStylePicker
+                  value={(card.button as Record<string, unknown>)?.styleId as string | undefined}
+                  onChange={(id) => updateCardButton(i, "styleId", id)}
+                  siteStyles={siteStyles}
+                />
+                {((card.button as Record<string, unknown>)?.text as string) && (
+                  <button
+                    onClick={() => updateCard(i, "button", undefined)}
+                    className="text-red-400 hover:text-red-600 text-[10px] font-semibold"
+                  >
+                    Remove Button
+                  </button>
+                )}
+              </div>
+            </details>
+
+            <button
+              onClick={() => removeCard(i)}
+              className="text-red-400 hover:text-red-600 text-xs font-semibold"
+            >
+              Remove Card
+            </button>
+          </div>
+        </details>
+      ))}
+      <button
+        onClick={addCard}
+        className="text-teal hover:text-teal-dark text-xs font-semibold transition-colors"
+      >
+        + Add Card
+      </button>
     </div>
   );
 }
