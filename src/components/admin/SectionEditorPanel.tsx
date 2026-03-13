@@ -189,25 +189,7 @@ function SectionFields({
 
     case "text_block":
       return (
-        <div className="space-y-3">
-          <Field label="Content">
-            <RichTextEditor
-              content={(data.html as string) || ""}
-              onChange={(html) => updateData("html", html)}
-            />
-          </Field>
-          <Field label="Alignment">
-            <select
-              value={(data.alignment as string) || "left"}
-              onChange={(e) => updateData("alignment", e.target.value)}
-              className="input-sm"
-            >
-              <option value="left">Left</option>
-              <option value="center">Center</option>
-              <option value="right">Right</option>
-            </select>
-          </Field>
-        </div>
+        <TextBlockEditor data={data} updateData={updateData} />
       );
 
     case "feature_grid":
@@ -1127,6 +1109,95 @@ function HeroCarouselEditor({
           step={500}
         />
       </Field>
+    </div>
+  );
+}
+
+function TextBlockEditor({
+  data,
+  updateData,
+}: {
+  data: Record<string, unknown>;
+  updateData: (key: string, value: unknown) => void;
+}) {
+  const [mode, setMode] = useState<"visual" | "html" | "preview">("preview");
+  const html = (data.html as string) || "";
+  const alignment = (data.alignment as string) || "left";
+
+  return (
+    <div className="space-y-3">
+      {/* Mode tabs */}
+      <div className="flex rounded-lg border border-gray-200 overflow-hidden">
+        {(["preview", "visual", "html"] as const).map((m) => (
+          <button
+            key={m}
+            onClick={() => setMode(m)}
+            className={`flex-1 px-3 py-1.5 text-xs font-semibold transition-colors ${
+              mode === m
+                ? "bg-teal text-white"
+                : "bg-gray-50 text-gray-500 hover:bg-gray-100"
+            }`}
+          >
+            {m === "preview" ? "Preview" : m === "visual" ? "Editor" : "HTML"}
+          </button>
+        ))}
+      </div>
+
+      {mode === "preview" && (
+        <div className="border border-gray-200 rounded-lg overflow-hidden">
+          <div className="bg-gray-50 px-3 py-1.5 border-b border-gray-200">
+            <p className="text-[10px] text-gray-400 uppercase font-semibold">Live Preview</p>
+          </div>
+          <div
+            className={`p-6 bg-white ${
+              alignment === "center" ? "text-center" : alignment === "right" ? "text-right" : "text-left"
+            }`}
+          >
+            <div
+              className="prose prose-lg max-w-none"
+              dangerouslySetInnerHTML={{ __html: html }}
+            />
+          </div>
+        </div>
+      )}
+
+      {mode === "visual" && (
+        <RichTextEditor
+          content={html}
+          onChange={(newHtml) => updateData("html", newHtml)}
+        />
+      )}
+
+      {mode === "html" && (
+        <textarea
+          value={html}
+          onChange={(e) => updateData("html", e.target.value)}
+          className="w-full p-3 border border-gray-200 rounded-lg font-mono text-xs leading-relaxed"
+          rows={12}
+          spellCheck={false}
+        />
+      )}
+
+      <Field label="Alignment">
+        <select
+          value={alignment}
+          onChange={(e) => updateData("alignment", e.target.value)}
+          className="input-sm"
+        >
+          <option value="left">Left</option>
+          <option value="center">Center</option>
+          <option value="right">Right</option>
+        </select>
+      </Field>
+
+      <label className="flex items-center gap-2 text-sm">
+        <input
+          type="checkbox"
+          checked={(data.prose as boolean) !== false}
+          onChange={(e) => updateData("prose", e.target.checked)}
+        />
+        Apply prose typography
+      </label>
     </div>
   );
 }
