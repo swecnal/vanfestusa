@@ -34,8 +34,10 @@ export default function LoginPage() {
       } else {
         router.push("/admin");
       }
-    } catch {
+    } catch (err) {
+      console.error("Login error:", err);
       toast.error("Network error");
+    } finally {
       setLoading(false);
     }
   };
