@@ -1,6 +1,7 @@
 "use client";
 
 import { useEditor, EditorContent, Extension } from "@tiptap/react";
+import { BubbleMenu } from "@tiptap/react/menus";
 import StarterKit from "@tiptap/starter-kit";
 import { TextStyle } from "@tiptap/extension-text-style";
 import { Color } from "@tiptap/extension-color";
@@ -8,12 +9,36 @@ import { FontFamily } from "@tiptap/extension-font-family";
 import { TextAlign } from "@tiptap/extension-text-align";
 import { Link } from "@tiptap/extension-link";
 import { Highlight } from "@tiptap/extension-highlight";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 
 interface Props {
   content: string;
   onChange: (html: string) => void;
 }
+
+/* ─── Button style presets ─── */
+const BUTTON_STYLES = [
+  {
+    label: "Text Link",
+    value: "",
+    preview: "text-teal underline",
+  },
+  {
+    label: "Primary Button",
+    value: "inline-block bg-teal hover:bg-teal-dark text-white font-semibold px-6 py-3 rounded-xl transition-colors no-underline",
+    preview: "bg-teal text-white px-3 py-1 rounded-lg text-xs",
+  },
+  {
+    label: "Outline Button",
+    value: "inline-block border-2 border-teal text-teal hover:bg-teal hover:text-white font-semibold px-6 py-3 rounded-xl transition-colors no-underline",
+    preview: "border-2 border-teal text-teal px-3 py-1 rounded-lg text-xs",
+  },
+  {
+    label: "White Button",
+    value: "inline-block bg-white text-charcoal font-semibold px-6 py-3 rounded-xl transition-colors hover:bg-gray-100 no-underline",
+    preview: "bg-white text-charcoal border px-3 py-1 rounded-lg text-xs",
+  },
+];
 
 /* ─── Custom FontSize extension ─── */
 const FontSize = Extension.create({
@@ -72,7 +97,6 @@ const StylePreserver = Extension.create({
             parseHTML: (el) => {
               const s = el.getAttribute("style");
               if (!s) return null;
-              // Keep margin, padding, and other layout styles
               const kept = s
                 .split(";")
                 .map((p) => p.trim())
@@ -97,6 +121,23 @@ const StylePreserver = Extension.create({
   },
 });
 
+/* ─── Extended Link with class preservation ─── */
+const CustomLink = Link.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      class: {
+        default: null,
+        parseHTML: (el) => el.getAttribute("class") || null,
+        renderHTML: (attrs) => {
+          if (!attrs.class) return {};
+          return { class: attrs.class };
+        },
+      },
+    };
+  },
+});
+
 const FONT_FAMILIES = [
   { label: "Poppins", value: "Poppins" },
   { label: "Gothic A1", value: "Gothic A1" },
@@ -111,6 +152,8 @@ const COLORS = [
 
 export default function RichTextEditor({ content, onChange }: Props) {
   const isInternalUpdate = useRef(false);
+  const [linkUrl, setLinkUrl] = useState("");
+  const [showLinkInput, setShowLinkInput] = useState(false);
 
   const editor = useEditor({
     extensions: [
@@ -122,7 +165,7 @@ export default function RichTextEditor({ content, onChange }: Props) {
       LineHeight,
       StylePreserver,
       TextAlign.configure({ types: ["heading", "paragraph"] }),
-      Link.configure({ openOnClick: false }),
+      CustomLink.configure({ openOnClick: false }),
       Highlight.configure({ multicolor: true }),
     ],
     content,
@@ -132,7 +175,6 @@ export default function RichTextEditor({ content, onChange }: Props) {
     },
   });
 
-  // Only sync from parent if it wasn't our own update
   useEffect(() => {
     if (isInternalUpdate.current) {
       isInternalUpdate.current = false;
@@ -143,7 +185,41 @@ export default function RichTextEditor({ content, onChange }: Props) {
     }
   }, [content, editor]);
 
+  const currentLinkClass = editor?.getAttributes("link").class || "";
+  const currentLinkHref = editor?.getAttributes("link").href || "";
+
+  const setLinkStyle = useCallback(
+    (styleClass: string) => {
+      if (!editor) return;
+      const href = editor.getAttributes("link").href;
+      if (!href) return;
+      editor
+        .chain()
+        .focus()
+        .extendMarkRange("link")
+        .updateAttributes("link", { class: styleClass || null })
+        .run();
+    },
+    [editor]
+  );
+
+  const handleAddLink = useCallback(() => {
+    if (!editor) return;
+    if (showLinkInput) {
+      if (linkUrl) {
+        editor.chain().focus().setLink({ href: linkUrl }).run();
+      }
+      setShowLinkInput(false);
+      setLinkUrl("");
+    } else {
+      setLinkUrl(currentLinkHref || "");
+      setShowLinkInput(true);
+    }
+  }, [editor, showLinkInput, linkUrl, currentLinkHref]);
+
   if (!editor) return null;
+
+  const isLink = editor.isActive("link");
 
   return (
     <div className="border border-gray-300 rounded-lg overflow-hidden">
@@ -263,27 +339,123 @@ export default function RichTextEditor({ content, onChange }: Props) {
 
         {/* Link */}
         <ToolbarButton
-          active={editor.isActive("link")}
-          onClick={() => {
-            const url = prompt("Enter URL:");
-            if (url) {
-              editor.chain().focus().setLink({ href: url }).run();
-            } else {
-              editor.chain().focus().unsetLink().run();
-            }
-          }}
+          active={isLink}
+          onClick={handleAddLink}
           title="Link"
         >
           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
           </svg>
         </ToolbarButton>
+
+        {/* Inline link URL input */}
+        {showLinkInput && (
+          <div className="w-full flex items-center gap-1 pt-1 border-t border-gray-200 mt-0.5">
+            <input
+              type="url"
+              value={linkUrl}
+              onChange={(e) => setLinkUrl(e.target.value)}
+              placeholder="https://..."
+              className="flex-1 h-6 px-2 text-[11px] border border-gray-300 rounded bg-white"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  if (linkUrl) editor.chain().focus().setLink({ href: linkUrl }).run();
+                  setShowLinkInput(false);
+                  setLinkUrl("");
+                }
+                if (e.key === "Escape") {
+                  setShowLinkInput(false);
+                  setLinkUrl("");
+                }
+              }}
+              autoFocus
+            />
+            <button
+              onClick={() => {
+                if (linkUrl) editor.chain().focus().setLink({ href: linkUrl }).run();
+                setShowLinkInput(false);
+                setLinkUrl("");
+              }}
+              className="h-6 px-2 text-[10px] bg-teal text-white rounded font-semibold"
+            >
+              Set
+            </button>
+            <button
+              onClick={() => { setShowLinkInput(false); setLinkUrl(""); }}
+              className="h-6 px-1.5 text-[10px] text-gray-400 hover:text-gray-600"
+            >
+              Cancel
+            </button>
+          </div>
+        )}
       </div>
+
+      {/* Bubble menu — appears when cursor is on a link/button */}
+      <BubbleMenu
+        editor={editor}
+        shouldShow={({ editor: ed }) => ed.isActive("link")}
+      >
+        <div className="bg-white rounded-lg shadow-xl border border-gray-200 p-2 space-y-2 min-w-[240px]" onClick={(e) => e.stopPropagation()}>
+          {/* URL */}
+          <div>
+            <label className="text-[9px] uppercase text-gray-400 font-semibold block mb-0.5">URL</label>
+            <div className="flex gap-1">
+              <input
+                type="url"
+                defaultValue={currentLinkHref}
+                onBlur={(e) => {
+                  if (e.target.value && e.target.value !== currentLinkHref) {
+                    editor.chain().focus().extendMarkRange("link").updateAttributes("link", { href: e.target.value }).run();
+                  }
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    const val = (e.target as HTMLInputElement).value;
+                    if (val) editor.chain().focus().extendMarkRange("link").updateAttributes("link", { href: val }).run();
+                  }
+                }}
+                className="flex-1 h-6 px-2 text-[11px] border border-gray-300 rounded bg-white min-w-0"
+                placeholder="https://..."
+              />
+            </div>
+          </div>
+
+          {/* Style */}
+          <div>
+            <label className="text-[9px] uppercase text-gray-400 font-semibold block mb-0.5">Style</label>
+            <div className="flex flex-wrap gap-1">
+              {BUTTON_STYLES.map((bs) => (
+                <button
+                  key={bs.label}
+                  onClick={() => setLinkStyle(bs.value)}
+                  className={`text-[10px] px-2 py-1 rounded border transition-colors ${
+                    currentLinkClass === (bs.value || "")
+                      ? "border-teal bg-teal/10 text-teal font-semibold"
+                      : "border-gray-200 text-gray-600 hover:border-gray-300"
+                  }`}
+                >
+                  {bs.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Remove */}
+          <button
+            onClick={() => editor.chain().focus().extendMarkRange("link").unsetLink().run()}
+            className="text-[10px] text-red-500 hover:text-red-700 font-semibold"
+          >
+            Remove Link
+          </button>
+        </div>
+      </BubbleMenu>
 
       {/* Editor — styled to match site rendering */}
       <EditorContent
         editor={editor}
-        className="site-html-content max-w-none p-3 min-h-[120px] focus:outline-none [&_.ProseMirror]:outline-none [&_.ProseMirror]:min-h-[100px]"
+        className="site-html-content max-w-none p-3 min-h-[120px] focus:outline-none [&_.ProseMirror]:outline-none [&_.ProseMirror]:min-h-[100px] [&_.ProseMirror_a]:cursor-text [&_.ProseMirror_a]:pointer-events-auto"
       />
     </div>
   );

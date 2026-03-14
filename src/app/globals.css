@@ -100,9 +100,14 @@
 .site-html-content li {
   margin: 0.25em 0;
 }
-.site-html-content a {
+/* Only style plain text links — not button-styled <a> tags with classes */
+.site-html-content a:not([class]) {
   color: #1CA288;
   text-decoration: underline;
+}
+/* Ensure buttons inside content keep their pointer style */
+.site-html-content a[class] {
+  text-decoration: none;
 }
 .site-html-content blockquote {
   border-left: 3px solid #1CA288;
