@@ -1502,7 +1502,7 @@ function TextBlockEditor({
   data: Record<string, unknown>;
   updateData: (key: string, value: unknown) => void;
 }) {
-  const [mode, setMode] = useState<"visual" | "html" | "preview">("preview");
+  const [mode, setMode] = useState<"visual" | "html">("visual");
   const html = (data.html as string) || "";
   const alignment = (data.alignment as string) || "left";
 
@@ -1510,7 +1510,7 @@ function TextBlockEditor({
     <div className="space-y-3">
       {/* Mode tabs */}
       <div className="flex rounded-lg border border-gray-200 overflow-hidden">
-        {(["preview", "visual", "html"] as const).map((m) => (
+        {(["visual", "html"] as const).map((m) => (
           <button
             key={m}
             onClick={() => setMode(m)}
@@ -1520,28 +1520,10 @@ function TextBlockEditor({
                 : "bg-gray-50 text-gray-500 hover:bg-gray-100"
             }`}
           >
-            {m === "preview" ? "Preview" : m === "visual" ? "Editor" : "HTML"}
+            {m === "visual" ? "Editor" : "HTML"}
           </button>
         ))}
       </div>
-
-      {mode === "preview" && (
-        <div className="border border-gray-200 rounded-lg overflow-hidden">
-          <div className="bg-gray-50 px-3 py-1.5 border-b border-gray-200">
-            <p className="text-[10px] text-gray-400 uppercase font-semibold">Live Preview</p>
-          </div>
-          <div
-            className={`p-6 bg-white ${
-              alignment === "center" ? "text-center" : alignment === "right" ? "text-right" : "text-left"
-            }`}
-          >
-            <div
-              className="prose prose-lg max-w-none"
-              dangerouslySetInnerHTML={{ __html: html }}
-            />
-          </div>
-        </div>
-      )}
 
       {mode === "visual" && (
         <RichTextEditor
