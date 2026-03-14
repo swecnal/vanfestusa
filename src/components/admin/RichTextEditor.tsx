@@ -232,9 +232,9 @@ export default function RichTextEditor({ content, onChange }: Props) {
       e.preventDefault();
       e.stopPropagation();
 
-      // Select the link text so editor knows which link is active
+      // Place cursor inside the link so editor recognizes it as active (no highlight)
       const pos = editor.view.posAtDOM(anchor, 0);
-      editor.chain().focus().setTextSelection(pos).extendMarkRange("link").run();
+      editor.commands.setTextSelection(pos);
 
       // Get position relative to wrapper
       const wrapperRect = wrapperRef.current?.getBoundingClientRect();
