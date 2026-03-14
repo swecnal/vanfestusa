@@ -66,7 +66,7 @@ export default function RichTextEditor({ content, onChange }: Props) {
               editor.chain().focus().unsetFontFamily().run();
             }
           }}
-          className="text-xs px-1.5 py-1 border border-gray-200 rounded bg-white"
+          className="text-xs px-1.5 py-1 border border-gray-300 rounded bg-white"
         >
           <option value="">Font</option>
           {FONT_FAMILIES.map((f) => (

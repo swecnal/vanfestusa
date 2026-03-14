@@ -61,7 +61,7 @@ export default function ImagePicker({ value, onChange }: Props) {
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="flex-1 px-2 py-1.5 border border-gray-200 rounded-lg text-xs"
+          className="flex-1 px-2 py-1.5 border border-gray-300 rounded-lg text-xs"
           placeholder="Image URL or upload"
         />
         <button

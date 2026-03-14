@@ -149,7 +149,7 @@ export default function SectionEditorPanel({ section, onSave, saving, onChange, 
         .input-sm {
           width: 100%;
           padding: 6px 10px;
-          border: 1px solid #e5e7eb;
+          border: 1px solid #c4c8cf;
           border-radius: 6px;
           font-size: 13px;
           outline: none;

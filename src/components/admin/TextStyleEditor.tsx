@@ -70,7 +70,7 @@ export default function TextStyleEditor({ label, value, onChange, defaults }: Pr
             <select
               value={value.fontFamily || ""}
               onChange={(e) => update("fontFamily", e.target.value)}
-              className="w-full p-1.5 border border-gray-200 rounded text-xs bg-white"
+              className="w-full p-1.5 border border-gray-300 rounded text-xs bg-white"
             >
               <option value="">{defaults?.fontFamily ? `Inherit (${defaults.fontFamily})` : "Inherit"}</option>
               {FONT_OPTIONS.filter((f) => f !== "inherit").map((f) => (
@@ -88,7 +88,7 @@ export default function TextStyleEditor({ label, value, onChange, defaults }: Pr
               type="text"
               value={value.fontSize || ""}
               onChange={(e) => update("fontSize", e.target.value)}
-              className="w-full p-1.5 border border-gray-200 rounded text-xs"
+              className="w-full p-1.5 border border-gray-300 rounded text-xs"
               placeholder={defaults?.fontSize || "e.g. 24px, 2rem, clamp(...)"}
             />
           </div>
@@ -101,7 +101,7 @@ export default function TextStyleEditor({ label, value, onChange, defaults }: Pr
             <select
               value={value.fontWeight || ""}
               onChange={(e) => update("fontWeight", e.target.value)}
-              className="w-full p-1.5 border border-gray-200 rounded text-xs bg-white"
+              className="w-full p-1.5 border border-gray-300 rounded text-xs bg-white"
             >
               {FONT_WEIGHT_OPTIONS.map((o) => (
                 <option key={o.value} value={o.value}>
@@ -121,13 +121,13 @@ export default function TextStyleEditor({ label, value, onChange, defaults }: Pr
                 type="color"
                 value={value.color || "#ffffff"}
                 onChange={(e) => update("color", e.target.value)}
-                className="w-8 h-8 rounded border border-gray-200 cursor-pointer p-0.5"
+                className="w-8 h-8 rounded border border-gray-300 cursor-pointer p-0.5"
               />
               <input
                 type="text"
                 value={value.color || ""}
                 onChange={(e) => update("color", e.target.value)}
-                className="flex-1 p-1.5 border border-gray-200 rounded text-xs"
+                className="flex-1 p-1.5 border border-gray-300 rounded text-xs"
                 placeholder="inherit"
               />
             </div>
@@ -139,7 +139,7 @@ export default function TextStyleEditor({ label, value, onChange, defaults }: Pr
             <select
               value={value.textTransform || ""}
               onChange={(e) => update("textTransform", e.target.value)}
-              className="w-full p-1.5 border border-gray-200 rounded text-xs bg-white"
+              className="w-full p-1.5 border border-gray-300 rounded text-xs bg-white"
             >
               {TEXT_TRANSFORM_OPTIONS.map((o) => (
                 <option key={o.value} value={o.value}>{o.label}</option>
@@ -154,7 +154,7 @@ export default function TextStyleEditor({ label, value, onChange, defaults }: Pr
               type="text"
               value={value.letterSpacing || ""}
               onChange={(e) => update("letterSpacing", e.target.value)}
-              className="w-full p-1.5 border border-gray-200 rounded text-xs"
+              className="w-full p-1.5 border border-gray-300 rounded text-xs"
               placeholder="e.g. 0.3em, 2px, normal"
             />
           </div>
