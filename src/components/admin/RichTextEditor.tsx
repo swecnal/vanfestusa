@@ -18,24 +18,20 @@ interface Props {
 /* ─── Button style presets ─── */
 const BUTTON_STYLES = [
   {
-    label: "Text Link",
-    value: "",
-    preview: "text-teal underline",
-  },
-  {
     label: "Primary Button",
     value: "inline-block bg-teal hover:bg-teal-dark text-white font-semibold px-6 py-3 rounded-xl transition-colors no-underline",
-    preview: "bg-teal text-white px-3 py-1 rounded-lg text-xs",
+  },
+  {
+    label: "Secondary Button",
+    value: "inline-block bg-white text-charcoal font-semibold px-6 py-3 rounded-xl transition-colors hover:bg-gray-100 no-underline",
   },
   {
     label: "Outline Button",
     value: "inline-block border-2 border-teal text-teal hover:bg-teal hover:text-white font-semibold px-6 py-3 rounded-xl transition-colors no-underline",
-    preview: "border-2 border-teal text-teal px-3 py-1 rounded-lg text-xs",
   },
   {
-    label: "White Button",
-    value: "inline-block bg-white text-charcoal font-semibold px-6 py-3 rounded-xl transition-colors hover:bg-gray-100 no-underline",
-    preview: "bg-white text-charcoal border px-3 py-1 rounded-lg text-xs",
+    label: "Text Link",
+    value: "",
   },
 ];
 
@@ -432,6 +428,35 @@ export default function RichTextEditor({ content, onChange }: Props) {
           </svg>
         </ToolbarButton>
 
+        {/* Add Button */}
+        <ToolbarButton
+          active={false}
+          onClick={() => {
+            editor
+              .chain()
+              .focus()
+              .insertContent({
+                type: "text",
+                text: "Button Text",
+                marks: [
+                  {
+                    type: "link",
+                    attrs: {
+                      href: "https://",
+                      class: BUTTON_STYLES[0].value,
+                    },
+                  },
+                ],
+              })
+              .run();
+          }}
+          title="Insert Button"
+        >
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-4.5-4.5h6m-3-3v6" />
+          </svg>
+        </ToolbarButton>
+
         {/* Inline link URL input */}
         {showLinkInput && (
           <div className="w-full flex items-center gap-1 pt-1 border-t border-gray-200 mt-0.5">
@@ -547,7 +572,7 @@ export default function RichTextEditor({ content, onChange }: Props) {
             }}
             className="text-[10px] text-red-500 hover:text-red-700 font-semibold"
           >
-            Remove Link
+            Remove
           </button>
         </div>
       )}
