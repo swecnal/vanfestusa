@@ -41,7 +41,7 @@ export default function SectionRenderer({ section, siteStyles = EMPTY_SITE_STYLE
       case "hero_simple":
         return <HeroSimpleSection data={data} settings={settings} />;
       case "text_block":
-        return <TextBlockSection data={data} settings={settings} />;
+        return <TextBlockSection data={data} settings={settings} siteStyles={siteStyles} />;
       case "two_column_cards":
         return <TwoColumnCardsSection data={data} settings={settings} siteStyles={siteStyles} />;
       case "feature_grid":
@@ -53,7 +53,7 @@ export default function SectionRenderer({ section, siteStyles = EMPTY_SITE_STYLE
       case "cta_section":
         return <CtaSectionSection data={data} settings={settings} siteStyles={siteStyles} />;
       case "faq_accordion":
-        return <FaqAccordionSection data={data} settings={settings} />;
+        return <FaqAccordionSection data={data} settings={settings} siteStyles={siteStyles} />;
       case "schedule_accordion":
         return <ScheduleAccordionSection data={data} settings={settings} />;
       case "sponsor_tiers":
@@ -75,7 +75,7 @@ export default function SectionRenderer({ section, siteStyles = EMPTY_SITE_STYLE
       case "vehicle_stream":
         return <VehicleStreamSection data={data} />;
       case "accordion_parent":
-        return <AccordionParentSection data={data} settings={settings} />;
+        return <AccordionParentSection data={data} settings={settings} siteStyles={siteStyles} />;
       case "contact_form":
         return <ContactFormSection data={data} settings={settings} />;
       case "html_block":

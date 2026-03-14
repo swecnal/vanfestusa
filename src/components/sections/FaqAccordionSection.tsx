@@ -2,13 +2,16 @@
 
 import { useState, useRef, useEffect } from "react";
 import type { FaqAccordionData, SectionSettings } from "@/lib/types";
+import type { SiteStyles } from "@/lib/styles";
+import { resolveButtonStylesInHtml, EMPTY_SITE_STYLES } from "@/lib/styles";
 
 interface Props {
   data: Record<string, unknown>;
   settings: SectionSettings;
+  siteStyles?: SiteStyles;
 }
 
-export default function FaqAccordionSection({ data, settings }: Props) {
+export default function FaqAccordionSection({ data, settings, siteStyles = EMPTY_SITE_STYLES }: Props) {
   const d = data as unknown as FaqAccordionData;
   const [openItems, setOpenItems] = useState<Set<number>>(new Set());
   const [allOpen, setAllOpen] = useState(false);
@@ -88,7 +91,7 @@ export default function FaqAccordionSection({ data, settings }: Props) {
                 }}
               >
                 <div className="px-6 pb-4 text-charcoal/70 text-sm leading-relaxed site-html-content">
-                  <div dangerouslySetInnerHTML={{ __html: item.answer }} />
+                  <div dangerouslySetInnerHTML={{ __html: resolveButtonStylesInHtml(item.answer, siteStyles) }} />
                 </div>
               </div>
             </div>

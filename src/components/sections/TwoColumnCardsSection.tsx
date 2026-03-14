@@ -1,6 +1,6 @@
 import SectionHeading from "@/components/SectionHeading";
 import type { TwoColumnCardsData, SectionSettings } from "@/lib/types";
-import { type SiteStyles, EMPTY_SITE_STYLES, findButtonStyle, buttonStyleToCSS, textStyleConfigToCSS } from "@/lib/styles";
+import { type SiteStyles, EMPTY_SITE_STYLES, findButtonStyle, buttonStyleToCSS, textStyleConfigToCSS, resolveButtonStylesInHtml } from "@/lib/styles";
 
 interface Props {
   data: Record<string, unknown>;
@@ -77,7 +77,7 @@ export default function TwoColumnCardsSection({ data, settings, siteStyles = EMP
                     <div
                       className={`text-sm leading-relaxed site-html-content ${isBackground ? "text-white/80" : "text-charcoal/70"}`}
                       style={textStyleConfigToCSS(card.bodyStyle || {})}
-                      dangerouslySetInnerHTML={{ __html: card.body }}
+                      dangerouslySetInnerHTML={{ __html: resolveButtonStylesInHtml(card.body, siteStyles) }}
                     />
                     {card.button?.text && card.button?.href && (() => {
                       const btnStyle = card.button!.styleId

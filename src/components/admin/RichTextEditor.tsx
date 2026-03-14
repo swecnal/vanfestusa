@@ -9,31 +9,15 @@ import { TextAlign } from "@tiptap/extension-text-align";
 import { Link } from "@tiptap/extension-link";
 import { Highlight } from "@tiptap/extension-highlight";
 import { useEffect, useRef, useState, useCallback } from "react";
+import type { SiteStyles, ButtonStyle } from "@/lib/styles";
+import { buttonStyleToCSS, buttonStyleToCSSString, findButtonStyle, EMPTY_SITE_STYLES } from "@/lib/styles";
 
 interface Props {
   content: string;
   onChange: (html: string) => void;
+  siteStyles?: SiteStyles;
+  onSiteStylesChange?: () => void; // callback to refresh siteStyles after saving a new one
 }
-
-/* ─── Button style presets ─── */
-const BUTTON_STYLES = [
-  {
-    label: "Primary Button",
-    value: "inline-block bg-teal hover:bg-teal-dark text-white font-semibold px-6 py-3 rounded-xl transition-colors no-underline",
-  },
-  {
-    label: "Secondary Button",
-    value: "inline-block bg-white text-charcoal font-semibold px-6 py-3 rounded-xl transition-colors hover:bg-gray-100 no-underline",
-  },
-  {
-    label: "Outline Button",
-    value: "inline-block border-2 border-teal text-teal hover:bg-teal hover:text-white font-semibold px-6 py-3 rounded-xl transition-colors no-underline",
-  },
-  {
-    label: "Text Link",
-    value: "",
-  },
-];
 
 /* ─── Custom FontSize extension ─── */
 const FontSize = Extension.create({
@@ -116,7 +100,7 @@ const StylePreserver = Extension.create({
   },
 });
 
-/* ─── Extended Link with class preservation ─── */
+/* ─── Extended Link with data-button-style + class preservation ─── */
 const CustomLink = Link.extend({
   addAttributes() {
     return {
@@ -127,6 +111,30 @@ const CustomLink = Link.extend({
         renderHTML: (attrs) => {
           if (!attrs.class) return {};
           return { class: attrs.class };
+        },
+      },
+      "data-button-style": {
+        default: null,
+        parseHTML: (el) => el.getAttribute("data-button-style") || null,
+        renderHTML: (attrs) => {
+          if (!attrs["data-button-style"]) return {};
+          return { "data-button-style": attrs["data-button-style"] };
+        },
+      },
+      "data-custom-style": {
+        default: null,
+        parseHTML: (el) => el.getAttribute("data-custom-style") || null,
+        renderHTML: (attrs) => {
+          if (!attrs["data-custom-style"]) return {};
+          return { "data-custom-style": attrs["data-custom-style"] };
+        },
+      },
+      style: {
+        default: null,
+        parseHTML: (el) => el.getAttribute("style") || null,
+        renderHTML: (attrs) => {
+          if (!attrs.style) return {};
+          return { style: attrs.style };
         },
       },
     };
@@ -145,17 +153,49 @@ const COLORS = [
   "#ef4444", "#f97316", "#eab308", "#3b82f6", "#8b5cf6",
 ];
 
-export default function RichTextEditor({ content, onChange }: Props) {
+const FONT_OPTIONS = ["Poppins", "Gothic A1", "EB Garamond", "Orbitron", "inherit"];
+const FONT_WEIGHT_OPTIONS = ["300", "400", "500", "600", "700", "800", "900"];
+
+/* ─── Default custom button style ─── */
+function defaultCustomStyle(): ButtonStyle {
+  return {
+    id: `custom-${Date.now()}`,
+    name: "Custom",
+    fontSize: "16px",
+    fontWeight: "600",
+    fontFamily: "Poppins",
+    textColor: "#ffffff",
+    bgColor: "#1CA288",
+    hoverBgColor: "#17806C",
+    borderWidth: "0px",
+    borderColor: "transparent",
+    borderRadius: "12px",
+    paddingX: "32px",
+    paddingY: "14px",
+    shadow: "none",
+    hoverShadow: "none",
+    textTransform: "none",
+  };
+}
+
+export default function RichTextEditor({ content, onChange, siteStyles = EMPTY_SITE_STYLES, onSiteStylesChange }: Props) {
   const isInternalUpdate = useRef(false);
   const [linkUrl, setLinkUrl] = useState("");
   const [showLinkInput, setShowLinkInput] = useState(false);
 
-  /* ─── Custom link popover state ─── */
+  /* ─── Link popover state ─── */
   const [linkPopover, setLinkPopover] = useState<{ top: number; left: number } | null>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [popoverHref, setPopoverHref] = useState("");
-  const [popoverClass, setPopoverClass] = useState("");
+  const [popoverStyleId, setPopoverStyleId] = useState<string | null>(null);
+
+  /* ─── Style picker sub-panels ─── */
+  const [styleTab, setStyleTab] = useState<"primary" | "secondary" | "custom" | null>(null);
+  const [customStyle, setCustomStyle] = useState<ButtonStyle>(defaultCustomStyle());
+  const [savingCustom, setSavingCustom] = useState(false);
+  const [customSaveName, setCustomSaveName] = useState("");
+  const [customSaveType, setCustomSaveType] = useState<"main" | "secondary">("main");
 
   const editor = useEditor({
     extensions: [
@@ -220,24 +260,36 @@ export default function RichTextEditor({ content, onChange }: Props) {
     const handleClick = (e: MouseEvent) => {
       const anchor = (e.target as HTMLElement).closest("a");
       if (!anchor) {
-        // Clicked non-link area — close popover
         setLinkPopover(null);
         return;
       }
-      // Prevent navigation
       e.preventDefault();
       e.stopPropagation();
 
-      // Place cursor inside the link so editor recognizes it as active (no highlight)
+      // Only open popover on plain click (not drag-select)
+      const sel = window.getSelection();
+      if (sel && !sel.isCollapsed) return;
+
       const pos = editor.view.posAtDOM(anchor, 0);
       editor.commands.setTextSelection(pos);
 
-      // Get position relative to wrapper
       const wrapperRect = wrapperRef.current?.getBoundingClientRect();
       const anchorRect = anchor.getBoundingClientRect();
       if (wrapperRect) {
-        setPopoverHref(editor.getAttributes("link").href || "");
-        setPopoverClass(editor.getAttributes("link").class || "");
+        const linkAttrs = editor.getAttributes("link");
+        setPopoverHref(linkAttrs.href || "");
+        setPopoverStyleId(linkAttrs["data-button-style"] || null);
+        setStyleTab(null);
+
+        // If custom, load the custom style into editor
+        if (linkAttrs["data-button-style"] === "custom" && linkAttrs["data-custom-style"]) {
+          try {
+            setCustomStyle(JSON.parse(linkAttrs["data-custom-style"]));
+          } catch {
+            setCustomStyle(defaultCustomStyle());
+          }
+        }
+
         setLinkPopover({
           top: anchorRect.bottom - wrapperRect.top + 4,
           left: Math.max(0, anchorRect.left - wrapperRect.left),
@@ -255,9 +307,9 @@ export default function RichTextEditor({ content, onChange }: Props) {
     const handleOutsideClick = (e: MouseEvent) => {
       if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) {
         setLinkPopover(null);
+        setStyleTab(null);
       }
     };
-    // Delay to avoid closing immediately from the same click
     const timer = setTimeout(() => {
       document.addEventListener("mousedown", handleOutsideClick);
     }, 0);
@@ -267,21 +319,89 @@ export default function RichTextEditor({ content, onChange }: Props) {
     };
   }, [linkPopover]);
 
-  const setLinkStyle = useCallback(
-    (styleClass: string) => {
+  /* ─── Apply a global button style ─── */
+  const applyButtonStyle = useCallback(
+    (styleId: string, style: ButtonStyle) => {
       if (!editor) return;
-      const href = editor.getAttributes("link").href;
-      if (!href) return;
+      const cssStr = buttonStyleToCSSString(style);
       editor
         .chain()
         .focus()
         .extendMarkRange("link")
-        .updateAttributes("link", { class: styleClass || null })
+        .updateAttributes("link", {
+          "data-button-style": styleId,
+          "data-custom-style": null,
+          class: null,
+          style: cssStr,
+        })
+        // Strip inline text marks to reset custom formatting
+        .unsetColor()
+        .unsetFontFamily()
+        .unsetMark("textStyle")
+        .unsetBold()
+        .unsetItalic()
         .run();
-      setPopoverClass(styleClass);
+      setPopoverStyleId(styleId);
     },
     [editor]
   );
+
+  /* ─── Apply custom style ─── */
+  const applyCustomStyle = useCallback(
+    (style: ButtonStyle) => {
+      if (!editor) return;
+      const cssStr = buttonStyleToCSSString(style);
+      const jsonStr = JSON.stringify(style);
+      editor
+        .chain()
+        .focus()
+        .extendMarkRange("link")
+        .updateAttributes("link", {
+          "data-button-style": "custom",
+          "data-custom-style": jsonStr,
+          class: null,
+          style: cssStr,
+        })
+        .run();
+      setPopoverStyleId("custom");
+    },
+    [editor]
+  );
+
+  /* ─── Save custom style to global settings ─── */
+  const handleSaveCustomStyle = useCallback(async () => {
+    if (!customSaveName.trim()) return;
+    setSavingCustom(true);
+    try {
+      // Fetch current settings
+      const res = await fetch("/api/global-settings");
+      const { settings } = await res.json();
+      const currentStyles = settings.button_styles || { main: [], secondary: [] };
+
+      const newStyle: ButtonStyle = {
+        ...customStyle,
+        id: `${customSaveType}-${Date.now()}`,
+        name: customSaveName.trim(),
+      };
+
+      currentStyles[customSaveType] = [...currentStyles[customSaveType], newStyle];
+
+      await fetch("/api/global-settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ button_styles: currentStyles }),
+      });
+
+      // Apply the newly saved style to the current button
+      applyButtonStyle(newStyle.id, newStyle);
+      setCustomSaveName("");
+      setSavingCustom(false);
+      setStyleTab(null);
+      onSiteStylesChange?.();
+    } catch {
+      setSavingCustom(false);
+    }
+  }, [customStyle, customSaveName, customSaveType, applyButtonStyle, onSiteStylesChange]);
 
   const handleAddLink = useCallback(() => {
     if (!editor) return;
@@ -300,6 +420,8 @@ export default function RichTextEditor({ content, onChange }: Props) {
   if (!editor) return null;
 
   const isLink = editor.isActive("link");
+  const mainStyles = siteStyles.button_styles.main;
+  const secondaryStyles = siteStyles.button_styles.secondary;
 
   return (
     <div ref={wrapperRef} className="relative border border-gray-300 rounded-lg overflow-visible">
@@ -320,51 +442,29 @@ export default function RichTextEditor({ content, onChange }: Props) {
         >
           <option value="">Font</option>
           {FONT_FAMILIES.map((f) => (
-            <option key={f.value} value={f.value}>
-              {f.label}
-            </option>
+            <option key={f.value} value={f.value}>{f.label}</option>
           ))}
         </select>
 
         <div className="w-px h-5 bg-gray-200 mx-0.5" />
 
-        {/* Bold, Italic, Strike */}
-        <ToolbarButton
-          active={editor.isActive("bold")}
-          onClick={() => editor.chain().focus().toggleBold().run()}
-          title="Bold"
-        >
+        <ToolbarButton active={editor.isActive("bold")} onClick={() => editor.chain().focus().toggleBold().run()} title="Bold">
           <strong>B</strong>
         </ToolbarButton>
-        <ToolbarButton
-          active={editor.isActive("italic")}
-          onClick={() => editor.chain().focus().toggleItalic().run()}
-          title="Italic"
-        >
+        <ToolbarButton active={editor.isActive("italic")} onClick={() => editor.chain().focus().toggleItalic().run()} title="Italic">
           <em>I</em>
         </ToolbarButton>
-        <ToolbarButton
-          active={editor.isActive("strike")}
-          onClick={() => editor.chain().focus().toggleStrike().run()}
-          title="Strikethrough"
-        >
+        <ToolbarButton active={editor.isActive("strike")} onClick={() => editor.chain().focus().toggleStrike().run()} title="Strikethrough">
           <s>S</s>
         </ToolbarButton>
 
         <div className="w-px h-5 bg-gray-200 mx-0.5" />
 
-        {/* Headings */}
         {[1, 2, 3].map((level) => (
           <ToolbarButton
             key={level}
             active={editor.isActive("heading", { level })}
-            onClick={() =>
-              editor
-                .chain()
-                .focus()
-                .toggleHeading({ level: level as 1 | 2 | 3 })
-                .run()
-            }
+            onClick={() => editor.chain().focus().toggleHeading({ level: level as 1 | 2 | 3 }).run()}
             title={`Heading ${level}`}
           >
             H{level}
@@ -373,7 +473,6 @@ export default function RichTextEditor({ content, onChange }: Props) {
 
         <div className="w-px h-5 bg-gray-200 mx-0.5" />
 
-        {/* Alignment */}
         {(["left", "center", "right"] as const).map((align) => (
           <ToolbarButton
             key={align}
@@ -391,7 +490,6 @@ export default function RichTextEditor({ content, onChange }: Props) {
 
         <div className="w-px h-5 bg-gray-200 mx-0.5" />
 
-        {/* Color */}
         <div className="flex gap-0.5">
           {COLORS.map((color) => (
             <button
@@ -406,49 +504,45 @@ export default function RichTextEditor({ content, onChange }: Props) {
 
         <div className="w-px h-5 bg-gray-200 mx-0.5" />
 
-        {/* Lists */}
-        <ToolbarButton
-          active={editor.isActive("bulletList")}
-          onClick={() => editor.chain().focus().toggleBulletList().run()}
-          title="Bullet List"
-        >
+        <ToolbarButton active={editor.isActive("bulletList")} onClick={() => editor.chain().focus().toggleBulletList().run()} title="Bullet List">
           <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
             <path d="M4 6a2 2 0 110-4 2 2 0 010 4zm0 8a2 2 0 110-4 2 2 0 010 4zm0 8a2 2 0 110-4 2 2 0 010 4zm4-18h14v2H8V4zm0 8h14v2H8v-2zm0 8h14v2H8v-2z" />
           </svg>
         </ToolbarButton>
 
-        {/* Link */}
-        <ToolbarButton
-          active={isLink}
-          onClick={handleAddLink}
-          title="Link"
-        >
+        <ToolbarButton active={isLink} onClick={handleAddLink} title="Link">
           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
           </svg>
         </ToolbarButton>
 
-        {/* Add Button */}
+        {/* Add Button — inserts a new button with first available style */}
         <ToolbarButton
           active={false}
           onClick={() => {
-            editor
-              .chain()
-              .focus()
-              .insertContent({
+            const firstStyle = mainStyles[0] || secondaryStyles[0];
+            if (firstStyle) {
+              const cssStr = buttonStyleToCSSString(firstStyle);
+              editor.chain().focus().insertContent({
                 type: "text",
                 text: "Button Text",
-                marks: [
-                  {
-                    type: "link",
-                    attrs: {
-                      href: "https://",
-                      class: BUTTON_STYLES[0].value,
-                    },
+                marks: [{
+                  type: "link",
+                  attrs: {
+                    href: "https://",
+                    "data-button-style": firstStyle.id,
+                    style: cssStr,
                   },
-                ],
-              })
-              .run();
+                }],
+              }).run();
+            } else {
+              // No global styles — insert plain link
+              editor.chain().focus().insertContent({
+                type: "text",
+                text: "Button Text",
+                marks: [{ type: "link", attrs: { href: "https://" } }],
+              }).run();
+            }
           }}
           title="Insert Button"
         >
@@ -457,7 +551,6 @@ export default function RichTextEditor({ content, onChange }: Props) {
           </svg>
         </ToolbarButton>
 
-        {/* Inline link URL input */}
         {showLinkInput && (
           <div className="w-full flex items-center gap-1 pt-1 border-t border-gray-200 mt-0.5">
             <input
@@ -473,47 +566,29 @@ export default function RichTextEditor({ content, onChange }: Props) {
                   setShowLinkInput(false);
                   setLinkUrl("");
                 }
-                if (e.key === "Escape") {
-                  setShowLinkInput(false);
-                  setLinkUrl("");
-                }
+                if (e.key === "Escape") { setShowLinkInput(false); setLinkUrl(""); }
               }}
               autoFocus
             />
             <button
-              onClick={() => {
-                if (linkUrl) editor.chain().focus().setLink({ href: linkUrl }).run();
-                setShowLinkInput(false);
-                setLinkUrl("");
-              }}
+              onClick={() => { if (linkUrl) editor.chain().focus().setLink({ href: linkUrl }).run(); setShowLinkInput(false); setLinkUrl(""); }}
               className="h-6 px-2 text-[10px] bg-teal text-white rounded font-semibold"
-            >
-              Set
-            </button>
-            <button
-              onClick={() => { setShowLinkInput(false); setLinkUrl(""); }}
-              className="h-6 px-1.5 text-[10px] text-gray-400 hover:text-gray-600"
-            >
-              Cancel
-            </button>
+            >Set</button>
+            <button onClick={() => { setShowLinkInput(false); setLinkUrl(""); }} className="h-6 px-1.5 text-[10px] text-gray-400 hover:text-gray-600">Cancel</button>
           </div>
         )}
       </div>
 
-      {/* Custom link/button popover — fixed position, click-triggered */}
+      {/* ─── Link/Button popover ─── */}
       {linkPopover && (
         <div
           ref={popoverRef}
-          className="absolute bg-white rounded-lg shadow-2xl border border-gray-200 p-3 space-y-2 min-w-[260px]"
+          className="absolute bg-white rounded-lg shadow-2xl border border-gray-200 p-3 space-y-2.5 min-w-[280px] max-w-[320px]"
           style={{ top: linkPopover.top, left: linkPopover.left, zIndex: 9999 }}
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Close button */}
-          <button
-            onClick={() => setLinkPopover(null)}
-            className="absolute top-1.5 right-1.5 w-5 h-5 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
-            title="Close"
-          >
+          {/* Close */}
+          <button onClick={() => { setLinkPopover(null); setStyleTab(null); }} className="absolute top-1.5 right-1.5 w-5 h-5 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors" title="Close">
             <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -534,9 +609,7 @@ export default function RichTextEditor({ content, onChange }: Props) {
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   e.preventDefault();
-                  if (popoverHref && editor) {
-                    editor.chain().focus().extendMarkRange("link").updateAttributes("link", { href: popoverHref }).run();
-                  }
+                  if (popoverHref && editor) editor.chain().focus().extendMarkRange("link").updateAttributes("link", { href: popoverHref }).run();
                 }
               }}
               className="w-full h-6 px-2 text-[11px] border border-gray-300 rounded bg-white"
@@ -544,31 +617,157 @@ export default function RichTextEditor({ content, onChange }: Props) {
             />
           </div>
 
-          {/* Style */}
+          {/* Style category buttons */}
           <div>
-            <label className="text-[9px] uppercase text-gray-400 font-semibold block mb-0.5">Style</label>
-            <div className="grid grid-cols-2 gap-1">
-              {BUTTON_STYLES.map((bs) => (
+            <label className="text-[9px] uppercase text-gray-400 font-semibold block mb-1">Style</label>
+            <div className="grid grid-cols-3 gap-1">
+              <button
+                onClick={() => setStyleTab(styleTab === "primary" ? null : "primary")}
+                className={`text-[10px] px-2 py-1.5 rounded border transition-colors text-center ${
+                  styleTab === "primary" || (popoverStyleId && mainStyles.some(s => s.id === popoverStyleId))
+                    ? "border-teal bg-teal/10 text-teal font-semibold"
+                    : "border-gray-200 text-gray-600 hover:border-gray-300"
+                }`}
+              >
+                Primary
+              </button>
+              <button
+                onClick={() => setStyleTab(styleTab === "secondary" ? null : "secondary")}
+                className={`text-[10px] px-2 py-1.5 rounded border transition-colors text-center ${
+                  styleTab === "secondary" || (popoverStyleId && secondaryStyles.some(s => s.id === popoverStyleId))
+                    ? "border-teal bg-teal/10 text-teal font-semibold"
+                    : "border-gray-200 text-gray-600 hover:border-gray-300"
+                }`}
+              >
+                Secondary
+              </button>
+              <button
+                onClick={() => {
+                  if (styleTab !== "custom") {
+                    // Load current custom style if exists, otherwise default
+                    const linkAttrs = editor.getAttributes("link");
+                    if (linkAttrs["data-button-style"] === "custom" && linkAttrs["data-custom-style"]) {
+                      try { setCustomStyle(JSON.parse(linkAttrs["data-custom-style"])); } catch { setCustomStyle(defaultCustomStyle()); }
+                    } else {
+                      // Try to pre-fill from current style
+                      const currentId = linkAttrs["data-button-style"];
+                      if (currentId) {
+                        const found = findButtonStyle(currentId, siteStyles);
+                        if (found) { setCustomStyle({ ...found, id: `custom-${Date.now()}`, name: "Custom" }); }
+                        else { setCustomStyle(defaultCustomStyle()); }
+                      } else { setCustomStyle(defaultCustomStyle()); }
+                    }
+                    setStyleTab("custom");
+                  } else {
+                    setStyleTab(null);
+                  }
+                }}
+                className={`text-[10px] px-2 py-1.5 rounded border transition-colors text-center ${
+                  styleTab === "custom" || popoverStyleId === "custom"
+                    ? "border-teal bg-teal/10 text-teal font-semibold"
+                    : "border-gray-200 text-gray-600 hover:border-gray-300"
+                }`}
+              >
+                Custom
+              </button>
+            </div>
+          </div>
+
+          {/* Primary styles picker */}
+          {styleTab === "primary" && (
+            <div className="space-y-1 max-h-[200px] overflow-y-auto">
+              {mainStyles.length === 0 ? (
+                <p className="text-[10px] text-gray-400 italic py-2">No primary styles — create in Styles settings</p>
+              ) : mainStyles.map((s) => (
                 <button
-                  key={bs.label}
-                  onClick={() => setLinkStyle(bs.value)}
-                  className={`text-[10px] px-2 py-1.5 rounded border transition-colors text-center ${
-                    popoverClass === (bs.value || "")
-                      ? "border-teal bg-teal/10 text-teal font-semibold"
-                      : "border-gray-200 text-gray-600 hover:border-gray-300"
+                  key={s.id}
+                  onClick={() => applyButtonStyle(s.id, s)}
+                  className={`w-full flex items-center gap-2 p-1.5 rounded border transition-colors ${
+                    popoverStyleId === s.id ? "border-teal bg-teal/5" : "border-gray-100 hover:border-gray-200"
                   }`}
                 >
-                  {bs.label}
+                  <span
+                    className="pointer-events-none text-[11px] truncate"
+                    style={buttonStyleToCSS(s)}
+                  >
+                    {s.name}
+                  </span>
                 </button>
               ))}
             </div>
-          </div>
+          )}
+
+          {/* Secondary styles picker */}
+          {styleTab === "secondary" && (
+            <div className="space-y-1 max-h-[200px] overflow-y-auto">
+              {secondaryStyles.length === 0 ? (
+                <p className="text-[10px] text-gray-400 italic py-2">No secondary styles — create in Styles settings</p>
+              ) : secondaryStyles.map((s) => (
+                <button
+                  key={s.id}
+                  onClick={() => applyButtonStyle(s.id, s)}
+                  className={`w-full flex items-center gap-2 p-1.5 rounded border transition-colors ${
+                    popoverStyleId === s.id ? "border-teal bg-teal/5" : "border-gray-100 hover:border-gray-200"
+                  }`}
+                >
+                  <span
+                    className="pointer-events-none text-[11px] truncate"
+                    style={buttonStyleToCSS(s)}
+                  >
+                    {s.name}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Custom style editor */}
+          {styleTab === "custom" && (
+            <CustomButtonStyleEditor
+              style={customStyle}
+              onChange={(updated) => {
+                setCustomStyle(updated);
+                applyCustomStyle(updated);
+              }}
+              onSave={() => setSavingCustom(true)}
+            />
+          )}
+
+          {/* Save custom as global style */}
+          {savingCustom && (
+            <div className="border-t border-gray-200 pt-2 space-y-1.5">
+              <label className="text-[9px] uppercase text-gray-400 font-semibold block">Save as Style</label>
+              <input
+                type="text"
+                value={customSaveName}
+                onChange={(e) => setCustomSaveName(e.target.value)}
+                placeholder="Style name..."
+                className="w-full h-6 px-2 text-[11px] border border-gray-300 rounded bg-white"
+                autoFocus
+              />
+              <div className="flex gap-1">
+                <label className={`flex-1 text-center text-[10px] px-2 py-1 rounded border cursor-pointer transition-colors ${customSaveType === "main" ? "border-teal bg-teal/10 text-teal font-semibold" : "border-gray-200 text-gray-500"}`}>
+                  <input type="radio" name="saveType" value="main" checked={customSaveType === "main"} onChange={() => setCustomSaveType("main")} className="sr-only" />
+                  Primary
+                </label>
+                <label className={`flex-1 text-center text-[10px] px-2 py-1 rounded border cursor-pointer transition-colors ${customSaveType === "secondary" ? "border-teal bg-teal/10 text-teal font-semibold" : "border-gray-200 text-gray-500"}`}>
+                  <input type="radio" name="saveType" value="secondary" checked={customSaveType === "secondary"} onChange={() => setCustomSaveType("secondary")} className="sr-only" />
+                  Secondary
+                </label>
+              </div>
+              <div className="flex gap-1">
+                <button onClick={handleSaveCustomStyle} disabled={!customSaveName.trim()} className="flex-1 h-6 text-[10px] bg-teal text-white rounded font-semibold disabled:opacity-50">Save</button>
+                <button onClick={() => setSavingCustom(false)} className="h-6 px-2 text-[10px] text-gray-400 hover:text-gray-600">Cancel</button>
+              </div>
+            </div>
+          )}
 
           {/* Remove */}
           <button
             onClick={() => {
               editor.chain().focus().extendMarkRange("link").unsetLink().run();
               setLinkPopover(null);
+              setStyleTab(null);
             }}
             className="text-[10px] text-red-500 hover:text-red-700 font-semibold"
           >
@@ -577,14 +776,9 @@ export default function RichTextEditor({ content, onChange }: Props) {
         </div>
       )}
 
-      {/* Editor — styled to match site rendering */}
+      {/* Editor */}
       {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
-      <div
-        onClick={(e) => {
-          const anchor = (e.target as HTMLElement).closest("a");
-          if (anchor) { e.preventDefault(); e.stopPropagation(); }
-        }}
-      >
+      <div onClick={(e) => { const a = (e.target as HTMLElement).closest("a"); if (a) { e.preventDefault(); e.stopPropagation(); } }}>
         <EditorContent
           editor={editor}
           className="site-html-content max-w-none p-3 min-h-[120px] focus:outline-none [&_.ProseMirror]:outline-none [&_.ProseMirror]:min-h-[100px] [&_.ProseMirror_a]:cursor-pointer"
@@ -594,28 +788,137 @@ export default function RichTextEditor({ content, onChange }: Props) {
   );
 }
 
-function ToolbarButton({
-  active,
-  onClick,
-  title,
-  children,
+/* ─── Custom Button Style Editor (inline in popover) ─── */
+function CustomButtonStyleEditor({
+  style,
+  onChange,
+  onSave,
 }: {
-  active: boolean;
-  onClick: () => void;
-  title: string;
-  children: React.ReactNode;
+  style: ButtonStyle;
+  onChange: (s: ButtonStyle) => void;
+  onSave: () => void;
 }) {
+  const update = (key: keyof ButtonStyle, val: string) => {
+    onChange({ ...style, [key]: val });
+  };
+
+  return (
+    <div className="space-y-2 border-t border-gray-200 pt-2">
+      {/* Live preview */}
+      <div className="flex justify-center py-1">
+        <span style={buttonStyleToCSS(style)} className="pointer-events-none text-[12px]">
+          Preview
+        </span>
+      </div>
+
+      {/* Colors row */}
+      <div className="grid grid-cols-3 gap-1">
+        <ColorField label="BG" value={style.bgColor} onChange={(v) => update("bgColor", v)} />
+        <ColorField label="Text" value={style.textColor} onChange={(v) => update("textColor", v)} />
+        <ColorField label="Border" value={style.borderColor} onChange={(v) => update("borderColor", v)} />
+      </div>
+
+      {/* Typography row */}
+      <div className="grid grid-cols-3 gap-1">
+        <div>
+          <label className="text-[8px] text-gray-400 block">Font</label>
+          <select value={style.fontFamily} onChange={(e) => update("fontFamily", e.target.value)} className="w-full h-5 text-[9px] border border-gray-200 rounded bg-white px-0.5">
+            {FONT_OPTIONS.map((f) => <option key={f} value={f}>{f}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="text-[8px] text-gray-400 block">Weight</label>
+          <select value={style.fontWeight} onChange={(e) => update("fontWeight", e.target.value)} className="w-full h-5 text-[9px] border border-gray-200 rounded bg-white px-0.5">
+            {FONT_WEIGHT_OPTIONS.map((w) => <option key={w} value={w}>{w}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="text-[8px] text-gray-400 block">Size</label>
+          <input type="text" value={style.fontSize} onChange={(e) => update("fontSize", e.target.value)} className="w-full h-5 text-[9px] border border-gray-200 rounded bg-white px-1" />
+        </div>
+      </div>
+
+      {/* Border + radius row */}
+      <div className="grid grid-cols-3 gap-1">
+        <div>
+          <label className="text-[8px] text-gray-400 block">Bdr Width</label>
+          <input type="text" value={style.borderWidth} onChange={(e) => update("borderWidth", e.target.value)} className="w-full h-5 text-[9px] border border-gray-200 rounded bg-white px-1" />
+        </div>
+        <div>
+          <label className="text-[8px] text-gray-400 block">Radius</label>
+          <input type="text" value={style.borderRadius} onChange={(e) => update("borderRadius", e.target.value)} className="w-full h-5 text-[9px] border border-gray-200 rounded bg-white px-1" />
+        </div>
+        <div>
+          <label className="text-[8px] text-gray-400 block">Transform</label>
+          <select value={style.textTransform} onChange={(e) => update("textTransform", e.target.value)} className="w-full h-5 text-[9px] border border-gray-200 rounded bg-white px-0.5">
+            <option value="none">None</option>
+            <option value="uppercase">Upper</option>
+            <option value="lowercase">Lower</option>
+            <option value="capitalize">Capital</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Padding row */}
+      <div className="grid grid-cols-2 gap-1">
+        <div>
+          <label className="text-[8px] text-gray-400 block">Pad X</label>
+          <input type="text" value={style.paddingX} onChange={(e) => update("paddingX", e.target.value)} className="w-full h-5 text-[9px] border border-gray-200 rounded bg-white px-1" />
+        </div>
+        <div>
+          <label className="text-[8px] text-gray-400 block">Pad Y</label>
+          <input type="text" value={style.paddingY} onChange={(e) => update("paddingY", e.target.value)} className="w-full h-5 text-[9px] border border-gray-200 rounded bg-white px-1" />
+        </div>
+      </div>
+
+      {/* Save button */}
+      <button
+        onClick={onSave}
+        className="w-full h-6 text-[10px] border border-teal text-teal rounded font-semibold hover:bg-teal/10 transition-colors"
+      >
+        Save as Style
+      </button>
+    </div>
+  );
+}
+
+/* ─── Tiny color input ─── */
+function ColorField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+  const ref = useRef<HTMLInputElement>(null);
+  return (
+    <div>
+      <label className="text-[8px] text-gray-400 block">{label}</label>
+      <button
+        onClick={() => ref.current?.click()}
+        className="relative w-full h-5 rounded border border-gray-200 overflow-hidden"
+        style={{ backgroundColor: value }}
+      >
+        <input ref={ref} type="color" value={value} onChange={(e) => onChange(e.target.value)} className="absolute inset-0 opacity-0 cursor-pointer" />
+        <span className="absolute inset-0 flex items-center justify-center text-[7px] font-bold" style={{ color: isLightColor(value) ? "#333" : "#fff" }}>
+          {value}
+        </span>
+      </button>
+    </div>
+  );
+}
+
+function ToolbarButton({ active, onClick, title, children }: { active: boolean; onClick: () => void; title: string; children: React.ReactNode }) {
   return (
     <button
       onClick={onClick}
       title={title}
-      className={`p-1.5 rounded text-xs transition-colors ${
-        active
-          ? "bg-teal/20 text-teal"
-          : "text-gray-500 hover:bg-gray-200 hover:text-gray-700"
-      }`}
+      className={`p-1.5 rounded text-xs transition-colors ${active ? "bg-teal/20 text-teal" : "text-gray-500 hover:bg-gray-200 hover:text-gray-700"}`}
     >
       {children}
     </button>
   );
+}
+
+function isLightColor(hex: string): boolean {
+  const c = hex.replace("#", "");
+  if (c.length < 6) return false;
+  const r = parseInt(c.substring(0, 2), 16);
+  const g = parseInt(c.substring(2, 4), 16);
+  const b = parseInt(c.substring(4, 6), 16);
+  return (r * 299 + g * 587 + b * 114) / 1000 > 160;
 }

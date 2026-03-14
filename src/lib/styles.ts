@@ -214,6 +214,65 @@ export function headingStyleToCSS(style: HeadingStyle): CSSProperties {
   };
 }
 
+// ─── Convert ButtonStyle to inline CSS string (for HTML style attr) ───
+
+export function buttonStyleToCSSString(style: ButtonStyle): string {
+  const parts: string[] = [];
+  parts.push(`font-size: ${style.fontSize}`);
+  parts.push(`font-weight: ${style.fontWeight}`);
+  if (style.fontFamily && style.fontFamily !== "inherit") parts.push(`font-family: ${style.fontFamily}`);
+  parts.push(`color: ${style.textColor}`);
+  parts.push(`background-color: ${style.bgColor}`);
+  parts.push(`border: ${style.borderWidth} solid ${style.borderColor}`);
+  parts.push(`border-radius: ${style.borderRadius}`);
+  parts.push(`padding: ${style.paddingY} ${style.paddingX}`);
+  if (style.shadow && style.shadow !== "none") parts.push(`box-shadow: ${style.shadow}`);
+  if (style.textTransform && style.textTransform !== "none") parts.push(`text-transform: ${style.textTransform}`);
+  parts.push("display: inline-block");
+  parts.push("text-decoration: none");
+  parts.push("cursor: pointer");
+  parts.push("transition: all 0.2s ease");
+  return parts.join("; ");
+}
+
+// ─── Resolve button styles in HTML string (for dangerouslySetInnerHTML) ───
+
+export function resolveButtonStylesInHtml(
+  html: string,
+  siteStyles: SiteStyles
+): string {
+  if (!html) return html;
+  // Match <a ...data-button-style="..."...> tags
+  return html.replace(
+    /<a\s([^>]*data-button-style="([^"]*)"[^>]*)>/gi,
+    (fullMatch, attrs, styleId) => {
+      let cssString = "";
+      if (styleId === "custom") {
+        // Parse data-custom-style JSON
+        const customMatch = attrs.match(/data-custom-style="([^"]*)"/);
+        if (customMatch) {
+          try {
+            const customStyle = JSON.parse(
+              customMatch[1].replace(/&quot;/g, '"').replace(/&#39;/g, "'")
+            ) as ButtonStyle;
+            cssString = buttonStyleToCSSString(customStyle);
+          } catch {
+            return fullMatch;
+          }
+        }
+      } else {
+        const resolved = findButtonStyle(styleId, siteStyles);
+        if (!resolved) return fullMatch;
+        cssString = buttonStyleToCSSString(resolved);
+      }
+      // Replace or add style attribute
+      let newAttrs = attrs.replace(/style="[^"]*"/i, "");
+      newAttrs = newAttrs.replace(/\s+/g, " ").trim();
+      return `<a ${newAttrs} style="${cssString}">`;
+    }
+  );
+}
+
 // ─── Resolve a styleId to a LinkStyle ───
 
 export function findLinkStyle(

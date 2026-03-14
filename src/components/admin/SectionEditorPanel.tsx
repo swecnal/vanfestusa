@@ -236,7 +236,7 @@ function SectionFields({
 
     case "text_block":
       return (
-        <TextBlockEditor data={data} updateData={updateData} />
+        <TextBlockEditor data={data} updateData={updateData} siteStyles={siteStyles} />
       );
 
     case "feature_grid":
@@ -397,6 +397,7 @@ function SectionFields({
                         <RichTextEditor
                           content={child.body || ""}
                           onChange={(html) => updateAccChild(i, "body", html)}
+                          siteStyles={siteStyles}
                         />
                       </Field>
                     )}
@@ -1498,9 +1499,13 @@ function HeroCarouselEditor({
 function TextBlockEditor({
   data,
   updateData,
+  siteStyles,
+  onSiteStylesChange,
 }: {
   data: Record<string, unknown>;
   updateData: (key: string, value: unknown) => void;
+  siteStyles: SiteStyles;
+  onSiteStylesChange?: () => void;
 }) {
   const [mode, setMode] = useState<"visual" | "html">("visual");
   const html = (data.html as string) || "";
@@ -1529,6 +1534,8 @@ function TextBlockEditor({
         <RichTextEditor
           content={html}
           onChange={(newHtml) => updateData("html", newHtml)}
+          siteStyles={siteStyles}
+          onSiteStylesChange={onSiteStylesChange}
         />
       )}
 

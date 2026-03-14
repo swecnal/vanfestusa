@@ -2,15 +2,16 @@
 
 import { useState, useRef, useEffect } from "react";
 import type { AccordionParentData, SectionSettings, SectionType } from "@/lib/types";
-import { type TextStyleConfig, textStyleConfigToCSS, EMPTY_SITE_STYLES } from "@/lib/styles";
+import { type SiteStyles, type TextStyleConfig, textStyleConfigToCSS, resolveButtonStylesInHtml, EMPTY_SITE_STYLES } from "@/lib/styles";
 import SectionRenderer from "./SectionRenderer";
 
 interface Props {
   data: Record<string, unknown>;
   settings: SectionSettings;
+  siteStyles?: SiteStyles;
 }
 
-export default function AccordionParentSection({ data, settings }: Props) {
+export default function AccordionParentSection({ data, settings, siteStyles = EMPTY_SITE_STYLES }: Props) {
   const d = data as unknown as AccordionParentData;
   const [openItems, setOpenItems] = useState<Set<number>>(new Set());
   const [allOpen, setAllOpen] = useState(false);
@@ -181,7 +182,7 @@ export default function AccordionParentSection({ data, settings }: Props) {
                   </div>
                 ) : (
                   <div className="px-6 pb-4 text-charcoal/70 text-sm leading-relaxed site-html-content">
-                    <div dangerouslySetInnerHTML={{ __html: child.body }} />
+                    <div dangerouslySetInnerHTML={{ __html: resolveButtonStylesInHtml(child.body, siteStyles) }} />
                   </div>
                 )}
               </div>

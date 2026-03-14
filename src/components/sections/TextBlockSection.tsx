@@ -1,12 +1,16 @@
 import type { TextBlockData, SectionSettings } from "@/lib/types";
+import type { SiteStyles } from "@/lib/styles";
+import { resolveButtonStylesInHtml, EMPTY_SITE_STYLES } from "@/lib/styles";
 
 interface Props {
   data: Record<string, unknown>;
   settings: SectionSettings;
+  siteStyles?: SiteStyles;
 }
 
-export default function TextBlockSection({ data, settings }: Props) {
+export default function TextBlockSection({ data, settings, siteStyles = EMPTY_SITE_STYLES }: Props) {
   const d = data as unknown as TextBlockData;
+  const resolvedHtml = resolveButtonStylesInHtml(d.html, siteStyles);
 
   return (
     <section
@@ -29,7 +33,7 @@ export default function TextBlockSection({ data, settings }: Props) {
       >
         <div
           className={`site-html-content ${d.prose ? "prose prose-lg max-w-none" : ""}`}
-          dangerouslySetInnerHTML={{ __html: d.html }}
+          dangerouslySetInnerHTML={{ __html: resolvedHtml }}
         />
       </div>
     </section>
