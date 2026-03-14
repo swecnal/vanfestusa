@@ -1,6 +1,6 @@
 "use client";
 
-import { useEditor, EditorContent } from "@tiptap/react";
+import { useEditor, EditorContent, Extension } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { TextStyle } from "@tiptap/extension-text-style";
 import { Color } from "@tiptap/extension-color";
@@ -8,12 +8,94 @@ import { FontFamily } from "@tiptap/extension-font-family";
 import { TextAlign } from "@tiptap/extension-text-align";
 import { Link } from "@tiptap/extension-link";
 import { Highlight } from "@tiptap/extension-highlight";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 interface Props {
   content: string;
   onChange: (html: string) => void;
 }
+
+/* ─── Custom FontSize extension ─── */
+const FontSize = Extension.create({
+  name: "fontSize",
+  addGlobalAttributes() {
+    return [
+      {
+        types: ["textStyle"],
+        attributes: {
+          fontSize: {
+            default: null,
+            parseHTML: (el) => el.style.fontSize || null,
+            renderHTML: (attrs) => {
+              if (!attrs.fontSize) return {};
+              return { style: `font-size: ${attrs.fontSize}` };
+            },
+          },
+        },
+      },
+    ];
+  },
+});
+
+/* ─── Custom LineHeight extension ─── */
+const LineHeight = Extension.create({
+  name: "lineHeight",
+  addGlobalAttributes() {
+    return [
+      {
+        types: ["paragraph", "heading"],
+        attributes: {
+          lineHeight: {
+            default: null,
+            parseHTML: (el) => el.style.lineHeight || null,
+            renderHTML: (attrs) => {
+              if (!attrs.lineHeight) return {};
+              return { style: `line-height: ${attrs.lineHeight}` };
+            },
+          },
+        },
+      },
+    ];
+  },
+});
+
+/* ─── Custom style preservation (margin, padding, etc.) ─── */
+const StylePreserver = Extension.create({
+  name: "stylePreserver",
+  addGlobalAttributes() {
+    return [
+      {
+        types: ["paragraph", "heading", "bulletList", "orderedList", "listItem"],
+        attributes: {
+          preservedStyle: {
+            default: null,
+            parseHTML: (el) => {
+              const s = el.getAttribute("style");
+              if (!s) return null;
+              // Keep margin, padding, and other layout styles
+              const kept = s
+                .split(";")
+                .map((p) => p.trim())
+                .filter(
+                  (p) =>
+                    p.startsWith("margin") ||
+                    p.startsWith("padding") ||
+                    p.startsWith("line-height") ||
+                    p.startsWith("letter-spacing")
+                )
+                .join("; ");
+              return kept || null;
+            },
+            renderHTML: (attrs) => {
+              if (!attrs.preservedStyle) return {};
+              return { style: attrs.preservedStyle };
+            },
+          },
+        },
+      },
+    ];
+  },
+});
 
 const FONT_FAMILIES = [
   { label: "Poppins", value: "Poppins" },
@@ -28,23 +110,34 @@ const COLORS = [
 ];
 
 export default function RichTextEditor({ content, onChange }: Props) {
+  const isInternalUpdate = useRef(false);
+
   const editor = useEditor({
     extensions: [
       StarterKit,
       TextStyle,
       Color,
       FontFamily,
+      FontSize,
+      LineHeight,
+      StylePreserver,
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       Link.configure({ openOnClick: false }),
       Highlight.configure({ multicolor: true }),
     ],
     content,
-    onUpdate: ({ editor }) => {
-      onChange(editor.getHTML());
+    onUpdate: ({ editor: ed }) => {
+      isInternalUpdate.current = true;
+      onChange(ed.getHTML());
     },
   });
 
+  // Only sync from parent if it wasn't our own update
   useEffect(() => {
+    if (isInternalUpdate.current) {
+      isInternalUpdate.current = false;
+      return;
+    }
     if (editor && content !== editor.getHTML()) {
       editor.commands.setContent(content);
     }
@@ -53,7 +146,7 @@ export default function RichTextEditor({ content, onChange }: Props) {
   if (!editor) return null;
 
   return (
-    <div className="border border-gray-200 rounded-lg overflow-hidden">
+    <div className="border border-gray-300 rounded-lg overflow-hidden">
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-0.5 p-1.5 bg-gray-50 border-b border-gray-200">
         {/* Font family */}
@@ -66,7 +159,8 @@ export default function RichTextEditor({ content, onChange }: Props) {
               editor.chain().focus().unsetFontFamily().run();
             }
           }}
-          className="text-xs px-1.5 py-1 border border-gray-300 rounded bg-white"
+          className="text-[10px] px-1 py-1 border border-gray-300 rounded bg-white h-6"
+          style={{ maxWidth: "72px" }}
         >
           <option value="">Font</option>
           {FONT_FAMILIES.map((f) => (
@@ -76,7 +170,7 @@ export default function RichTextEditor({ content, onChange }: Props) {
           ))}
         </select>
 
-        <div className="w-px h-5 bg-gray-200 mx-1" />
+        <div className="w-px h-5 bg-gray-200 mx-0.5" />
 
         {/* Bold, Italic, Strike */}
         <ToolbarButton
@@ -101,7 +195,7 @@ export default function RichTextEditor({ content, onChange }: Props) {
           <s>S</s>
         </ToolbarButton>
 
-        <div className="w-px h-5 bg-gray-200 mx-1" />
+        <div className="w-px h-5 bg-gray-200 mx-0.5" />
 
         {/* Headings */}
         {[1, 2, 3].map((level) => (
@@ -121,7 +215,7 @@ export default function RichTextEditor({ content, onChange }: Props) {
           </ToolbarButton>
         ))}
 
-        <div className="w-px h-5 bg-gray-200 mx-1" />
+        <div className="w-px h-5 bg-gray-200 mx-0.5" />
 
         {/* Alignment */}
         {(["left", "center", "right"] as const).map((align) => (
@@ -139,7 +233,7 @@ export default function RichTextEditor({ content, onChange }: Props) {
           </ToolbarButton>
         ))}
 
-        <div className="w-px h-5 bg-gray-200 mx-1" />
+        <div className="w-px h-5 bg-gray-200 mx-0.5" />
 
         {/* Color */}
         <div className="flex gap-0.5">
@@ -154,7 +248,7 @@ export default function RichTextEditor({ content, onChange }: Props) {
           ))}
         </div>
 
-        <div className="w-px h-5 bg-gray-200 mx-1" />
+        <div className="w-px h-5 bg-gray-200 mx-0.5" />
 
         {/* Lists */}
         <ToolbarButton
@@ -186,10 +280,10 @@ export default function RichTextEditor({ content, onChange }: Props) {
         </ToolbarButton>
       </div>
 
-      {/* Editor */}
+      {/* Editor — styled to match site rendering */}
       <EditorContent
         editor={editor}
-        className="prose prose-sm max-w-none p-3 min-h-[120px] focus:outline-none [&_.ProseMirror]:outline-none [&_.ProseMirror]:min-h-[100px]"
+        className="rte-site-styles max-w-none p-3 min-h-[120px] focus:outline-none [&_.ProseMirror]:outline-none [&_.ProseMirror]:min-h-[100px]"
       />
     </div>
   );
