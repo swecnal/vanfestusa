@@ -7,11 +7,15 @@ import { usePageEditor } from "@/lib/page-editor-context";
 import {
   DndContext,
   closestCenter,
+  rectIntersection,
   KeyboardSensor,
   PointerSensor,
   useSensor,
   useSensors,
+  useDroppable,
   type DragEndEvent,
+  type DragStartEvent,
+  type CollisionDetection,
 } from "@dnd-kit/core";
 import {
   arrayMove,
@@ -37,6 +41,16 @@ interface PageData {
   sections: Section[];
 }
 
+/* ─── Custom collision detection: prefer nest- droppables when intersecting ─── */
+const nestAwareCollision: CollisionDetection = (args) => {
+  // First check rect intersection for nest- droppables
+  const rectCollisions = rectIntersection(args);
+  const nestCollision = rectCollisions.find((c) => String(c.id).startsWith("nest-"));
+  if (nestCollision) return [nestCollision];
+  // Fall back to closestCenter for normal sortable reorder
+  return closestCenter(args);
+};
+
 /* ─── Sortable live section wrapper ─── */
 function SortableLiveSection({
   section,
@@ -49,6 +63,8 @@ function SortableLiveSection({
   siteStyles,
   editingData,
   editingSettings,
+  activeDragId,
+  activeDragType,
 }: {
   section: Section;
   isSelected: boolean;
@@ -60,6 +76,8 @@ function SortableLiveSection({
   siteStyles: SiteStyles;
   editingData?: Record<string, unknown>;
   editingSettings?: Record<string, unknown>;
+  activeDragId?: string | null;
+  activeDragType?: string | null;
 }) {
   const [showAccordionMenu, setShowAccordionMenu] = useState(false);
   const { attributes, listeners, setNodeRef, transform, transition } =
@@ -182,6 +200,37 @@ function SortableLiveSection({
       <div className={!section.is_visible ? "opacity-30" : ""}>
         <SectionRenderer section={displaySection} siteStyles={siteStyles} />
       </div>
+
+      {/* Nest drop zone — appears on accordion sections when dragging a non-accordion section */}
+      {section.section_type === "accordion_parent" &&
+        activeDragId &&
+        activeDragId !== section.id &&
+        activeDragType !== "accordion_parent" && (
+          <NestDropZone accordionId={section.id} title={(section.data.title as string) || "Accordion Group"} />
+        )}
+    </div>
+  );
+}
+
+/* ─── Nest Drop Zone (drop into accordion) ─── */
+function NestDropZone({ accordionId, title }: { accordionId: string; title: string }) {
+  const { isOver, setNodeRef } = useDroppable({ id: `nest-${accordionId}` });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={`mx-4 mb-2 rounded-lg border-2 border-dashed transition-all z-20 relative ${
+        isOver
+          ? "border-teal bg-teal/10 py-4"
+          : "border-teal/40 bg-teal/5 py-3"
+      }`}
+    >
+      <div className="flex items-center justify-center gap-2 text-teal text-xs font-semibold">
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 3.75H6.912a2.25 2.25 0 00-2.15 1.588L2.35 13.177a2.25 2.25 0 00-.1.661V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18v-4.162c0-.224-.034-.447-.1-.661L19.24 5.338a2.25 2.25 0 00-2.15-1.588H15M2.25 13.5h3.86a2.25 2.25 0 012.012 1.244l.256.512a2.25 2.25 0 002.013 1.244h3.218a2.25 2.25 0 002.013-1.244l.256-.512a2.25 2.25 0 012.013-1.244h3.859" />
+        </svg>
+        {isOver ? `Drop to nest into "${title}"` : `Drop here to nest into "${title}"`}
+      </div>
     </div>
   );
 }
@@ -258,6 +307,8 @@ export default function PageEditorPage() {
   const [saving, setSaving] = useState(false);
   const [externalDragActive, setExternalDragActive] = useState(false);
   const [siteStyles, setSiteStyles] = useState<SiteStyles>(EMPTY_SITE_STYLES);
+  // Track active internal drag for nest-into-accordion
+  const [activeDragId, setActiveDragId] = useState<string | null>(null);
   // In-progress editing state for real-time preview
   const [editingData, setEditingData] = useState<Record<string, unknown> | null>(null);
   const [editingSettings, setEditingSettings] = useState<Record<string, unknown> | null>(null);
@@ -304,12 +355,26 @@ export default function PageEditorPage() {
 
   const selectedSection = sections.find((s) => s.id === selectedSectionId);
 
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveDragId(event.active.id as string);
+  };
+
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
+    setActiveDragId(null);
     if (!over || active.id === over.id) return;
+
+    // Check if dropped on a nest-{accordionId} droppable
+    const overId = over.id as string;
+    if (overId.startsWith("nest-")) {
+      const accordionId = overId.replace("nest-", "");
+      handleMoveToAccordion(active.id as string, accordionId);
+      return;
+    }
 
     const oldIndex = sections.findIndex((s) => s.id === active.id);
     const newIndex = sections.findIndex((s) => s.id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
     const newSections = arrayMove(sections, oldIndex, newIndex).map((s, i) => ({
       ...s,
       sort_order: i,
@@ -583,30 +648,36 @@ export default function PageEditorPage() {
               <DropZone index={0} onDrop={handleAddSectionAtIndex} isActive={externalDragActive} />
               <DndContext
                 sensors={sensors}
-                collisionDetection={closestCenter}
+                collisionDetection={nestAwareCollision}
+                onDragStart={handleDragStart}
                 onDragEnd={handleDragEnd}
               >
                 <SortableContext
                   items={sections.map((s) => s.id)}
                   strategy={verticalListSortingStrategy}
                 >
-                  {sections.map((section, idx) => (
-                    <div key={section.id}>
-                      <SortableLiveSection
-                        section={section}
-                        isSelected={selectedSectionId === section.id}
-                        onSelect={() => handleSelectSection(section.id)}
-                        onToggleVisibility={() => handleToggleVisibility(section)}
-                        onDelete={() => handleDeleteSection(section.id)}
-                        onMoveToAccordion={handleMoveToAccordion}
-                        accordionGroups={accordionGroups}
-                        siteStyles={siteStyles}
-                        editingData={selectedSectionId === section.id && editingData ? editingData : undefined}
-                        editingSettings={selectedSectionId === section.id && editingSettings ? editingSettings : undefined}
-                      />
-                      <DropZone index={idx + 1} onDrop={handleAddSectionAtIndex} isActive={externalDragActive} />
-                    </div>
-                  ))}
+                  {sections.map((section, idx) => {
+                    const dragSection = activeDragId ? sections.find((s) => s.id === activeDragId) : null;
+                    return (
+                      <div key={section.id}>
+                        <SortableLiveSection
+                          section={section}
+                          isSelected={selectedSectionId === section.id}
+                          onSelect={() => handleSelectSection(section.id)}
+                          onToggleVisibility={() => handleToggleVisibility(section)}
+                          onDelete={() => handleDeleteSection(section.id)}
+                          onMoveToAccordion={handleMoveToAccordion}
+                          accordionGroups={accordionGroups}
+                          siteStyles={siteStyles}
+                          editingData={selectedSectionId === section.id && editingData ? editingData : undefined}
+                          editingSettings={selectedSectionId === section.id && editingSettings ? editingSettings : undefined}
+                          activeDragId={activeDragId}
+                          activeDragType={dragSection?.section_type || null}
+                        />
+                        <DropZone index={idx + 1} onDrop={handleAddSectionAtIndex} isActive={externalDragActive} />
+                      </div>
+                    );
+                  })}
                 </SortableContext>
               </DndContext>
             </div>
