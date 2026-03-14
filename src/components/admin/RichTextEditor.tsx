@@ -175,6 +175,8 @@ function defaultCustomStyle(): ButtonStyle {
     shadow: "none",
     hoverShadow: "none",
     textTransform: "none",
+    marginTop: "0px",
+    marginBottom: "0px",
   };
 }
 
@@ -617,6 +619,54 @@ export default function RichTextEditor({ content, onChange, siteStyles = EMPTY_S
             />
           </div>
 
+          {/* Per-button margin above/below */}
+          <div className="grid grid-cols-2 gap-1.5">
+            <div>
+              <label className="text-[9px] uppercase text-gray-400 font-semibold block mb-0.5">Margin Above</label>
+              <input
+                type="text"
+                value={(() => {
+                  const s = editor.getAttributes("link").style || "";
+                  const m = s.match(/margin-top:\s*([^;]+)/);
+                  return m ? m[1].trim() : "0px";
+                })()}
+                onChange={(e) => {
+                  if (!editor) return;
+                  const currentStyle = editor.getAttributes("link").style || "";
+                  let newStyle = currentStyle.replace(/margin-top:\s*[^;]+;?\s*/g, "").trim();
+                  if (e.target.value && e.target.value !== "0px") {
+                    newStyle = newStyle ? `${newStyle}; margin-top: ${e.target.value}` : `margin-top: ${e.target.value}`;
+                  }
+                  editor.chain().focus().extendMarkRange("link").updateAttributes("link", { style: newStyle || null }).run();
+                }}
+                className="w-full h-6 px-2 text-[11px] border border-gray-300 rounded bg-white"
+                placeholder="0px"
+              />
+            </div>
+            <div>
+              <label className="text-[9px] uppercase text-gray-400 font-semibold block mb-0.5">Margin Below</label>
+              <input
+                type="text"
+                value={(() => {
+                  const s = editor.getAttributes("link").style || "";
+                  const m = s.match(/margin-bottom:\s*([^;]+)/);
+                  return m ? m[1].trim() : "0px";
+                })()}
+                onChange={(e) => {
+                  if (!editor) return;
+                  const currentStyle = editor.getAttributes("link").style || "";
+                  let newStyle = currentStyle.replace(/margin-bottom:\s*[^;]+;?\s*/g, "").trim();
+                  if (e.target.value && e.target.value !== "0px") {
+                    newStyle = newStyle ? `${newStyle}; margin-bottom: ${e.target.value}` : `margin-bottom: ${e.target.value}`;
+                  }
+                  editor.chain().focus().extendMarkRange("link").updateAttributes("link", { style: newStyle || null }).run();
+                }}
+                className="w-full h-6 px-2 text-[11px] border border-gray-300 rounded bg-white"
+                placeholder="0px"
+              />
+            </div>
+          </div>
+
           {/* Style category buttons */}
           <div>
             <label className="text-[9px] uppercase text-gray-400 font-semibold block mb-1">Style</label>
@@ -868,6 +918,18 @@ function CustomButtonStyleEditor({
         <div>
           <label className="text-[8px] text-gray-400 block">Pad Y</label>
           <input type="text" value={style.paddingY} onChange={(e) => update("paddingY", e.target.value)} className="w-full h-5 text-[9px] border border-gray-200 rounded bg-white px-1" />
+        </div>
+      </div>
+
+      {/* Margin row */}
+      <div className="grid grid-cols-2 gap-1">
+        <div>
+          <label className="text-[8px] text-gray-400 block">Margin Top</label>
+          <input type="text" value={style.marginTop || "0px"} onChange={(e) => update("marginTop", e.target.value)} className="w-full h-5 text-[9px] border border-gray-200 rounded bg-white px-1" />
+        </div>
+        <div>
+          <label className="text-[8px] text-gray-400 block">Margin Btm</label>
+          <input type="text" value={style.marginBottom || "0px"} onChange={(e) => update("marginBottom", e.target.value)} className="w-full h-5 text-[9px] border border-gray-200 rounded bg-white px-1" />
         </div>
       </div>
 

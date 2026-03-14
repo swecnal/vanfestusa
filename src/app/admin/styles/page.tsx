@@ -24,6 +24,8 @@ const defaultButtonStyle = (type: "main" | "secondary", index: number): ButtonSt
   shadow: type === "main" ? "0 0 30px rgba(28,162,136,0.4)" : "none",
   hoverShadow: type === "main" ? "0 0 50px rgba(28,162,136,0.6)" : "none",
   textTransform: "none",
+  marginTop: "0px",
+  marginBottom: "0px",
 });
 
 const defaultLinkStyle = (type: "primary" | "secondary", index: number): LinkStyle => ({
@@ -136,20 +138,22 @@ export default function StylesPage() {
   }
 
   return (
-    <div className="max-w-5xl">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h2 className="font-display font-bold text-2xl text-charcoal">
-            Styles
-          </h2>
-          <p className="text-gray-500 text-sm mt-1">
-            Design reusable button and link styles for your site.
-          </p>
-        </div>
+    <div className="max-w-5xl pb-20">
+      <div className="mb-8">
+        <h2 className="font-display font-bold text-2xl text-charcoal">
+          Styles
+        </h2>
+        <p className="text-gray-500 text-sm mt-1">
+          Design reusable button and link styles for your site.
+        </p>
+      </div>
+
+      {/* Sticky save button */}
+      <div className="fixed bottom-6 right-6 z-50">
         <button
           onClick={save}
           disabled={saving}
-          className="bg-teal hover:bg-teal-dark text-white font-semibold px-6 py-2.5 rounded-lg transition-colors disabled:opacity-50 text-sm"
+          className="bg-teal hover:bg-teal-dark text-white font-semibold px-6 py-2.5 rounded-lg transition-colors disabled:opacity-50 text-sm shadow-lg"
         >
           {saving ? "Saving..." : "Save All Styles"}
         </button>
@@ -468,6 +472,25 @@ function ButtonStyleEditor({
           onChange={(e) => update("paddingY", e.target.value)}
           className="style-input"
           placeholder="12px"
+        />
+      </StyleField>
+
+      <StyleField label="Margin Top">
+        <input
+          type="text"
+          value={style.marginTop || "0px"}
+          onChange={(e) => update("marginTop", e.target.value)}
+          className="style-input"
+          placeholder="0px"
+        />
+      </StyleField>
+      <StyleField label="Margin Bottom">
+        <input
+          type="text"
+          value={style.marginBottom || "0px"}
+          onChange={(e) => update("marginBottom", e.target.value)}
+          className="style-input"
+          placeholder="0px"
         />
       </StyleField>
 

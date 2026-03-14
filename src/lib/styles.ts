@@ -45,6 +45,8 @@ export interface ButtonStyle {
   shadow: string;
   hoverShadow: string;
   textTransform: string;
+  marginTop?: string;
+  marginBottom?: string;
 }
 
 // ─── Link Style ───
@@ -153,6 +155,8 @@ export function buttonStyleToCSS(style: ButtonStyle): CSSProperties {
     textDecoration: "none",
     cursor: "pointer",
     transition: "all 0.2s ease",
+    marginTop: style.marginTop && style.marginTop !== "0px" ? style.marginTop : undefined,
+    marginBottom: style.marginBottom && style.marginBottom !== "0px" ? style.marginBottom : undefined,
   };
 }
 
@@ -228,6 +232,8 @@ export function buttonStyleToCSSString(style: ButtonStyle): string {
   parts.push(`padding: ${style.paddingY} ${style.paddingX}`);
   if (style.shadow && style.shadow !== "none") parts.push(`box-shadow: ${style.shadow}`);
   if (style.textTransform && style.textTransform !== "none") parts.push(`text-transform: ${style.textTransform}`);
+  if (style.marginTop && style.marginTop !== "0px") parts.push(`margin-top: ${style.marginTop}`);
+  if (style.marginBottom && style.marginBottom !== "0px") parts.push(`margin-bottom: ${style.marginBottom}`);
   parts.push("display: inline-block");
   parts.push("text-decoration: none");
   parts.push("cursor: pointer");
