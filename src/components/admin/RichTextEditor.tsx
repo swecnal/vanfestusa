@@ -522,12 +522,12 @@ export default function RichTextEditor({ content, onChange }: Props) {
           {/* Style */}
           <div>
             <label className="text-[9px] uppercase text-gray-400 font-semibold block mb-0.5">Style</label>
-            <div className="flex flex-wrap gap-1">
+            <div className="grid grid-cols-2 gap-1">
               {BUTTON_STYLES.map((bs) => (
                 <button
                   key={bs.label}
                   onClick={() => setLinkStyle(bs.value)}
-                  className={`text-[10px] px-2 py-1 rounded border transition-colors ${
+                  className={`text-[10px] px-2 py-1.5 rounded border transition-colors text-center ${
                     popoverClass === (bs.value || "")
                       ? "border-teal bg-teal/10 text-teal font-semibold"
                       : "border-gray-200 text-gray-600 hover:border-gray-300"
