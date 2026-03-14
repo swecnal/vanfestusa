@@ -541,6 +541,59 @@ export default function PageEditorPage() {
     toast.success(`Moved ${label} into accordion`);
   };
 
+  // Ungroup: extract an accordion child back out as a standalone section
+  const handleUngroupChild = async (accordionId: string, childIndex: number) => {
+    const accordion = sections.find((s) => s.id === accordionId);
+    if (!accordion) return;
+    const accChildren = (accordion.data.children as Array<Record<string, unknown>>) || [];
+    const child = accChildren[childIndex];
+    if (!child || !child.sectionType) return;
+
+    const label = SECTION_TYPE_LABELS[child.sectionType as SectionType] || (child.sectionType as string);
+    if (!confirm(`Extract "${child.title || label}" out of the accordion as a standalone section?`)) return;
+
+    // Create new standalone section
+    const res = await fetch(`/api/pages/${pageId}/sections`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        section_type: child.sectionType,
+        data: child.sectionData || {},
+        settings: child.sectionSettings || {},
+      }),
+    });
+
+    if (!res.ok) {
+      toast.error("Failed to ungroup");
+      return;
+    }
+
+    const { section: newSection } = await res.json();
+
+    // Remove child from accordion
+    const updatedChildren = accChildren.filter((_, idx) => idx !== childIndex);
+    const updatedAccordionData = { ...accordion.data, children: updatedChildren };
+
+    await fetch(`/api/pages/${pageId}/sections/${accordionId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ data: updatedAccordionData }),
+    });
+
+    // Update local state: add new section after accordion, update accordion data
+    setSections((prev) => {
+      const accIdx = prev.findIndex((s) => s.id === accordionId);
+      const updated = prev.map((s) => (s.id === accordionId ? { ...s, data: updatedAccordionData } : s));
+      updated.splice(accIdx + 1, 0, newSection);
+      return updated;
+    });
+
+    setSelectedSectionId(newSection.id);
+    setEditingData(null);
+    setEditingSettings(null);
+    toast.success(`Ungrouped ${label}`);
+  };
+
   // Click-to-toggle: clicking the same section deselects it, clicking a different one switches
   const handleSelectSection = useCallback((id: string | null) => {
     if (id !== null && id === selectedSectionId) {
@@ -712,6 +765,7 @@ export default function PageEditorPage() {
               saving={saving}
               onChange={handleEditorChange}
               stickyButtons
+              onUngroupChild={handleUngroupChild}
             />
           </div>
         </div>

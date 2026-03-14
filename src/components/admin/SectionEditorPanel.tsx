@@ -20,9 +20,10 @@ interface Props {
   saving: boolean;
   onChange?: (data: Record<string, unknown>, settings: Record<string, unknown>) => void;
   stickyButtons?: boolean;
+  onUngroupChild?: (accordionId: string, childIndex: number) => void;
 }
 
-export default function SectionEditorPanel({ section, onSave, saving, onChange, stickyButtons }: Props) {
+export default function SectionEditorPanel({ section, onSave, saving, onChange, stickyButtons, onUngroupChild }: Props) {
   const [data, setData] = useState<Record<string, unknown>>(section.data);
   const [settings, setSettings] = useState<Record<string, unknown>>(section.settings as unknown as Record<string, unknown>);
   const [siteStyles, setSiteStyles] = useState<SiteStyles>(EMPTY_SITE_STYLES);
@@ -75,6 +76,8 @@ export default function SectionEditorPanel({ section, onSave, saving, onChange, 
         data={data}
         updateData={updateData}
         siteStyles={siteStyles}
+        sectionId={section.id}
+        onUngroupChild={onUngroupChild}
       />
 
       {/* Common settings */}
@@ -179,11 +182,15 @@ function SectionFields({
   data,
   updateData,
   siteStyles,
+  sectionId,
+  onUngroupChild,
 }: {
   type: string;
   data: Record<string, unknown>;
   updateData: (key: string, value: unknown) => void;
   siteStyles: SiteStyles;
+  sectionId?: string;
+  onUngroupChild?: (accordionId: string, childIndex: number) => void;
 }) {
   switch (type) {
     case "hero_carousel":
@@ -371,7 +378,19 @@ function SectionFields({
                         <span className="text-[10px] uppercase tracking-wider font-semibold px-2 py-1 rounded bg-teal/10 text-teal border border-teal/20">
                           {SECTION_TYPE_LABELS[child.sectionType as SectionType] || child.sectionType}
                         </span>
-                        <span className="text-xs text-gray-400">Embedded section</span>
+                        <span className="text-xs text-gray-400 flex-1">Embedded section</span>
+                        {onUngroupChild && sectionId && (
+                          <button
+                            onClick={() => onUngroupChild(sectionId, i)}
+                            className="text-[10px] font-semibold text-orange-500 hover:text-orange-700 transition-colors flex items-center gap-1"
+                            title="Extract back to standalone section"
+                          >
+                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5l5.25 5.25" />
+                            </svg>
+                            Ungroup
+                          </button>
+                        )}
                       </div>
                     ) : (
                       <Field label="Content">
