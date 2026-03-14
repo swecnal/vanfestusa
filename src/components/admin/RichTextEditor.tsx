@@ -171,10 +171,35 @@ export default function RichTextEditor({ content, onChange }: Props) {
       LineHeight,
       StylePreserver,
       TextAlign.configure({ types: ["heading", "paragraph"] }),
-      CustomLink.configure({ openOnClick: false }),
+      CustomLink.configure({
+        openOnClick: false,
+        HTMLAttributes: { rel: null, target: null },
+      }),
       Highlight.configure({ multicolor: true }),
     ],
     content,
+    editorProps: {
+      handleClick: (view, pos, event) => {
+        const anchor = (event.target as HTMLElement).closest("a");
+        if (anchor) {
+          event.preventDefault();
+          event.stopPropagation();
+          return true;
+        }
+        return false;
+      },
+      handleDOMEvents: {
+        click: (view, event) => {
+          const anchor = (event.target as HTMLElement).closest("a");
+          if (anchor) {
+            event.preventDefault();
+            event.stopPropagation();
+            return true;
+          }
+          return false;
+        },
+      },
+    },
     onUpdate: ({ editor: ed }) => {
       isInternalUpdate.current = true;
       onChange(ed.getHTML());
@@ -528,10 +553,18 @@ export default function RichTextEditor({ content, onChange }: Props) {
       )}
 
       {/* Editor — styled to match site rendering */}
-      <EditorContent
-        editor={editor}
-        className="site-html-content max-w-none p-3 min-h-[120px] focus:outline-none [&_.ProseMirror]:outline-none [&_.ProseMirror]:min-h-[100px] [&_.ProseMirror_a]:cursor-pointer"
-      />
+      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
+      <div
+        onClick={(e) => {
+          const anchor = (e.target as HTMLElement).closest("a");
+          if (anchor) { e.preventDefault(); e.stopPropagation(); }
+        }}
+      >
+        <EditorContent
+          editor={editor}
+          className="site-html-content max-w-none p-3 min-h-[120px] focus:outline-none [&_.ProseMirror]:outline-none [&_.ProseMirror]:min-h-[100px] [&_.ProseMirror_a]:cursor-pointer"
+        />
+      </div>
     </div>
   );
 }
