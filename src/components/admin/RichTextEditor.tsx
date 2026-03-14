@@ -1,7 +1,6 @@
 "use client";
 
 import { useEditor, EditorContent, Extension } from "@tiptap/react";
-import { BubbleMenu } from "@tiptap/react/menus";
 import StarterKit from "@tiptap/starter-kit";
 import { TextStyle } from "@tiptap/extension-text-style";
 import { Color } from "@tiptap/extension-color";
@@ -155,6 +154,13 @@ export default function RichTextEditor({ content, onChange }: Props) {
   const [linkUrl, setLinkUrl] = useState("");
   const [showLinkInput, setShowLinkInput] = useState(false);
 
+  /* ─── Custom link popover state ─── */
+  const [linkPopover, setLinkPopover] = useState<{ top: number; left: number } | null>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const [popoverHref, setPopoverHref] = useState("");
+  const [popoverClass, setPopoverClass] = useState("");
+
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -185,8 +191,60 @@ export default function RichTextEditor({ content, onChange }: Props) {
     }
   }, [content, editor]);
 
-  const currentLinkClass = editor?.getAttributes("link").class || "";
-  const currentLinkHref = editor?.getAttributes("link").href || "";
+  /* ─── Intercept clicks on links inside the editor ─── */
+  useEffect(() => {
+    if (!editor) return;
+    const editorEl = editor.view.dom;
+
+    const handleClick = (e: MouseEvent) => {
+      const anchor = (e.target as HTMLElement).closest("a");
+      if (!anchor) {
+        // Clicked non-link area — close popover
+        setLinkPopover(null);
+        return;
+      }
+      // Prevent navigation
+      e.preventDefault();
+      e.stopPropagation();
+
+      // Select the link text so editor knows which link is active
+      const pos = editor.view.posAtDOM(anchor, 0);
+      editor.chain().focus().setTextSelection(pos).extendMarkRange("link").run();
+
+      // Get position relative to wrapper
+      const wrapperRect = wrapperRef.current?.getBoundingClientRect();
+      const anchorRect = anchor.getBoundingClientRect();
+      if (wrapperRect) {
+        setPopoverHref(editor.getAttributes("link").href || "");
+        setPopoverClass(editor.getAttributes("link").class || "");
+        setLinkPopover({
+          top: anchorRect.bottom - wrapperRect.top + 4,
+          left: Math.max(0, anchorRect.left - wrapperRect.left),
+        });
+      }
+    };
+
+    editorEl.addEventListener("click", handleClick, true);
+    return () => editorEl.removeEventListener("click", handleClick, true);
+  }, [editor]);
+
+  /* ─── Close popover on click outside ─── */
+  useEffect(() => {
+    if (!linkPopover) return;
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) {
+        setLinkPopover(null);
+      }
+    };
+    // Delay to avoid closing immediately from the same click
+    const timer = setTimeout(() => {
+      document.addEventListener("mousedown", handleOutsideClick);
+    }, 0);
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener("mousedown", handleOutsideClick);
+    };
+  }, [linkPopover]);
 
   const setLinkStyle = useCallback(
     (styleClass: string) => {
@@ -199,6 +257,7 @@ export default function RichTextEditor({ content, onChange }: Props) {
         .extendMarkRange("link")
         .updateAttributes("link", { class: styleClass || null })
         .run();
+      setPopoverClass(styleClass);
     },
     [editor]
   );
@@ -212,19 +271,19 @@ export default function RichTextEditor({ content, onChange }: Props) {
       setShowLinkInput(false);
       setLinkUrl("");
     } else {
-      setLinkUrl(currentLinkHref || "");
+      setLinkUrl(editor.getAttributes("link").href || "");
       setShowLinkInput(true);
     }
-  }, [editor, showLinkInput, linkUrl, currentLinkHref]);
+  }, [editor, showLinkInput, linkUrl]);
 
   if (!editor) return null;
 
   const isLink = editor.isActive("link");
 
   return (
-    <div className="border border-gray-300 rounded-lg overflow-hidden">
+    <div ref={wrapperRef} className="relative border border-gray-300 rounded-lg overflow-visible">
       {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-0.5 p-1.5 bg-gray-50 border-b border-gray-200">
+      <div className="flex flex-wrap items-center gap-0.5 p-1.5 bg-gray-50 border-b border-gray-200 rounded-t-lg">
         {/* Font family */}
         <select
           value={editor.getAttributes("textStyle").fontFamily || ""}
@@ -391,35 +450,48 @@ export default function RichTextEditor({ content, onChange }: Props) {
         )}
       </div>
 
-      {/* Bubble menu — appears when cursor is on a link/button */}
-      <BubbleMenu
-        editor={editor}
-        shouldShow={({ editor: ed }) => ed.isActive("link")}
-      >
-        <div className="bg-white rounded-lg shadow-xl border border-gray-200 p-2 space-y-2 min-w-[240px]" onClick={(e) => e.stopPropagation()}>
+      {/* Custom link/button popover — fixed position, click-triggered */}
+      {linkPopover && (
+        <div
+          ref={popoverRef}
+          className="absolute bg-white rounded-lg shadow-2xl border border-gray-200 p-3 space-y-2 min-w-[260px]"
+          style={{ top: linkPopover.top, left: linkPopover.left, zIndex: 9999 }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Close button */}
+          <button
+            onClick={() => setLinkPopover(null)}
+            className="absolute top-1.5 right-1.5 w-5 h-5 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+            title="Close"
+          >
+            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+
           {/* URL */}
           <div>
             <label className="text-[9px] uppercase text-gray-400 font-semibold block mb-0.5">URL</label>
-            <div className="flex gap-1">
-              <input
-                type="url"
-                defaultValue={currentLinkHref}
-                onBlur={(e) => {
-                  if (e.target.value && e.target.value !== currentLinkHref) {
-                    editor.chain().focus().extendMarkRange("link").updateAttributes("link", { href: e.target.value }).run();
+            <input
+              type="url"
+              value={popoverHref}
+              onChange={(e) => setPopoverHref(e.target.value)}
+              onBlur={() => {
+                if (popoverHref && editor) {
+                  editor.chain().focus().extendMarkRange("link").updateAttributes("link", { href: popoverHref }).run();
+                }
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  if (popoverHref && editor) {
+                    editor.chain().focus().extendMarkRange("link").updateAttributes("link", { href: popoverHref }).run();
                   }
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    const val = (e.target as HTMLInputElement).value;
-                    if (val) editor.chain().focus().extendMarkRange("link").updateAttributes("link", { href: val }).run();
-                  }
-                }}
-                className="flex-1 h-6 px-2 text-[11px] border border-gray-300 rounded bg-white min-w-0"
-                placeholder="https://..."
-              />
-            </div>
+                }
+              }}
+              className="w-full h-6 px-2 text-[11px] border border-gray-300 rounded bg-white"
+              placeholder="https://..."
+            />
           </div>
 
           {/* Style */}
@@ -431,7 +503,7 @@ export default function RichTextEditor({ content, onChange }: Props) {
                   key={bs.label}
                   onClick={() => setLinkStyle(bs.value)}
                   className={`text-[10px] px-2 py-1 rounded border transition-colors ${
-                    currentLinkClass === (bs.value || "")
+                    popoverClass === (bs.value || "")
                       ? "border-teal bg-teal/10 text-teal font-semibold"
                       : "border-gray-200 text-gray-600 hover:border-gray-300"
                   }`}
@@ -444,18 +516,21 @@ export default function RichTextEditor({ content, onChange }: Props) {
 
           {/* Remove */}
           <button
-            onClick={() => editor.chain().focus().extendMarkRange("link").unsetLink().run()}
+            onClick={() => {
+              editor.chain().focus().extendMarkRange("link").unsetLink().run();
+              setLinkPopover(null);
+            }}
             className="text-[10px] text-red-500 hover:text-red-700 font-semibold"
           >
             Remove Link
           </button>
         </div>
-      </BubbleMenu>
+      )}
 
       {/* Editor — styled to match site rendering */}
       <EditorContent
         editor={editor}
-        className="site-html-content max-w-none p-3 min-h-[120px] focus:outline-none [&_.ProseMirror]:outline-none [&_.ProseMirror]:min-h-[100px] [&_.ProseMirror_a]:cursor-text [&_.ProseMirror_a]:pointer-events-auto"
+        className="site-html-content max-w-none p-3 min-h-[120px] focus:outline-none [&_.ProseMirror]:outline-none [&_.ProseMirror]:min-h-[100px] [&_.ProseMirror_a]:cursor-pointer"
       />
     </div>
   );
