@@ -75,7 +75,7 @@ export default function TwoColumnCardsSection({ data, settings, siteStyles = EMP
                       </p>
                     )}
                     <div
-                      className={`text-sm leading-relaxed ${isBackground ? "text-white/80" : "text-charcoal/70"}`}
+                      className={`text-sm leading-relaxed site-html-content ${isBackground ? "text-white/80" : "text-charcoal/70"}`}
                       style={textStyleConfigToCSS(card.bodyStyle || {})}
                       dangerouslySetInnerHTML={{ __html: card.body }}
                     />

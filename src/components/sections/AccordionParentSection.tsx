@@ -180,7 +180,7 @@ export default function AccordionParentSection({ data, settings }: Props) {
                     />
                   </div>
                 ) : (
-                  <div className="px-6 pb-4 text-charcoal/70 text-sm leading-relaxed">
+                  <div className="px-6 pb-4 text-charcoal/70 text-sm leading-relaxed site-html-content">
                     <div dangerouslySetInnerHTML={{ __html: child.body }} />
                   </div>
                 )}

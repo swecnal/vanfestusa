@@ -55,67 +55,65 @@
   animation-play-state: paused;
 }
 
-/* Rich text editor — match site rendering styles */
-.rte-site-styles .ProseMirror {
+/* Shared HTML content styles — used by both editor + page renderer */
+.site-html-content,
+.site-html-content .ProseMirror {
   font-family: "Gothic A1", sans-serif;
   font-size: 16px;
   line-height: 1.7;
   color: #1a1a1a;
 }
-.rte-site-styles .ProseMirror h1 {
+.site-html-content h1 {
   font-family: "Poppins", sans-serif;
   font-size: 2.25rem;
   font-weight: 900;
   line-height: 1.2;
   margin: 1em 0 0.5em;
-  color: #1a1a1a;
 }
-.rte-site-styles .ProseMirror h2 {
+.site-html-content h2 {
   font-family: "Poppins", sans-serif;
   font-size: 1.75rem;
   font-weight: 800;
   line-height: 1.25;
   margin: 0.8em 0 0.4em;
-  color: #1a1a1a;
 }
-.rte-site-styles .ProseMirror h3 {
+.site-html-content h3 {
   font-family: "Poppins", sans-serif;
   font-size: 1.35rem;
   font-weight: 700;
   line-height: 1.3;
   margin: 0.6em 0 0.3em;
-  color: #1a1a1a;
 }
-.rte-site-styles .ProseMirror p {
+.site-html-content p {
   margin: 0.5em 0;
 }
-.rte-site-styles .ProseMirror ul {
+.site-html-content ul {
   list-style-type: disc;
   padding-left: 1.5em;
   margin: 0.5em 0;
 }
-.rte-site-styles .ProseMirror ol {
+.site-html-content ol {
   list-style-type: decimal;
   padding-left: 1.5em;
   margin: 0.5em 0;
 }
-.rte-site-styles .ProseMirror li {
+.site-html-content li {
   margin: 0.25em 0;
 }
-.rte-site-styles .ProseMirror a {
+.site-html-content a {
   color: #1CA288;
   text-decoration: underline;
 }
-.rte-site-styles .ProseMirror blockquote {
+.site-html-content blockquote {
   border-left: 3px solid #1CA288;
   padding-left: 1em;
   margin: 0.5em 0;
   color: #555;
 }
-.rte-site-styles .ProseMirror strong {
+.site-html-content strong {
   font-weight: 700;
 }
-.rte-site-styles .ProseMirror hr {
+.site-html-content hr {
   border: none;
   border-top: 1px solid #e5e7eb;
   margin: 1em 0;

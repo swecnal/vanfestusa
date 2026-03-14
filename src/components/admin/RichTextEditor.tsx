@@ -283,7 +283,7 @@ export default function RichTextEditor({ content, onChange }: Props) {
       {/* Editor — styled to match site rendering */}
       <EditorContent
         editor={editor}
-        className="rte-site-styles max-w-none p-3 min-h-[120px] focus:outline-none [&_.ProseMirror]:outline-none [&_.ProseMirror]:min-h-[100px]"
+        className="site-html-content max-w-none p-3 min-h-[120px] focus:outline-none [&_.ProseMirror]:outline-none [&_.ProseMirror]:min-h-[100px]"
       />
     </div>
   );

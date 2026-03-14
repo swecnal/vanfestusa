@@ -87,7 +87,7 @@ export default function FaqAccordionSection({ data, settings }: Props) {
                   maxHeight: openItems.has(i) ? refs.current[i]?.scrollHeight : 0,
                 }}
               >
-                <div className="px-6 pb-4 text-charcoal/70 text-sm leading-relaxed">
+                <div className="px-6 pb-4 text-charcoal/70 text-sm leading-relaxed site-html-content">
                   <div dangerouslySetInnerHTML={{ __html: item.answer }} />
                 </div>
               </div>

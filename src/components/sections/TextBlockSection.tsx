@@ -28,7 +28,7 @@ export default function TextBlockSection({ data, settings }: Props) {
         }`}
       >
         <div
-          className={d.prose ? "prose prose-lg max-w-none" : ""}
+          className={`site-html-content ${d.prose ? "prose prose-lg max-w-none" : ""}`}
           dangerouslySetInnerHTML={{ __html: d.html }}
         />
       </div>
