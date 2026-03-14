@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import type { Section } from "@/lib/types";
+import type { Section, SectionType } from "@/lib/types";
+import { SECTION_TYPE_LABELS } from "@/lib/types";
 import RichTextEditor from "./RichTextEditor";
 import ImagePicker from "./ImagePicker";
 import TextStyleEditor from "./TextStyleEditor";
@@ -328,6 +329,11 @@ function SectionFields({
                   <summary className="px-3 py-2 text-sm font-medium text-gray-700 cursor-pointer hover:bg-gray-50 flex items-center gap-2">
                     <span className="text-gray-400 text-xs w-5">{i + 1}.</span>
                     <span className="flex-1 truncate">{child.title || "Untitled"}</span>
+                    {child.sectionType && (
+                      <span className="text-[9px] uppercase tracking-wider font-semibold px-1.5 py-0.5 rounded bg-teal/10 text-teal flex-shrink-0">
+                        {SECTION_TYPE_LABELS[child.sectionType as SectionType] || child.sectionType}
+                      </span>
+                    )}
                     <span className="flex gap-0.5">
                       <button
                         onClick={(e) => { e.preventDefault(); moveAccChild(i, i - 1); }}
@@ -360,12 +366,21 @@ function SectionFields({
                         className="input-sm"
                       />
                     </Field>
-                    <Field label="Content">
-                      <RichTextEditor
-                        content={child.body || ""}
-                        onChange={(html) => updateAccChild(i, "body", html)}
-                      />
-                    </Field>
+                    {child.sectionType ? (
+                      <div className="flex items-center gap-2 py-2">
+                        <span className="text-[10px] uppercase tracking-wider font-semibold px-2 py-1 rounded bg-teal/10 text-teal border border-teal/20">
+                          {SECTION_TYPE_LABELS[child.sectionType as SectionType] || child.sectionType}
+                        </span>
+                        <span className="text-xs text-gray-400">Embedded section</span>
+                      </div>
+                    ) : (
+                      <Field label="Content">
+                        <RichTextEditor
+                          content={child.body || ""}
+                          onChange={(html) => updateAccChild(i, "body", html)}
+                        />
+                      </Field>
+                    )}
                   </div>
                 </details>
               ))}

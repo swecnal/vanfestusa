@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import type { AccordionParentData, SectionSettings } from "@/lib/types";
-import { type TextStyleConfig, textStyleConfigToCSS } from "@/lib/styles";
+import type { AccordionParentData, SectionSettings, SectionType } from "@/lib/types";
+import { type TextStyleConfig, textStyleConfigToCSS, EMPTY_SITE_STYLES } from "@/lib/styles";
+import SectionRenderer from "./SectionRenderer";
 
 interface Props {
   data: Record<string, unknown>;
@@ -158,9 +159,31 @@ export default function AccordionParentSection({ data, settings }: Props) {
                   maxHeight: openItems.has(i) ? refs.current[i]?.scrollHeight : 0,
                 }}
               >
-                <div className="px-6 pb-4 text-charcoal/70 text-sm leading-relaxed">
-                  <div dangerouslySetInnerHTML={{ __html: child.body }} />
-                </div>
+                {child.sectionType ? (
+                  <div className="pb-2">
+                    <SectionRenderer
+                      section={{
+                        id: `accordion-child-${i}`,
+                        page_id: "",
+                        section_type: child.sectionType as SectionType,
+                        data: child.sectionData || {},
+                        settings: {
+                          ...(child.sectionSettings || {}),
+                          paddingY: (child.sectionSettings?.paddingY as string) || "py-4",
+                        } as SectionSettings,
+                        sort_order: i,
+                        is_visible: true,
+                        created_at: "",
+                        updated_at: "",
+                      }}
+                      siteStyles={EMPTY_SITE_STYLES}
+                    />
+                  </div>
+                ) : (
+                  <div className="px-6 pb-4 text-charcoal/70 text-sm leading-relaxed">
+                    <div dangerouslySetInnerHTML={{ __html: child.body }} />
+                  </div>
+                )}
               </div>
             </div>
           ))}

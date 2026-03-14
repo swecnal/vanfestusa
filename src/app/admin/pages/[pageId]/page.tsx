@@ -44,6 +44,8 @@ function SortableLiveSection({
   onSelect,
   onToggleVisibility,
   onDelete,
+  onMoveToAccordion,
+  accordionGroups,
   siteStyles,
   editingData,
   editingSettings,
@@ -53,10 +55,13 @@ function SortableLiveSection({
   onSelect: () => void;
   onToggleVisibility: () => void;
   onDelete: () => void;
+  onMoveToAccordion?: (sectionId: string, accordionId: string) => void;
+  accordionGroups?: { id: string; title: string }[];
   siteStyles: SiteStyles;
   editingData?: Record<string, unknown>;
   editingSettings?: Record<string, unknown>;
 }) {
+  const [showAccordionMenu, setShowAccordionMenu] = useState(false);
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({ id: section.id });
 
@@ -130,6 +135,38 @@ function SortableLiveSection({
             )}
           </svg>
         </button>
+        {/* Move to Accordion — only for non-accordion sections when accordions exist */}
+        {accordionGroups && accordionGroups.length > 0 && section.section_type !== "accordion_parent" && (
+          <div className="relative">
+            <button
+              onClick={(e) => { e.stopPropagation(); setShowAccordionMenu(!showAccordionMenu); }}
+              className="bg-charcoal text-white rounded-full p-1.5 shadow-lg"
+              title="Move into Accordion Group"
+            >
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 3.75H6.912a2.25 2.25 0 00-2.15 1.588L2.35 13.177a2.25 2.25 0 00-.1.661V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18v-4.162c0-.224-.034-.447-.1-.661L19.24 5.338a2.25 2.25 0 00-2.15-1.588H15M2.25 13.5h3.86a2.25 2.25 0 012.012 1.244l.256.512a2.25 2.25 0 002.013 1.244h3.218a2.25 2.25 0 002.013-1.244l.256-.512a2.25 2.25 0 012.013-1.244h3.859" />
+              </svg>
+            </button>
+            {showAccordionMenu && (
+              <div className="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-xl border border-gray-200 py-1 min-w-[160px] z-30">
+                <p className="px-3 py-1 text-[10px] text-gray-400 uppercase font-semibold">Move into...</p>
+                {accordionGroups.map((ag) => (
+                  <button
+                    key={ag.id}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowAccordionMenu(false);
+                      onMoveToAccordion?.(section.id, ag.id);
+                    }}
+                    className="w-full text-left px-3 py-1.5 text-xs text-gray-700 hover:bg-teal/10 hover:text-teal transition-colors"
+                  >
+                    {ag.title || "Accordion Group"}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
         <button
           onClick={(e) => { e.stopPropagation(); onDelete(); }}
           className="bg-red-500 text-white rounded-full p-1.5 shadow-lg"
@@ -388,6 +425,57 @@ export default function PageEditorPage() {
     setEditingSettings(settings);
   }, []);
 
+  // Accordion groups on the page (for "move into accordion" feature)
+  const accordionGroups = sections
+    .filter((s) => s.section_type === "accordion_parent")
+    .map((s) => ({ id: s.id, title: (s.data.title as string) || "Accordion Group" }));
+
+  // Move a section into an accordion group
+  const handleMoveToAccordion = async (sectionId: string, accordionId: string) => {
+    const section = sections.find((s) => s.id === sectionId);
+    const accordion = sections.find((s) => s.id === accordionId);
+    if (!section || !accordion) return;
+
+    const label = SECTION_TYPE_LABELS[section.section_type as SectionType] || section.section_type;
+    if (!confirm(`Move "${label}" into "${(accordion.data.title as string) || "Accordion Group"}"?`)) return;
+
+    // Add section as accordion child
+    const accChildren = (accordion.data.children as Array<Record<string, unknown>>) || [];
+    const newChild = {
+      title: (section.data.title as string) || (section.data.heading as string) || label,
+      body: "",
+      sectionType: section.section_type,
+      sectionData: section.data,
+      sectionSettings: section.settings,
+    };
+    const updatedAccordionData = { ...accordion.data, children: [...accChildren, newChild] };
+
+    // Save updated accordion
+    await fetch(`/api/pages/${pageId}/sections/${accordionId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ data: updatedAccordionData }),
+    });
+
+    // Delete the original section
+    await fetch(`/api/pages/${pageId}/sections/${sectionId}`, { method: "DELETE" });
+
+    // Update local state
+    setSections((prev) =>
+      prev
+        .map((s) => (s.id === accordionId ? { ...s, data: updatedAccordionData } : s))
+        .filter((s) => s.id !== sectionId)
+    );
+
+    if (selectedSectionId === sectionId) {
+      setSelectedSectionId(accordionId);
+      setEditingData(null);
+      setEditingSettings(null);
+    }
+
+    toast.success(`Moved ${label} into accordion`);
+  };
+
   // Click-to-toggle: clicking the same section deselects it, clicking a different one switches
   const handleSelectSection = useCallback((id: string | null) => {
     if (id !== null && id === selectedSectionId) {
@@ -510,6 +598,8 @@ export default function PageEditorPage() {
                         onSelect={() => handleSelectSection(section.id)}
                         onToggleVisibility={() => handleToggleVisibility(section)}
                         onDelete={() => handleDeleteSection(section.id)}
+                        onMoveToAccordion={handleMoveToAccordion}
+                        accordionGroups={accordionGroups}
                         siteStyles={siteStyles}
                         editingData={selectedSectionId === section.id && editingData ? editingData : undefined}
                         editingSettings={selectedSectionId === section.id && editingSettings ? editingSettings : undefined}

@@ -377,6 +377,9 @@ export interface AccordionParentData {
   children: Array<{
     title: string;
     body: string;
+    sectionType?: string;
+    sectionData?: Record<string, unknown>;
+    sectionSettings?: Record<string, unknown>;
   }>;
 }
 
