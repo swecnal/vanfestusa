@@ -92,12 +92,30 @@ export type SectionType =
   | "contact_form"
   | "html_block";
 
+// ─── Background Config ───
+
+export interface BackgroundConfig {
+  type: "none" | "solid" | "gradient" | "image";
+  // Solid
+  solidColor?: string;
+  // Gradient
+  gradientType?: "linear" | "radial";
+  gradientAngle?: number;
+  gradientColors?: Array<{ color: string; opacity?: number }>;
+  gradientReverse?: boolean;
+  // Image
+  imageUrl?: string;
+  imageSizing?: "cover" | "contain" | "stretch" | "tile" | "full";
+  imageOpacity?: number;
+}
+
 // ─── Section Settings (common to all) ───
 
 export interface SectionSettings {
   bgColor?: string;
   bgImage?: string;
   bgImageOpacity?: number;
+  bgConfig?: BackgroundConfig;
   // Granular spacing (CSS values like "16px")
   paddingTop?: string;
   paddingBottom?: string;
@@ -149,6 +167,64 @@ export function sectionSpacingStyles(settings: SectionSettings): React.CSSProper
     marginLeft: settings.marginLeft || undefined,
     marginRight: settings.marginRight || undefined,
   };
+}
+
+// ─── Background utilities ───
+
+function hexToRgba(hex: string, opacity: number): string {
+  const c = hex.replace("#", "");
+  const r = parseInt(c.substring(0, 2), 16);
+  const g = parseInt(c.substring(2, 4), 16);
+  const b = parseInt(c.substring(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+}
+
+/** Returns the legacy bg className; empty string when bgConfig overrides */
+export function sectionBgClass(settings: SectionSettings): string {
+  if (settings.bgConfig?.type && settings.bgConfig.type !== "none") return "";
+  if (settings.bgColor === "charcoal") return "bg-charcoal text-white";
+  if (settings.bgColor === "sand") return "bg-sand";
+  return "";
+}
+
+/** Compute inline background styles from BackgroundConfig */
+export function backgroundConfigStyles(config?: BackgroundConfig): React.CSSProperties {
+  if (!config || config.type === "none") return {};
+
+  if (config.type === "solid") {
+    return { backgroundColor: config.solidColor || "#ffffff" };
+  }
+
+  if (config.type === "gradient") {
+    let colors = config.gradientColors || [{ color: "#ffffff" }, { color: "#000000" }];
+    if (config.gradientReverse) colors = [...colors].reverse();
+    const stops = colors.map((c) => {
+      const op = (c.opacity ?? 100) / 100;
+      return op < 1 ? hexToRgba(c.color, op) : c.color;
+    }).join(", ");
+    if (config.gradientType === "radial") {
+      return { background: `radial-gradient(circle, ${stops})` };
+    }
+    return { background: `linear-gradient(${config.gradientAngle ?? 180}deg, ${stops})` };
+  }
+
+  if (config.type === "image" && config.imageUrl) {
+    const sizing = config.imageSizing || "cover";
+    const base: React.CSSProperties = {
+      backgroundImage: `url(${config.imageUrl})`,
+      backgroundPosition: "center",
+    };
+    switch (sizing) {
+      case "cover": base.backgroundSize = "cover"; break;
+      case "contain": base.backgroundSize = "contain"; base.backgroundRepeat = "no-repeat"; break;
+      case "stretch": base.backgroundSize = "100% 100%"; break;
+      case "tile": base.backgroundSize = "auto"; base.backgroundRepeat = "repeat"; break;
+      case "full": base.backgroundSize = "100% auto"; base.backgroundRepeat = "no-repeat"; break;
+    }
+    return base;
+  }
+
+  return {};
 }
 
 // ─── Section Data Shapes ───

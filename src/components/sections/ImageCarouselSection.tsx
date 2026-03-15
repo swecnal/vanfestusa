@@ -2,7 +2,7 @@ import SectionHeading from "@/components/SectionHeading";
 import BuildsCarousel from "@/components/BuildsCarousel";
 import Link from "next/link";
 import type { SectionSettings } from "@/lib/types";
-import { sectionSpacingStyles } from "@/lib/types";
+import { sectionSpacingStyles, sectionBgClass } from "@/lib/types";
 import { textStyleConfigToCSS, type TextStyleConfig } from "@/lib/styles";
 
 interface Props {
@@ -29,9 +29,7 @@ export default function ImageCarouselSection({ data, settings }: Props) {
   return (
     <section
       style={sectionSpacingStyles(settings)}
-      className={`relative px-4 ${
-        isLight ? "bg-charcoal" : "bg-white"
-      } overflow-hidden ${settings.customClasses || ""}`}
+      className={`relative px-4 ${sectionBgClass(settings)} overflow-hidden ${settings.customClasses || ""}`}
     >
       {bgImage && (
         <img

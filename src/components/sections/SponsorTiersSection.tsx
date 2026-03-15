@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { SponsorTiersData, SectionSettings } from "@/lib/types";
-import { sectionSpacingStyles } from "@/lib/types";
+import { sectionSpacingStyles, sectionBgClass } from "@/lib/types";
 import { textStyleConfigToCSS, type TextStyleConfig } from "@/lib/styles";
 
 interface Props {
@@ -93,7 +93,7 @@ export default function SponsorTiersSection({ data, settings }: Props) {
 
   if (d.wrapInOuterAccordion) {
     return (
-      <section style={sectionSpacingStyles(settings)} className={`px-4 bg-white ${settings.customClasses || ""}`}>
+      <section style={sectionSpacingStyles(settings)} className={`px-4 ${sectionBgClass(settings)} ${settings.customClasses || ""}`}>
         <div className={`mx-auto ${settings.maxWidth || "max-w-4xl"}`}>
           {d.heading && (
             <h2 className="font-display font-black text-3xl text-charcoal mb-8 text-center" style={headingStyle ? textStyleConfigToCSS(headingStyle) : undefined} dangerouslySetInnerHTML={{ __html: d.heading || "" }} />
@@ -119,7 +119,7 @@ export default function SponsorTiersSection({ data, settings }: Props) {
   }
 
   return (
-    <section style={sectionSpacingStyles(settings)} className={`px-4 bg-white ${settings.customClasses || ""}`}>
+    <section style={sectionSpacingStyles(settings)} className={`px-4 ${sectionBgClass(settings)} ${settings.customClasses || ""}`}>
       <div className={`mx-auto ${settings.maxWidth || "max-w-4xl"}`}>
         {d.heading && (
           <h2 className="font-display font-black text-3xl text-charcoal mb-8 text-center" style={headingStyle ? textStyleConfigToCSS(headingStyle) : undefined} dangerouslySetInnerHTML={{ __html: d.heading || "" }} />

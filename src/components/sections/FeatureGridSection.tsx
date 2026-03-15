@@ -1,6 +1,6 @@
 import SectionHeading from "@/components/SectionHeading";
 import type { FeatureGridData, SectionSettings } from "@/lib/types";
-import { sectionSpacingStyles } from "@/lib/types";
+import { sectionSpacingStyles, sectionBgClass } from "@/lib/types";
 import { type SiteStyles, type TextStyleConfig, EMPTY_SITE_STYLES, findButtonStyle, buttonStyleToCSS, textStyleConfigToCSS } from "@/lib/styles";
 
 interface Props {
@@ -25,9 +25,7 @@ export default function FeatureGridSection({ data, settings, siteStyles = EMPTY_
   return (
     <section
       style={sectionSpacingStyles(settings)}
-      className={`px-4 ${
-        isLight ? "bg-charcoal" : "bg-white"
-      } ${settings.customClasses || ""}`}
+      className={`px-4 ${sectionBgClass(settings)} ${settings.customClasses || ""}`}
     >
       <div className={`mx-auto ${settings.maxWidth || "max-w-6xl"}`}>
         {d.heading && (

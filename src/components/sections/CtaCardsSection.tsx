@@ -1,7 +1,7 @@
 import Link from "next/link";
 import SectionHeading from "@/components/SectionHeading";
 import type { CtaCardsData, SectionSettings } from "@/lib/types";
-import { sectionSpacingStyles } from "@/lib/types";
+import { sectionSpacingStyles, sectionBgClass } from "@/lib/types";
 import { textStyleConfigToCSS, type TextStyleConfig } from "@/lib/styles";
 
 interface Props {
@@ -17,9 +17,7 @@ export default function CtaCardsSection({ data, settings }: Props) {
   return (
     <section
       style={sectionSpacingStyles(settings)}
-      className={`px-4 ${
-        settings.bgColor === "charcoal" ? "bg-charcoal" : "bg-white"
-      } ${settings.customClasses || ""}`}
+      className={`px-4 ${sectionBgClass(settings)} ${settings.customClasses || ""}`}
     >
       <div className={`mx-auto ${settings.maxWidth || "max-w-4xl"} text-center`}>
         {d.heading && (

@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import type { Section, SectionType } from "@/lib/types";
+import type { Section, SectionType, BackgroundConfig } from "@/lib/types";
 import { SECTION_TYPE_LABELS, SPACING_PRESETS } from "@/lib/types";
 import RichTextEditor from "./RichTextEditor";
 import ImagePicker from "./ImagePicker";
+import BackgroundEditor from "./BackgroundEditor";
 import TextStyleEditor from "./TextStyleEditor";
 import {
   type SiteStyles,
@@ -76,18 +77,14 @@ export default function SectionEditorPanel({ section, onSave, saving, onChange, 
           Section Settings
         </summary>
         <div className="p-3 space-y-3 border-t border-gray-100">
-          <Field label="Background Color">
-            <select
-              value={(settings.bgColor as string) || ""}
-              onChange={(e) => updateSettings("bgColor", e.target.value || undefined)}
-              className="input-sm"
-            >
-              <option value="">Default</option>
-              <option value="white">White</option>
-              <option value="sand">Sand</option>
-              <option value="charcoal">Charcoal</option>
-            </select>
-          </Field>
+          <BackgroundEditor
+            value={settings.bgConfig as BackgroundConfig | undefined}
+            onChange={(cfg) => {
+              const next = { ...settings, bgConfig: cfg, bgColor: undefined };
+              setSettings(next);
+              onChange?.(data, next);
+            }}
+          />
 
           {/* Padding */}
           <div>

@@ -1,4 +1,5 @@
 import type { Section } from "@/lib/types";
+import { backgroundConfigStyles } from "@/lib/types";
 import { type SiteStyles, EMPTY_SITE_STYLES } from "@/lib/styles";
 import HeroCarouselSection from "./HeroCarouselSection";
 import HeroSimpleSection from "./HeroSimpleSection";
@@ -87,6 +88,30 @@ export default function SectionRenderer({ section, siteStyles = EMPTY_SITE_STYLE
 
   if (!content) return null;
 
-  // Wrap in section with ID for anchor links
-  return sectionId ? <div id={sectionId}>{content}</div> : content;
+  const bgConfig = settings.bgConfig;
+  const hasBg = bgConfig?.type && bgConfig.type !== "none";
+  const bgStyles = hasBg ? backgroundConfigStyles(bgConfig) : undefined;
+  const isImageBg = bgConfig?.type === "image" && bgConfig.imageUrl;
+  const imageOpacity = (bgConfig?.imageOpacity ?? 100) / 100;
+
+  // Wrap with background + anchor ID
+  if (hasBg || sectionId) {
+    return (
+      <div
+        id={sectionId || undefined}
+        className={hasBg ? "relative overflow-hidden" : undefined}
+        style={isImageBg ? undefined : bgStyles}
+      >
+        {isImageBg && (
+          <div
+            className="absolute inset-0"
+            style={{ ...bgStyles, opacity: imageOpacity }}
+          />
+        )}
+        {hasBg ? <div className="relative z-10">{content}</div> : content}
+      </div>
+    );
+  }
+
+  return content;
 }

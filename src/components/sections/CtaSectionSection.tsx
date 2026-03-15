@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { CtaSectionData, SectionSettings } from "@/lib/types";
-import { sectionSpacingStyles } from "@/lib/types";
+import { sectionSpacingStyles, sectionBgClass } from "@/lib/types";
 import { type SiteStyles, EMPTY_SITE_STYLES, findButtonStyle, buttonStyleToCSS, textStyleConfigToCSS, type TextStyleConfig } from "@/lib/styles";
 
 interface Props {
@@ -44,9 +44,7 @@ export default function CtaSectionSection({ data, settings, siteStyles = EMPTY_S
       className={`px-4 ${
         d.bgColor
           ? `bg-[${d.bgColor}]`
-          : isLight
-            ? "bg-charcoal"
-            : "bg-white"
+          : sectionBgClass(settings)
       } ${settings.customClasses || ""}`}
     >
       <div className={`mx-auto ${settings.maxWidth || "max-w-4xl"} text-center`}>

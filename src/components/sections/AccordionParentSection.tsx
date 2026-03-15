@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import type { AccordionParentData, SectionSettings, SectionType } from "@/lib/types";
-import { sectionSpacingStyles } from "@/lib/types";
+import { sectionSpacingStyles, sectionBgClass } from "@/lib/types";
 import { type SiteStyles, type TextStyleConfig, textStyleConfigToCSS, resolveButtonStylesInHtml, EMPTY_SITE_STYLES } from "@/lib/styles";
 import SectionRenderer from "./SectionRenderer";
 
@@ -47,9 +47,7 @@ export default function AccordionParentSection({ data, settings, siteStyles = EM
   return (
     <section
       style={sectionSpacingStyles(settings)}
-      className={`px-4 ${
-        settings.bgColor === "sand" ? "bg-sand" : "bg-white"
-      } ${settings.customClasses || ""}`}
+      className={`px-4 ${sectionBgClass(settings)} ${settings.customClasses || ""}`}
       id={settings.sectionId}
     >
       <div className={`mx-auto ${settings.maxWidth || "max-w-4xl"}`}>

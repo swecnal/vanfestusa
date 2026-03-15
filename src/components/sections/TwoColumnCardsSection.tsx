@@ -1,6 +1,6 @@
 import SectionHeading from "@/components/SectionHeading";
 import type { TwoColumnCardsData, SectionSettings } from "@/lib/types";
-import { sectionSpacingStyles } from "@/lib/types";
+import { sectionSpacingStyles, sectionBgClass } from "@/lib/types";
 import { type SiteStyles, type TextStyleConfig, EMPTY_SITE_STYLES, findButtonStyle, buttonStyleToCSS, textStyleConfigToCSS, resolveButtonStylesInHtml } from "@/lib/styles";
 
 interface Props {
@@ -23,7 +23,7 @@ export default function TwoColumnCardsSection({ data, settings, siteStyles = EMP
   const cols = d.columns || 2;
 
   return (
-    <section style={sectionSpacingStyles(settings)} className={`px-4 ${settings.bgColor === "sand" ? "bg-sand" : "bg-white"} ${settings.customClasses || ""}`}>
+    <section style={sectionSpacingStyles(settings)} className={`px-4 ${sectionBgClass(settings)} ${settings.customClasses || ""}`}>
       <div className={`mx-auto ${settings.maxWidth || "max-w-4xl"} text-center`}>
         {d.heading && <SectionHeading title={d.heading} subtitle={d.headingSubtitle} titleStyle={headingStyleConfig ? textStyleConfigToCSS(headingStyleConfig) : undefined} subtitleStyle={headingSubtitleStyleConfig ? textStyleConfigToCSS(headingSubtitleStyleConfig) : undefined} />}
         <div className={`grid ${GRID_COLS[cols] || GRID_COLS[2]} gap-6 text-left`}>
