@@ -230,7 +230,7 @@ export default function WaveDividerSection({ data, settings }: Props) {
           viewBox={`0 0 1440 ${height}`}
           preserveAspectRatio="none"
           className="block w-full"
-          style={{ height, transform: d.flip ? "scaleX(-1)" : undefined }}
+          style={{ height, transform: d.flip ? "scaleY(-1)" : undefined }}
           xmlns="http://www.w3.org/2000/svg"
         >
           <defs>
@@ -253,7 +253,7 @@ export default function WaveDividerSection({ data, settings }: Props) {
           viewBox={`0 0 1440 ${height}`}
           preserveAspectRatio="none"
           className="block w-full"
-          style={{ height, transform: d.flip ? "scaleX(-1)" : undefined }}
+          style={{ height, transform: d.flip ? "scaleY(-1)" : undefined }}
           xmlns="http://www.w3.org/2000/svg"
         >
           {generateBubblesElements(1440, height, intensity, fromColor)}
@@ -270,7 +270,7 @@ export default function WaveDividerSection({ data, settings }: Props) {
           viewBox={`0 0 1440 ${height}`}
           preserveAspectRatio="none"
           className="block w-full"
-          style={{ height, transform: d.flip ? "scaleX(-1)" : undefined }}
+          style={{ height, transform: d.flip ? "scaleY(-1)" : undefined }}
           xmlns="http://www.w3.org/2000/svg"
         >
           {generateDigitalFadeElements(1440, height, intensity, fromColor)}
@@ -301,7 +301,7 @@ export default function WaveDividerSection({ data, settings }: Props) {
         viewBox={`0 0 1440 ${height}`}
         preserveAspectRatio="none"
         className="block w-full"
-        style={{ height, transform: d.flip ? "scaleX(-1)" : undefined }}
+        style={{ height, transform: d.flip ? "scaleY(-1)" : undefined }}
         xmlns="http://www.w3.org/2000/svg"
       >
         <path d={svgPath} fill={fromColor} />

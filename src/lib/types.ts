@@ -270,6 +270,7 @@ export interface TwoColumnCardsData {
   headingStyle?: import("@/lib/styles").TextStyleConfig;
   headingSubtitleStyle?: import("@/lib/styles").TextStyleConfig;
   columns?: 1 | 2 | 3 | 4;
+  layout?: number[];
   cards: Array<{
     title: string;
     subtitle?: string;

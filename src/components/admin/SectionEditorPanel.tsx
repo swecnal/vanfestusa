@@ -641,7 +641,7 @@ function SectionFields({
                   checked={(data.flip as boolean) || false}
                   onChange={(e) => updateData("flip", e.target.checked)}
                 />
-                Flip horizontally
+                Flip vertically
               </label>
             </>
           )}
@@ -1990,6 +1990,37 @@ function ColumnCardsEditor({
   siteStyles: SiteStyles;
 }) {
   const cards = (data.cards as Array<Record<string, unknown>>) || [];
+  const [expandedCard, setExpandedCard] = useState<number | null>(null);
+
+  // Derive layout: use explicit layout or fall back to legacy columns
+  const legacyCols = (data.columns as number) || 2;
+  const layout: number[] = (data.layout as number[]) || (cards.length > 0
+    ? (() => {
+        const rows: number[] = [];
+        let remaining = cards.length;
+        while (remaining > 0) {
+          const rowSize = Math.min(remaining, legacyCols);
+          rows.push(rowSize);
+          remaining -= rowSize;
+        }
+        return rows;
+      })()
+    : [2]);
+
+  const setLayout = (newLayout: number[], newCards?: Array<Record<string, unknown>>) => {
+    updateData("layout", newLayout);
+    if (newCards) updateData("cards", newCards);
+    // Clear legacy columns field
+    updateData("columns", undefined);
+  };
+
+  // Convert layout to card index ranges
+  const rowRanges: Array<{ start: number; count: number }> = [];
+  let idx = 0;
+  for (const count of layout) {
+    rowRanges.push({ start: idx, count });
+    idx += count;
+  }
 
   const updateCard = (index: number, key: string, value: unknown) => {
     const next = [...cards];
@@ -2004,12 +2035,36 @@ function ColumnCardsEditor({
     updateData("cards", next);
   };
 
-  const removeCard = (index: number) => {
-    updateData("cards", cards.filter((_, i) => i !== index));
+  const addCardToRow = (rowIndex: number) => {
+    if (layout[rowIndex] >= 4) return;
+    const insertAt = rowRanges[rowIndex].start + rowRanges[rowIndex].count;
+    const newCards = [...cards];
+    newCards.splice(insertAt, 0, { title: "New Card", body: "" });
+    const newLayout = [...layout];
+    newLayout[rowIndex] += 1;
+    setLayout(newLayout, newCards);
   };
 
-  const addCard = () => {
-    updateData("cards", [...cards, { title: "New Card", body: "" }]);
+  const removeCard = (cardIndex: number) => {
+    // Find which row this card is in
+    let rowIdx = 0;
+    let sum = 0;
+    for (let r = 0; r < layout.length; r++) {
+      if (cardIndex < sum + layout[r]) { rowIdx = r; break; }
+      sum += layout[r];
+    }
+    const newCards = cards.filter((_, i) => i !== cardIndex);
+    const newLayout = [...layout];
+    newLayout[rowIdx] -= 1;
+    // Remove empty rows
+    const filtered = newLayout.filter((n) => n > 0);
+    setLayout(filtered.length > 0 ? filtered : [1], newCards.length > 0 ? newCards : [{ title: "New Card", body: "" }]);
+  };
+
+  const addRow = () => {
+    const newCards = [...cards, { title: "New Card", body: "" }];
+    const newLayout = [...layout, 1];
+    setLayout(newLayout, newCards);
   };
 
   return (
@@ -2020,102 +2075,150 @@ function ColumnCardsEditor({
       <Field label="Heading Subtitle">
         <RichTextEditor content={(data.headingSubtitle as string) || ""} onChange={(html) => updateData("headingSubtitle", html)} siteStyles={siteStyles} />
       </Field>
-      <Field label="Columns">
-        <select
-          value={String(data.columns || 2)}
-          onChange={(e) => updateData("columns", Number(e.target.value))}
-          className="input-sm"
-        >
-          <option value="1">1</option>
-          <option value="2">2</option>
-          <option value="3">3</option>
-          <option value="4">4</option>
-        </select>
-      </Field>
 
-      {cards.map((card, i) => (
-        <details key={i} className="border border-gray-200 rounded-lg">
-          <summary className="px-3 py-2 text-xs font-semibold text-gray-600 cursor-pointer hover:bg-gray-50 flex items-center justify-between">
-            <span>Card {i + 1}: {(card.title as string) || "Untitled"}</span>
-          </summary>
-          <div className="p-3 space-y-3 border-t border-gray-100">
-            <Field label="Title">
-              <input type="text" value={(card.title as string) || ""} onChange={(e) => updateCard(i, "title", e.target.value)} className="input-sm" />
-            </Field>
-            <TextStyleEditor label="Title Style" value={(card.titleStyle as TextStyleConfig) || {}} onChange={(s) => updateCard(i, "titleStyle", s)} defaults={{ fontSize: "20px (text-xl)", fontWeight: "700", fontFamily: "Gothic A1" }} />
-            <Field label="Subtitle">
-              <input type="text" value={(card.subtitle as string) || ""} onChange={(e) => updateCard(i, "subtitle", e.target.value)} className="input-sm" />
-            </Field>
-            <TextStyleEditor label="Subtitle Style" value={(card.subtitleStyle as TextStyleConfig) || {}} onChange={(s) => updateCard(i, "subtitleStyle", s)} defaults={{ fontSize: "12px", fontWeight: "400" }} />
-            <Field label="Body">
-              <textarea value={(card.body as string) || ""} onChange={(e) => updateCard(i, "body", e.target.value)} className="input-sm" rows={3} />
-            </Field>
-            <TextStyleEditor label="Body Style" value={(card.bodyStyle as TextStyleConfig) || {}} onChange={(s) => updateCard(i, "bodyStyle", s)} defaults={{ fontSize: "14px" }} />
-            <Field label="Background Color">
-              <input type="text" value={(card.bgColor as string) || ""} onChange={(e) => updateCard(i, "bgColor", e.target.value)} className="input-sm" placeholder="e.g. bg-sand, #hex" />
-            </Field>
-            <Field label="Card Image">
-              <ImagePicker value={(card.image as string) || ""} onChange={(url) => updateCard(i, "image", url)} />
-            </Field>
-            {(card.image as string) && (
-              <Field label="Image Position">
-                <select value={(card.imagePosition as string) || "full-width"} onChange={(e) => updateCard(i, "imagePosition", e.target.value)} className="input-sm">
-                  <option value="full-width">Full Width (top)</option>
-                  <option value="small-left">Small Left</option>
-                  <option value="small-right">Small Right</option>
-                  <option value="small-center">Small Center</option>
-                  <option value="background">Background</option>
-                </select>
-              </Field>
-            )}
-
-            {/* Card Button */}
-            <details className="border border-gray-100 rounded-lg">
-              <summary className="px-2 py-1.5 text-[10px] font-semibold text-gray-400 uppercase cursor-pointer hover:bg-gray-50">
-                Card Button
-              </summary>
-              <div className="p-2 space-y-2 border-t border-gray-100">
-                <Field label="Text">
-                  <input type="text" value={((card.button as Record<string, unknown>)?.text as string) || ""} onChange={(e) => updateCardButton(i, "text", e.target.value)} className="input-sm" placeholder="Button text" />
-                </Field>
-                <Field label="URL">
-                  <input type="text" value={((card.button as Record<string, unknown>)?.href as string) || ""} onChange={(e) => updateCardButton(i, "href", e.target.value)} className="input-sm" placeholder="/page or https://..." />
-                </Field>
-                <label className="flex items-center gap-2 text-xs">
-                  <input type="checkbox" checked={((card.button as Record<string, unknown>)?.external as boolean) || false} onChange={(e) => updateCardButton(i, "external", e.target.checked)} />
-                  Open in new tab
-                </label>
-                <ButtonStylePicker
-                  value={(card.button as Record<string, unknown>)?.styleId as string | undefined}
-                  onChange={(id) => updateCardButton(i, "styleId", id)}
-                  siteStyles={siteStyles}
-                />
-                {((card.button as Record<string, unknown>)?.text as string) && (
+      {/* Visual tile layout editor */}
+      <div>
+        <label className="block text-[11px] font-medium text-gray-600 mb-1.5">Card Layout</label>
+        <div className="space-y-1.5">
+          {rowRanges.map((row, rowIdx) => (
+            <div key={rowIdx} className="flex gap-1">
+              {Array.from({ length: row.count }).map((_, tileIdx) => {
+                const cardIdx = row.start + tileIdx;
+                const card = cards[cardIdx];
+                const isExpanded = expandedCard === cardIdx;
+                return (
                   <button
-                    onClick={() => updateCard(i, "button", undefined)}
-                    className="text-red-400 hover:text-red-600 text-[10px] font-semibold"
+                    key={tileIdx}
+                    onClick={() => setExpandedCard(isExpanded ? null : cardIdx)}
+                    className={`relative flex-1 h-10 rounded border text-[9px] font-medium transition-all truncate px-1 ${
+                      isExpanded
+                        ? "bg-teal/15 border-teal text-teal ring-1 ring-teal/30"
+                        : "bg-white border-gray-200 text-gray-500 hover:border-gray-300 hover:bg-gray-50"
+                    }`}
+                    title={card ? (card.title as string) || `Card ${cardIdx + 1}` : `Card ${cardIdx + 1}`}
                   >
-                    Remove Button
+                    <span className="block truncate leading-tight mt-0.5">
+                      {card ? (card.title as string)?.replace(/<[^>]*>/g, "").substring(0, 12) || `Card ${cardIdx + 1}` : `Card ${cardIdx + 1}`}
+                    </span>
+                    {/* Red X delete button */}
+                    <span
+                      onClick={(e) => { e.stopPropagation(); removeCard(cardIdx); }}
+                      className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-[8px] leading-none cursor-pointer shadow-sm"
+                      title="Remove card"
+                    >
+                      ✕
+                    </span>
                   </button>
-                )}
-              </div>
-            </details>
+                );
+              })}
+              {/* Add card tile (faded) */}
+              {row.count < 4 && (
+                <button
+                  onClick={() => addCardToRow(rowIdx)}
+                  className="flex-1 h-10 rounded border-2 border-dashed border-gray-200 bg-gray-50/50 text-gray-300 hover:border-teal/40 hover:text-teal hover:bg-teal/5 flex items-center justify-center transition-all"
+                  title="Add card to this row"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                  </svg>
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+        {/* Add row button */}
+        <button
+          onClick={addRow}
+          className="mt-1.5 w-full h-8 rounded border-2 border-dashed border-gray-200 bg-gray-50/50 text-gray-300 hover:border-teal/40 hover:text-teal hover:bg-teal/5 flex items-center justify-center gap-1 transition-all text-[10px] font-medium"
+          title="Add new row"
+        >
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+          </svg>
+          Add Row
+        </button>
+      </div>
 
-            <button
-              onClick={() => removeCard(i)}
-              className="text-red-400 hover:text-red-600 text-xs font-semibold"
-            >
-              Remove Card
-            </button>
+      {/* Expanded card editor */}
+      {expandedCard !== null && cards[expandedCard] && (() => {
+        const i = expandedCard;
+        const card = cards[i];
+        return (
+          <div className="border border-teal/30 rounded-lg bg-teal/5">
+            <div className="px-3 py-2 text-xs font-semibold text-teal border-b border-teal/20 flex items-center justify-between">
+              <span>Card {i + 1}: {(card.title as string)?.replace(/<[^>]*>/g, "").substring(0, 30) || "Untitled"}</span>
+              <button onClick={() => setExpandedCard(null)} className="text-gray-400 hover:text-gray-600">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="p-3 space-y-3">
+              <Field label="Title">
+                <input type="text" value={(card.title as string) || ""} onChange={(e) => updateCard(i, "title", e.target.value)} className="input-sm" />
+              </Field>
+              <TextStyleEditor label="Title Style" value={(card.titleStyle as TextStyleConfig) || {}} onChange={(s) => updateCard(i, "titleStyle", s)} defaults={{ fontSize: "20px (text-xl)", fontWeight: "700", fontFamily: "Gothic A1" }} />
+              <Field label="Subtitle">
+                <input type="text" value={(card.subtitle as string) || ""} onChange={(e) => updateCard(i, "subtitle", e.target.value)} className="input-sm" />
+              </Field>
+              <TextStyleEditor label="Subtitle Style" value={(card.subtitleStyle as TextStyleConfig) || {}} onChange={(s) => updateCard(i, "subtitleStyle", s)} defaults={{ fontSize: "12px", fontWeight: "400" }} />
+              <Field label="Body">
+                <textarea value={(card.body as string) || ""} onChange={(e) => updateCard(i, "body", e.target.value)} className="input-sm" rows={3} />
+              </Field>
+              <TextStyleEditor label="Body Style" value={(card.bodyStyle as TextStyleConfig) || {}} onChange={(s) => updateCard(i, "bodyStyle", s)} defaults={{ fontSize: "14px" }} />
+              <Field label="Background Color">
+                <input type="text" value={(card.bgColor as string) || ""} onChange={(e) => updateCard(i, "bgColor", e.target.value)} className="input-sm" placeholder="e.g. bg-sand, #hex" />
+              </Field>
+              <Field label="Card Image">
+                <ImagePicker value={(card.image as string) || ""} onChange={(url) => updateCard(i, "image", url)} />
+              </Field>
+              {(card.image as string) && (
+                <Field label="Image Position">
+                  <select value={(card.imagePosition as string) || "full-width"} onChange={(e) => updateCard(i, "imagePosition", e.target.value)} className="input-sm">
+                    <option value="full-width">Full Width (top)</option>
+                    <option value="small-left">Small Left</option>
+                    <option value="small-right">Small Right</option>
+                    <option value="small-center">Small Center</option>
+                    <option value="background">Background</option>
+                  </select>
+                </Field>
+              )}
+
+              {/* Card Button */}
+              <details className="border border-gray-100 rounded-lg">
+                <summary className="px-2 py-1.5 text-[10px] font-semibold text-gray-400 uppercase cursor-pointer hover:bg-gray-50">
+                  Card Button
+                </summary>
+                <div className="p-2 space-y-2 border-t border-gray-100">
+                  <Field label="Text">
+                    <input type="text" value={((card.button as Record<string, unknown>)?.text as string) || ""} onChange={(e) => updateCardButton(i, "text", e.target.value)} className="input-sm" placeholder="Button text" />
+                  </Field>
+                  <Field label="URL">
+                    <input type="text" value={((card.button as Record<string, unknown>)?.href as string) || ""} onChange={(e) => updateCardButton(i, "href", e.target.value)} className="input-sm" placeholder="/page or https://..." />
+                  </Field>
+                  <label className="flex items-center gap-2 text-xs">
+                    <input type="checkbox" checked={((card.button as Record<string, unknown>)?.external as boolean) || false} onChange={(e) => updateCardButton(i, "external", e.target.checked)} />
+                    Open in new tab
+                  </label>
+                  <ButtonStylePicker
+                    value={(card.button as Record<string, unknown>)?.styleId as string | undefined}
+                    onChange={(id) => updateCardButton(i, "styleId", id)}
+                    siteStyles={siteStyles}
+                  />
+                  {((card.button as Record<string, unknown>)?.text as string) && (
+                    <button
+                      onClick={() => updateCard(i, "button", undefined)}
+                      className="text-red-400 hover:text-red-600 text-[10px] font-semibold"
+                    >
+                      Remove Button
+                    </button>
+                  )}
+                </div>
+              </details>
+            </div>
           </div>
-        </details>
-      ))}
-      <button
-        onClick={addCard}
-        className="text-teal hover:text-teal-dark text-xs font-semibold transition-colors"
-      >
-        + Add Card
-      </button>
+        );
+      })()}
     </div>
   );
 }
