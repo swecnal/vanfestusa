@@ -1130,33 +1130,38 @@ function SectionFields({
       return (
         <div className="space-y-3">
           <Field label="Heading">
-            <RichTextEditor content={(data.heading as string) || ""} onChange={(html) => updateData("heading", html)} siteStyles={siteStyles} />
+            <RichTextEditor content={(data.heading as string) || "Our Sponsors"} onChange={(html) => updateData("heading", html)} siteStyles={siteStyles} />
           </Field>
           <Field label="Subheading">
-            <RichTextEditor content={(data.subheading as string) || ""} onChange={(html) => updateData("subheading", html)} siteStyles={siteStyles} />
+            <RichTextEditor content={(data.subheading as string) || "Proudly supported by these amazing brands"} onChange={(html) => updateData("subheading", html)} siteStyles={siteStyles} />
           </Field>
-          <Field label="CTA Text">
-            <input
-              type="text"
-              value={(data.ctaText as string) || "Become a Sponsor"}
-              onChange={(e) => updateData("ctaText", e.target.value)}
-              className="input-sm"
-            />
-          </Field>
-          <Field label="CTA Link">
-            <input
-              type="text"
-              value={(data.ctaHref as string) || "/get-involved#sponsors"}
-              onChange={(e) => updateData("ctaHref", e.target.value)}
-              className="input-sm"
-            />
-          </Field>
-          <ButtonStylePicker
-            value={data.ctaStyleId as string | undefined}
-            onChange={(id) => updateData("ctaStyleId", id)}
-            siteStyles={siteStyles}
-            label="CTA Button Style"
-          />
+          <details className="border border-gray-200 rounded-lg" open>
+            <summary className="px-3 py-2 text-xs font-semibold text-gray-500 cursor-pointer hover:bg-gray-50">Button</summary>
+            <div className="p-3 space-y-2 border-t border-gray-100">
+              <Field label="Text">
+                <input
+                  type="text"
+                  value={(data.ctaText as string) || "Become a Sponsor"}
+                  onChange={(e) => updateData("ctaText", e.target.value)}
+                  className="input-sm"
+                />
+              </Field>
+              <Field label="URL">
+                <input
+                  type="text"
+                  value={(data.ctaHref as string) || "/get-involved#sponsors"}
+                  onChange={(e) => updateData("ctaHref", e.target.value)}
+                  className="input-sm"
+                />
+              </Field>
+              <ButtonStylePicker
+                value={data.ctaStyleId as string | undefined}
+                onChange={(id) => updateData("ctaStyleId", id)}
+                siteStyles={siteStyles}
+                label="Style"
+              />
+            </div>
+          </details>
           <Field label="Sponsors">
             <ArrayEditor
               items={(data.sponsors as Array<Record<string, string>>) || []}
@@ -1593,9 +1598,10 @@ function ArrayEditor({
         <div key={i} className="bg-gray-50 rounded-lg p-2 space-y-1.5 relative">
           <button
             onClick={() => removeItem(i)}
-            className="absolute top-1 right-1 text-gray-300 hover:text-red-500 p-1"
+            className="absolute -top-1.5 -right-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center shadow-sm transition-colors"
+            title="Remove"
           >
-            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
