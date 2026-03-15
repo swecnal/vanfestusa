@@ -1167,14 +1167,20 @@ function SectionFields({
         </div>
       );
 
-    case "image_carousel":
+    case "image_carousel": {
+      const icHeading = typeof data.heading === "string"
+        ? { title: data.heading, subtitle: (data.subheading as string) || "" }
+        : (data.heading as Record<string, unknown>) || {};
+      const updateICHeading = (key: string, value: unknown) => {
+        updateData("heading", { ...icHeading, [key]: value });
+      };
       return (
         <div className="space-y-3">
           <Field label="Heading">
-            <RichTextEditor content={typeof data.heading === "string" ? data.heading : ((data.heading as Record<string, unknown>)?.title as string) || ""} onChange={(html) => updateData("heading", html)} siteStyles={siteStyles} />
+            <RichTextEditor content={(icHeading.title as string) || ""} onChange={(html) => updateICHeading("title", html)} siteStyles={siteStyles} />
           </Field>
           <Field label="Subheading">
-            <RichTextEditor content={(data.subheading as string) || ""} onChange={(html) => updateData("subheading", html)} siteStyles={siteStyles} />
+            <RichTextEditor content={(icHeading.subtitle as string) || ""} onChange={(html) => updateICHeading("subtitle", html)} siteStyles={siteStyles} />
           </Field>
           <Field label="Background Image">
             <ImagePicker
@@ -1248,6 +1254,7 @@ function SectionFields({
           </button>
         </div>
       );
+    }
 
     case "photo_strip":
       return (
@@ -1389,6 +1396,147 @@ function SectionFields({
           </details>
         </div>
       );
+
+    case "sponsor_list": {
+      const slHeading = (data.heading as Record<string, unknown>) || {};
+      const slSponsors = (data.sponsors as Array<Record<string, unknown>>) || [];
+      const updateSLHeading = (key: string, value: unknown) => {
+        updateData("heading", { ...slHeading, [key]: value });
+      };
+      return (
+        <div className="space-y-3">
+          <Field label="Heading">
+            <RichTextEditor content={(slHeading.title as string) || ""} onChange={(html) => updateSLHeading("title", html)} siteStyles={siteStyles} />
+          </Field>
+          <Field label="Subtitle">
+            <RichTextEditor content={(slHeading.subtitle as string) || ""} onChange={(html) => updateSLHeading("subtitle", html)} siteStyles={siteStyles} />
+          </Field>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={(slHeading.light as boolean) || false}
+              onChange={(e) => updateSLHeading("light", e.target.checked)}
+              className="accent-teal"
+            />
+            <span className="text-xs text-gray-600">Light text (for dark backgrounds)</span>
+          </label>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={(data.showExpandAll as boolean) !== false}
+              onChange={(e) => updateData("showExpandAll", e.target.checked)}
+              className="accent-teal"
+            />
+            <span className="text-xs text-gray-600">Show Expand/Collapse All</span>
+          </label>
+          <details className="border border-gray-200 rounded-lg">
+            <summary className="px-3 py-2 text-xs font-semibold text-gray-500 cursor-pointer">
+              Sponsors ({slSponsors.length})
+            </summary>
+            <div className="p-3 space-y-3 border-t border-gray-100 max-h-[400px] overflow-y-auto">
+              {slSponsors.map((sp, i) => (
+                <div key={i} className="border border-gray-200 rounded-lg p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-semibold text-gray-400">Sponsor {i + 1}</span>
+                    <button
+                      onClick={() => updateData("sponsors", slSponsors.filter((_, j) => j !== i))}
+                      className="text-red-400 hover:text-red-600 text-xs"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                  <Field label="Name">
+                    <input
+                      type="text"
+                      value={(sp.name as string) || ""}
+                      onChange={(e) => {
+                        const next = [...slSponsors];
+                        next[i] = { ...next[i], name: e.target.value };
+                        updateData("sponsors", next);
+                      }}
+                      className="input-sm"
+                    />
+                  </Field>
+                  <Field label="Logo">
+                    <ImagePicker
+                      value={(sp.logo as string) || ""}
+                      onChange={(url) => {
+                        const next = [...slSponsors];
+                        next[i] = { ...next[i], logo: url };
+                        updateData("sponsors", next);
+                      }}
+                    />
+                  </Field>
+                  <Field label="Website URL">
+                    <input
+                      type="text"
+                      value={(sp.websiteUrl as string) || ""}
+                      onChange={(e) => {
+                        const next = [...slSponsors];
+                        next[i] = { ...next[i], websiteUrl: e.target.value };
+                        updateData("sponsors", next);
+                      }}
+                      className="input-sm"
+                      placeholder="https://..."
+                    />
+                  </Field>
+                  <Field label="Category">
+                    <select
+                      value={(sp.category as string) || "official_sponsor"}
+                      onChange={(e) => {
+                        const next = [...slSponsors];
+                        next[i] = { ...next[i], category: e.target.value };
+                        updateData("sponsors", next);
+                      }}
+                      className="input-sm"
+                    >
+                      <option value="presenting_partner">Presenting Partner</option>
+                      <option value="premier_sponsor">Premier Sponsor</option>
+                      <option value="feature_sponsor">Feature Sponsor</option>
+                      <option value="official_sponsor">Official Sponsor</option>
+                      <option value="digital_sponsor">Digital Sponsor</option>
+                      <option value="exhibiting_vendor">Exhibiting Vendor</option>
+                      <option value="community_partner">Community Partner</option>
+                    </select>
+                  </Field>
+                  <Field label="Description">
+                    <input
+                      type="text"
+                      value={(sp.description as string) || ""}
+                      onChange={(e) => {
+                        const next = [...slSponsors];
+                        next[i] = { ...next[i], description: e.target.value };
+                        updateData("sponsors", next);
+                      }}
+                      className="input-sm"
+                    />
+                  </Field>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={(sp.darkBg as boolean) || false}
+                      onChange={(e) => {
+                        const next = [...slSponsors];
+                        next[i] = { ...next[i], darkBg: e.target.checked };
+                        updateData("sponsors", next);
+                      }}
+                      className="accent-teal"
+                    />
+                    <span className="text-xs text-gray-600">Dark logo background</span>
+                  </label>
+                </div>
+              ))}
+              <button
+                onClick={() => updateData("sponsors", [...slSponsors, { name: "", logo: "", category: "official_sponsor" }])}
+                className="w-full py-2 border-2 border-dashed border-gray-200 rounded-lg text-xs text-gray-500 hover:border-teal hover:text-teal transition-colors"
+              >
+                + Add Sponsor
+              </button>
+            </div>
+          </details>
+        </div>
+      );
+    }
 
     default:
       return (
