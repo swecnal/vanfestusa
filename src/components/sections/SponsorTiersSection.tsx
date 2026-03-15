@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { SponsorTiersData, SectionSettings } from "@/lib/types";
 import { sectionSpacingStyles } from "@/lib/types";
+import { textStyleConfigToCSS, type TextStyleConfig } from "@/lib/styles";
 
 interface Props {
   data: Record<string, unknown>;
@@ -11,6 +12,7 @@ interface Props {
 
 export default function SponsorTiersSection({ data, settings }: Props) {
   const d = data as unknown as SponsorTiersData;
+  const headingStyle = (data as Record<string, unknown>).headingStyle as TextStyleConfig | undefined;
   const [openTiers, setOpenTiers] = useState<Set<number>>(new Set());
   const [outerOpen, setOuterOpen] = useState(false);
 
@@ -94,7 +96,7 @@ export default function SponsorTiersSection({ data, settings }: Props) {
       <section style={sectionSpacingStyles(settings)} className={`px-4 bg-white ${settings.customClasses || ""}`}>
         <div className={`mx-auto ${settings.maxWidth || "max-w-4xl"}`}>
           {d.heading && (
-            <h2 className="font-display font-black text-3xl text-charcoal mb-8 text-center">{d.heading}</h2>
+            <h2 className="font-display font-black text-3xl text-charcoal mb-8 text-center" style={headingStyle ? textStyleConfigToCSS(headingStyle) : undefined}>{d.heading}</h2>
           )}
           <div className="border border-charcoal/10 rounded-xl overflow-hidden">
             <button
@@ -120,7 +122,7 @@ export default function SponsorTiersSection({ data, settings }: Props) {
     <section style={sectionSpacingStyles(settings)} className={`px-4 bg-white ${settings.customClasses || ""}`}>
       <div className={`mx-auto ${settings.maxWidth || "max-w-4xl"}`}>
         {d.heading && (
-          <h2 className="font-display font-black text-3xl text-charcoal mb-8 text-center">{d.heading}</h2>
+          <h2 className="font-display font-black text-3xl text-charcoal mb-8 text-center" style={headingStyle ? textStyleConfigToCSS(headingStyle) : undefined}>{d.heading}</h2>
         )}
         {tiersContent}
       </div>

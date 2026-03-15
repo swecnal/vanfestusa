@@ -1,5 +1,6 @@
 import SectionHeading from "@/components/SectionHeading";
 import type { HeroSimpleData, SectionSettings } from "@/lib/types";
+import { textStyleConfigToCSS, type TextStyleConfig } from "@/lib/styles";
 
 interface Props {
   data: Record<string, unknown>;
@@ -8,6 +9,8 @@ interface Props {
 
 export default function HeroSimpleSection({ data, settings }: Props) {
   const d = data as unknown as HeroSimpleData;
+  const titleStyle = (data as Record<string, unknown>).titleStyle as TextStyleConfig | undefined;
+  const subtitleStyle = (data as Record<string, unknown>).subtitleStyle as TextStyleConfig | undefined;
 
   return (
     <section
@@ -27,6 +30,8 @@ export default function HeroSimpleSection({ data, settings }: Props) {
           title={d.title}
           subtitle={d.subtitle}
           light={d.light}
+          titleStyle={titleStyle ? textStyleConfigToCSS(titleStyle) : undefined}
+          subtitleStyle={subtitleStyle ? textStyleConfigToCSS(subtitleStyle) : undefined}
         />
       </div>
     </section>

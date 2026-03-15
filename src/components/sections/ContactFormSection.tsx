@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { ContactFormData, SectionSettings } from "@/lib/types";
 import { sectionSpacingStyles } from "@/lib/types";
+import { textStyleConfigToCSS, type TextStyleConfig } from "@/lib/styles";
 
 interface Props {
   data: Record<string, unknown>;
@@ -11,6 +12,7 @@ interface Props {
 
 export default function ContactFormSection({ data, settings }: Props) {
   const d = data as unknown as ContactFormData;
+  const formHeadingStyle = (data as Record<string, unknown>).formHeadingStyle as TextStyleConfig | undefined;
   const [formState, setFormState] = useState({ name: "", email: "", subject: "", message: "" });
   const [humanChecked, setHumanChecked] = useState(false);
 
@@ -41,7 +43,7 @@ export default function ContactFormSection({ data, settings }: Props) {
           </div>
         )}
         {d.formHeading && (
-          <h3 className="font-display font-bold text-2xl text-charcoal mb-6 text-center">
+          <h3 className="font-display font-bold text-2xl text-charcoal mb-6 text-center" style={formHeadingStyle ? textStyleConfigToCSS(formHeadingStyle) : undefined}>
             {d.formHeading}
           </h3>
         )}

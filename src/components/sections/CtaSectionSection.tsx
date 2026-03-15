@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { CtaSectionData, SectionSettings } from "@/lib/types";
 import { sectionSpacingStyles } from "@/lib/types";
-import { type SiteStyles, EMPTY_SITE_STYLES, findButtonStyle, buttonStyleToCSS } from "@/lib/styles";
+import { type SiteStyles, EMPTY_SITE_STYLES, findButtonStyle, buttonStyleToCSS, textStyleConfigToCSS, type TextStyleConfig } from "@/lib/styles";
 
 interface Props {
   data: Record<string, unknown>;
@@ -11,6 +11,8 @@ interface Props {
 
 export default function CtaSectionSection({ data, settings, siteStyles = EMPTY_SITE_STYLES }: Props) {
   const d = data as unknown as CtaSectionData;
+  const titleStyle = (data as Record<string, unknown>).titleStyle as TextStyleConfig | undefined;
+  const subtitleStyle = (data as Record<string, unknown>).subtitleStyle as TextStyleConfig | undefined;
   const isLight = d.light || settings.bgColor === "charcoal";
 
   const getButtonProps = (btn: CtaSectionData["buttons"][number]) => {
@@ -52,6 +54,7 @@ export default function CtaSectionSection({ data, settings, siteStyles = EMPTY_S
           className={`font-display font-black text-3xl md:text-4xl mb-4 ${
             isLight ? "text-white" : "text-charcoal"
           }`}
+          style={titleStyle ? textStyleConfigToCSS(titleStyle) : undefined}
         >
           {d.title}
         </h2>
@@ -60,6 +63,7 @@ export default function CtaSectionSection({ data, settings, siteStyles = EMPTY_S
             className={`text-lg mb-8 ${
               isLight ? "text-white/70" : "text-charcoal/60"
             }`}
+            style={subtitleStyle ? textStyleConfigToCSS(subtitleStyle) : undefined}
           >
             {d.subtitle}
           </p>

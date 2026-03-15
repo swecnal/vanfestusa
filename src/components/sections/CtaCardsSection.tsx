@@ -2,6 +2,7 @@ import Link from "next/link";
 import SectionHeading from "@/components/SectionHeading";
 import type { CtaCardsData, SectionSettings } from "@/lib/types";
 import { sectionSpacingStyles } from "@/lib/types";
+import { textStyleConfigToCSS, type TextStyleConfig } from "@/lib/styles";
 
 interface Props {
   data: Record<string, unknown>;
@@ -10,6 +11,7 @@ interface Props {
 
 export default function CtaCardsSection({ data, settings }: Props) {
   const d = data as unknown as CtaCardsData;
+  const headingStyle = (data as Record<string, unknown>).headingStyle as TextStyleConfig | undefined;
   const cols = d.columns || 3;
 
   return (
@@ -21,7 +23,7 @@ export default function CtaCardsSection({ data, settings }: Props) {
     >
       <div className={`mx-auto ${settings.maxWidth || "max-w-4xl"} text-center`}>
         {d.heading && (
-          <SectionHeading title={d.heading.title} subtitle={d.heading.subtitle} />
+          <SectionHeading title={d.heading.title} subtitle={d.heading.subtitle} titleStyle={headingStyle ? textStyleConfigToCSS(headingStyle) : undefined} />
         )}
         <div
           className={`grid grid-cols-1 ${

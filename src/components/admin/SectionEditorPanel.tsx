@@ -70,16 +70,6 @@ export default function SectionEditorPanel({ section, onSave, saving, onChange, 
 
   return (
     <div className="p-4 space-y-4">
-      {/* Dynamic editor based on section type */}
-      <SectionFields
-        type={section.section_type}
-        data={data}
-        updateData={updateData}
-        siteStyles={siteStyles}
-        sectionId={section.id}
-        onUngroupChild={onUngroupChild}
-      />
-
       {/* Common settings */}
       <details className="border border-gray-200 rounded-lg">
         <summary className="px-3 py-2 text-xs font-semibold text-gray-500 cursor-pointer hover:bg-gray-50">
@@ -217,6 +207,16 @@ export default function SectionEditorPanel({ section, onSave, saving, onChange, 
         </div>
       </details>
 
+      {/* Dynamic editor based on section type */}
+      <SectionFields
+        type={section.section_type}
+        data={data}
+        updateData={updateData}
+        siteStyles={siteStyles}
+        sectionId={section.id}
+        onUngroupChild={onUngroupChild}
+      />
+
       {/* Save button */}
       <div className={stickyButtons ? "sticky bottom-0 bg-white pt-2 pb-1 border-t border-gray-100 -mx-4 px-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]" : ""}>
         <button
@@ -289,6 +289,7 @@ function SectionFields({
               className="input-sm"
             />
           </Field>
+          <TextStyleEditor label="Title Style" value={(data.titleStyle as TextStyleConfig) || {}} onChange={(s) => updateData("titleStyle", s)} defaults={{ fontSize: "clamp(2.25rem, 5vw, 3.75rem)", fontWeight: "900", fontFamily: "Gothic A1" }} />
           <Field label="Subtitle">
             <input
               type="text"
@@ -297,6 +298,7 @@ function SectionFields({
               className="input-sm"
             />
           </Field>
+          <TextStyleEditor label="Subtitle Style" value={(data.subtitleStyle as TextStyleConfig) || {}} onChange={(s) => updateData("subtitleStyle", s)} defaults={{ fontSize: "clamp(1rem, 2vw, 1.25rem)", fontWeight: "400" }} />
           <Field label="Background Image">
             <ImagePicker
               value={(data.bgImage as string) || ""}
@@ -501,6 +503,7 @@ function SectionFields({
               className="input-sm"
             />
           </Field>
+          <TextStyleEditor label="Heading Style" value={(data.headingStyle as TextStyleConfig) || {}} onChange={(s) => updateData("headingStyle", s)} defaults={{ fontSize: "clamp(1.875rem, 4vw, 2.25rem)", fontWeight: "900", fontFamily: "Gothic A1" }} />
           <Field label="FAQ Items">
             <ArrayEditor
               items={(data.items as Array<Record<string, string>>) || []}
@@ -528,6 +531,7 @@ function SectionFields({
               className="input-sm"
             />
           </Field>
+          <TextStyleEditor label="Title Style" value={(data.titleStyle as TextStyleConfig) || {}} onChange={(s) => updateData("titleStyle", s)} defaults={{ fontSize: "clamp(1.875rem, 4vw, 2.25rem)", fontWeight: "900", fontFamily: "Gothic A1" }} />
           <Field label="Subtitle">
             <input
               type="text"
@@ -536,6 +540,7 @@ function SectionFields({
               className="input-sm"
             />
           </Field>
+          <TextStyleEditor label="Subtitle Style" value={(data.subtitleStyle as TextStyleConfig) || {}} onChange={(s) => updateData("subtitleStyle", s)} defaults={{ fontSize: "clamp(1rem, 2vw, 1.25rem)", fontWeight: "400" }} />
           <label className="flex items-center gap-2 text-sm">
             <input
               type="checkbox"
@@ -927,6 +932,7 @@ function SectionFields({
               className="input-sm"
             />
           </Field>
+          <TextStyleEditor label="Heading Style" value={(data.headingStyle as TextStyleConfig) || {}} onChange={(s) => updateData("headingStyle", s)} defaults={{ fontSize: "clamp(1.875rem, 4vw, 2.25rem)", fontWeight: "900" }} />
           <Field label="Columns">
             <select
               value={String(data.columns || 3)}
@@ -973,6 +979,7 @@ function SectionFields({
               className="input-sm"
             />
           </Field>
+          <TextStyleEditor label="Heading Style" value={(data.headingStyle as TextStyleConfig) || {}} onChange={(s) => updateData("headingStyle", s)} defaults={{ fontSize: "clamp(1.875rem, 4vw, 2.25rem)", fontWeight: "900" }} />
           <Field label="Columns">
             <select
               value={String(data.columns || 3)}
@@ -1004,6 +1011,7 @@ function SectionFields({
               className="input-sm"
             />
           </Field>
+          <TextStyleEditor label="Heading Style" value={(data.headingStyle as TextStyleConfig) || {}} onChange={(s) => updateData("headingStyle", s)} defaults={{ fontSize: "clamp(1.875rem, 4vw, 2.25rem)", fontWeight: "900" }} />
           <Field label="Subheading">
             <input
               type="text"
@@ -1012,6 +1020,7 @@ function SectionFields({
               className="input-sm"
             />
           </Field>
+          <TextStyleEditor label="Subheading Style" value={(data.subheadingStyle as TextStyleConfig) || {}} onChange={(s) => updateData("subheadingStyle", s)} defaults={{ fontSize: "16px", fontWeight: "400" }} />
           <Field label="CTA Text">
             <input
               type="text"
@@ -1028,6 +1037,12 @@ function SectionFields({
               className="input-sm"
             />
           </Field>
+          <ButtonStylePicker
+            value={data.ctaStyleId as string | undefined}
+            onChange={(id) => updateData("ctaStyleId", id)}
+            siteStyles={siteStyles}
+            label="CTA Button Style"
+          />
           <Field label="Sponsors">
             <ArrayEditor
               items={(data.sponsors as Array<Record<string, string>>) || []}
@@ -1049,6 +1064,7 @@ function SectionFields({
               className="input-sm"
             />
           </Field>
+          <TextStyleEditor label="Heading Style" value={(data.headingStyle as TextStyleConfig) || {}} onChange={(s) => updateData("headingStyle", s)} defaults={{ fontSize: "clamp(1.875rem, 4vw, 2.25rem)", fontWeight: "900" }} />
           <Field label="Subheading">
             <input
               type="text"
@@ -1057,6 +1073,7 @@ function SectionFields({
               className="input-sm"
             />
           </Field>
+          <TextStyleEditor label="Subheading Style" value={(data.subheadingStyle as TextStyleConfig) || {}} onChange={(s) => updateData("subheadingStyle", s)} defaults={{ fontSize: "16px", fontWeight: "400" }} />
           <Field label="Background Image">
             <ImagePicker
               value={(data.bgImage as string) || ""}
@@ -1079,13 +1096,54 @@ function SectionFields({
               onChange={(images) => updateData("images", images)}
             />
           </Field>
-          <Field label="CTA Buttons">
-            <ArrayEditor
-              items={(data.ctaButtons as Array<Record<string, string>>) || []}
-              onChange={(items) => updateData("ctaButtons", items)}
-              fields={["text", "href", "variant"]}
-            />
-          </Field>
+          {/* CTA Buttons */}
+          {((data.ctaButtons as Array<Record<string, unknown>>) || []).map((btn, i) => {
+            const ctaBtns = (data.ctaButtons as Array<Record<string, unknown>>) || [];
+            const updateCtaBtn = (key: string, value: unknown) => {
+              const next = [...ctaBtns];
+              next[i] = { ...next[i], [key]: value };
+              updateData("ctaButtons", next);
+            };
+            return (
+              <details key={i} className="border border-gray-200 rounded-lg">
+                <summary className="px-3 py-2 text-xs font-semibold text-gray-600 cursor-pointer hover:bg-gray-50">
+                  Button {i + 1}: {(btn.text as string) || "Untitled"}
+                </summary>
+                <div className="p-3 space-y-3 border-t border-gray-100">
+                  <Field label="Text">
+                    <input type="text" value={(btn.text as string) || ""} onChange={(e) => updateCtaBtn("text", e.target.value)} className="input-sm" />
+                  </Field>
+                  <Field label="URL">
+                    <input type="text" value={(btn.href as string) || ""} onChange={(e) => updateCtaBtn("href", e.target.value)} className="input-sm" />
+                  </Field>
+                  <Field label="Variant">
+                    <select value={(btn.variant as string) || "primary"} onChange={(e) => updateCtaBtn("variant", e.target.value)} className="input-sm">
+                      <option value="primary">Primary</option>
+                      <option value="secondary">Secondary</option>
+                      <option value="outline">Outline</option>
+                    </select>
+                  </Field>
+                  <ButtonStylePicker
+                    value={btn.styleId as string | undefined}
+                    onChange={(id) => updateCtaBtn("styleId", id)}
+                    siteStyles={siteStyles}
+                  />
+                  <button
+                    onClick={() => updateData("ctaButtons", ctaBtns.filter((_, idx) => idx !== i))}
+                    className="text-red-400 hover:text-red-600 text-xs font-semibold"
+                  >
+                    Remove Button
+                  </button>
+                </div>
+              </details>
+            );
+          })}
+          <button
+            onClick={() => updateData("ctaButtons", [...((data.ctaButtons as Array<Record<string, unknown>>) || []), { text: "Button", href: "#", variant: "primary" }])}
+            className="text-teal hover:text-teal-dark text-xs font-semibold"
+          >
+            + Add Button
+          </button>
         </div>
       );
 
@@ -1139,6 +1197,7 @@ function SectionFields({
               className="input-sm"
             />
           </Field>
+          <TextStyleEditor label="Form Heading Style" value={(data.formHeadingStyle as TextStyleConfig) || {}} onChange={(s) => updateData("formHeadingStyle", s)} defaults={{ fontSize: "clamp(1.875rem, 4vw, 2.25rem)", fontWeight: "900" }} />
           <Field label="Intro Text">
             <textarea
               value={(data.introText as string) || ""}
@@ -1161,6 +1220,7 @@ function SectionFields({
               className="input-sm"
             />
           </Field>
+          <TextStyleEditor label="Heading Style" value={(data.headingStyle as TextStyleConfig) || {}} onChange={(s) => updateData("headingStyle", s)} defaults={{ fontSize: "clamp(1.875rem, 4vw, 2.25rem)", fontWeight: "900" }} />
           <Field label="Disclaimer">
             <input
               type="text"
@@ -1204,6 +1264,7 @@ function SectionFields({
               className="input-sm"
             />
           </Field>
+          <TextStyleEditor label="Heading Style" value={(data.headingStyle as TextStyleConfig) || {}} onChange={(s) => updateData("headingStyle", s)} defaults={{ fontSize: "clamp(1.875rem, 4vw, 2.25rem)", fontWeight: "900" }} />
           <Field label="Intro Text">
             <textarea
               value={(data.introText as string) || ""}
@@ -1532,7 +1593,7 @@ function HeroCarouselEditor({
             onChange={(s) => updateOverlay("labelStyle", s)}
             defaults={{ fontSize: "text-sm md:text-base", fontWeight: "600", fontFamily: "Gothic A1" }}
           />
-          <Field label="Event Name">
+          <Field label="Main Text">
             <input
               type="text"
               value={(overlay.eventName as string) || ""}
@@ -1541,7 +1602,7 @@ function HeroCarouselEditor({
             />
           </Field>
           <TextStyleEditor
-            label="Event Name Style"
+            label="Main Text Style"
             value={(overlay.eventNameStyle as TextStyleConfig) || {}}
             onChange={(s) => updateOverlay("eventNameStyle", s)}
             defaults={{ fontSize: "clamp(2.5rem, 6vw, 5rem)", fontWeight: "700", fontFamily: "EB Garamond" }}
@@ -1799,6 +1860,7 @@ function EventCardsEditor({
           className="input-sm"
         />
       </Field>
+      <TextStyleEditor label="Heading Title Style" value={(data.headingTitleStyle as TextStyleConfig) || {}} onChange={(s) => updateData("headingTitleStyle", s)} defaults={{ fontSize: "clamp(1.875rem, 4vw, 2.25rem)", fontWeight: "900", fontFamily: "Gothic A1" }} />
       <Field label="Heading Subtitle">
         <input
           type="text"
@@ -1807,6 +1869,7 @@ function EventCardsEditor({
           className="input-sm"
         />
       </Field>
+      <TextStyleEditor label="Heading Subtitle Style" value={(data.headingSubtitleStyle as TextStyleConfig) || {}} onChange={(s) => updateData("headingSubtitleStyle", s)} defaults={{ fontSize: "16px", fontWeight: "400" }} />
 
       {/* Layout controls */}
       <Field label="Columns">
@@ -1960,6 +2023,7 @@ function FeatureGridEditor({
           className="input-sm"
         />
       </Field>
+      <TextStyleEditor label="Heading Title Style" value={(data.headingTitleStyle as TextStyleConfig) || {}} onChange={(s) => updateData("headingTitleStyle", s)} defaults={{ fontSize: "clamp(1.875rem, 4vw, 2.25rem)", fontWeight: "900", fontFamily: "Gothic A1" }} />
       <Field label="Heading Subtitle">
         <input
           type="text"
@@ -1968,6 +2032,7 @@ function FeatureGridEditor({
           className="input-sm"
         />
       </Field>
+      <TextStyleEditor label="Heading Subtitle Style" value={(data.headingSubtitleStyle as TextStyleConfig) || {}} onChange={(s) => updateData("headingSubtitleStyle", s)} defaults={{ fontSize: "16px", fontWeight: "400" }} />
       <label className="flex items-center gap-2 text-sm">
         <input
           type="checkbox"
@@ -2127,6 +2192,7 @@ function ColumnCardsEditor({
           className="input-sm"
         />
       </Field>
+      <TextStyleEditor label="Heading Style" value={(data.headingStyle as TextStyleConfig) || {}} onChange={(s) => updateData("headingStyle", s)} defaults={{ fontSize: "clamp(1.875rem, 4vw, 2.25rem)", fontWeight: "900", fontFamily: "Gothic A1" }} />
       <Field label="Heading Subtitle">
         <input
           type="text"
@@ -2135,6 +2201,7 @@ function ColumnCardsEditor({
           className="input-sm"
         />
       </Field>
+      <TextStyleEditor label="Subtitle Style" value={(data.headingSubtitleStyle as TextStyleConfig) || {}} onChange={(s) => updateData("headingSubtitleStyle", s)} defaults={{ fontSize: "16px", fontWeight: "400" }} />
       <Field label="Columns">
         <select
           value={String(data.columns || 2)}

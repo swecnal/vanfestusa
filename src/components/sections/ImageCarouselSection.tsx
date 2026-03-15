@@ -3,6 +3,7 @@ import BuildsCarousel from "@/components/BuildsCarousel";
 import Link from "next/link";
 import type { SectionSettings } from "@/lib/types";
 import { sectionSpacingStyles } from "@/lib/types";
+import { textStyleConfigToCSS, type TextStyleConfig } from "@/lib/styles";
 
 interface Props {
   data: Record<string, unknown>;
@@ -11,6 +12,8 @@ interface Props {
 
 export default function ImageCarouselSection({ data, settings }: Props) {
   const d = data as Record<string, unknown>;
+  const headingStyleConfig = d.headingStyle as TextStyleConfig | undefined;
+  const subheadingStyleConfig = d.subheadingStyle as TextStyleConfig | undefined;
 
   // heading can be a string or an object { title, subtitle, light }
   const heading = typeof d.heading === "string"
@@ -44,6 +47,8 @@ export default function ImageCarouselSection({ data, settings }: Props) {
             title={heading.title}
             subtitle={heading.subtitle}
             light={heading.light}
+            titleStyle={headingStyleConfig ? textStyleConfigToCSS(headingStyleConfig) : undefined}
+            subtitleStyle={subheadingStyleConfig ? textStyleConfigToCSS(subheadingStyleConfig) : undefined}
           />
         )}
         <div className="mb-10">

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import type { CSSProperties } from "react";
 
 interface Sponsor {
   name: string;
@@ -16,6 +17,8 @@ interface SponsorMarqueeProps {
   ctaText?: string;
   ctaHref?: string;
   speed?: number;
+  headingStyle?: CSSProperties;
+  subheadingStyle?: CSSProperties;
 }
 
 export default function SponsorMarquee({
@@ -24,6 +27,8 @@ export default function SponsorMarquee({
   subheading = "Proudly supported by these amazing brands",
   ctaText = "Become a Sponsor",
   ctaHref = "/get-involved#sponsors",
+  headingStyle,
+  subheadingStyle,
 }: SponsorMarqueeProps) {
   if (!sponsors.length) return null;
 
@@ -33,10 +38,10 @@ export default function SponsorMarquee({
   return (
     <section className="py-16 px-4 bg-sand">
       <div className="mx-auto max-w-6xl text-center mb-10">
-        <h2 className="font-display font-black text-3xl sm:text-4xl text-charcoal mb-3">
+        <h2 className="font-display font-black text-3xl sm:text-4xl text-charcoal mb-3" style={headingStyle}>
           {heading}
         </h2>
-        <p className="text-charcoal/60 text-lg">
+        <p className="text-charcoal/60 text-lg" style={subheadingStyle}>
           {subheading}
         </p>
       </div>

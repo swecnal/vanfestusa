@@ -59,6 +59,7 @@ function SortableLiveSection({
   onSelect,
   onToggleVisibility,
   onDelete,
+  onDuplicate,
   onMoveToAccordion,
   accordionGroups,
   siteStyles,
@@ -72,6 +73,7 @@ function SortableLiveSection({
   onSelect: () => void;
   onToggleVisibility: () => void;
   onDelete: () => void;
+  onDuplicate: () => void;
   onMoveToAccordion?: (sectionId: string, accordionId: string) => void;
   accordionGroups?: { id: string; title: string }[];
   siteStyles: SiteStyles;
@@ -152,6 +154,15 @@ function SortableLiveSection({
             ) : (
               <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
             )}
+          </svg>
+        </button>
+        <button
+          onClick={(e) => { e.stopPropagation(); onDuplicate(); }}
+          className="bg-charcoal text-white rounded-full p-1.5 shadow-lg"
+          title="Duplicate section"
+        >
+          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 01-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H6.75a9.06 9.06 0 011.5.124m7.5 10.376h3.375c.621 0 1.125-.504 1.125-1.125V11.25c0-4.46-3.243-8.161-7.5-8.876a9.06 9.06 0 00-1.5-.124H9.375c-.621 0-1.125.504-1.125 1.125v3.5m7.5 10.375H9.375a1.125 1.125 0 01-1.125-1.125v-9.25m12 6.625v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5a3.375 3.375 0 00-3.375-3.375H9.75" />
           </svg>
         </button>
         {/* Move to Accordion — only for non-accordion sections when accordions exist */}
@@ -442,6 +453,41 @@ export default function PageEditorPage() {
         toast.success("Section deleted");
       },
     });
+  };
+
+  const handleDuplicateSection = async (sectionId: string) => {
+    const section = sections.find((s) => s.id === sectionId);
+    if (!section) return;
+
+    const sectionIndex = sections.findIndex((s) => s.id === sectionId);
+    const res = await fetch(`/api/pages/${pageId}/sections`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        section_type: section.section_type,
+        data: section.data,
+        settings: section.settings,
+      }),
+    });
+
+    if (res.ok) {
+      const { section: newSection } = await res.json();
+      const newSections = [...sections];
+      newSections.splice(sectionIndex + 1, 0, newSection);
+      const reordered = newSections.map((s, i) => ({ ...s, sort_order: i }));
+      setSections(reordered);
+      setSelectedSectionId(newSection.id);
+
+      await fetch(`/api/pages/${pageId}/sections/reorder`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sections: reordered.map((s) => ({ id: s.id, sort_order: s.sort_order })),
+        }),
+      });
+
+      toast.success(`Duplicated ${SECTION_TYPE_LABELS[section.section_type as SectionType] || section.section_type}`);
+    }
   };
 
   const handleAddSectionAtIndex = useCallback(async (type: SectionType, index?: number) => {
@@ -789,6 +835,7 @@ export default function PageEditorPage() {
                           onSelect={() => handleSelectSection(section.id)}
                           onToggleVisibility={() => handleToggleVisibility(section)}
                           onDelete={() => handleDeleteSection(section.id)}
+                          onDuplicate={() => handleDuplicateSection(section.id)}
                           onMoveToAccordion={handleMoveToAccordion}
                           accordionGroups={accordionGroups}
                           siteStyles={siteStyles}

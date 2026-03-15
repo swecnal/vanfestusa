@@ -4,6 +4,7 @@ import { useState } from "react";
 import Lightbox from "@/components/Lightbox";
 import type { ImageGalleryData, SectionSettings } from "@/lib/types";
 import { sectionSpacingStyles } from "@/lib/types";
+import { textStyleConfigToCSS, type TextStyleConfig } from "@/lib/styles";
 
 interface Props {
   data: Record<string, unknown>;
@@ -12,6 +13,7 @@ interface Props {
 
 export default function ImageGallerySection({ data, settings }: Props) {
   const d = data as unknown as ImageGalleryData;
+  const headingStyle = (data as Record<string, unknown>).headingStyle as TextStyleConfig | undefined;
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   const cols = d.columns || 3;
@@ -28,7 +30,7 @@ export default function ImageGallerySection({ data, settings }: Props) {
     <section style={sectionSpacingStyles(settings)} className={`px-4 bg-white ${settings.customClasses || ""}`}>
       <div className={`mx-auto ${settings.maxWidth || "max-w-6xl"}`}>
         {d.heading && (
-          <h2 className="font-display font-black text-3xl text-charcoal mb-8 text-center">
+          <h2 className="font-display font-black text-3xl text-charcoal mb-8 text-center" style={headingStyle ? textStyleConfigToCSS(headingStyle) : undefined}>
             {d.heading}
           </h2>
         )}

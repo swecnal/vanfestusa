@@ -5,7 +5,7 @@ import SectionHeading from "@/components/SectionHeading";
 import BounceCTA from "@/components/BounceCTA";
 import type { EventCardsData, SectionSettings } from "@/lib/types";
 import { sectionSpacingStyles } from "@/lib/types";
-import { textStyleConfigToCSS } from "@/lib/styles";
+import { textStyleConfigToCSS, type TextStyleConfig } from "@/lib/styles";
 
 interface Props {
   data: Record<string, unknown>;
@@ -20,6 +20,8 @@ const GRID_COLS: Record<number, string> = {
 
 export default function EventCardsSection({ data, settings }: Props) {
   const d = data as unknown as EventCardsData;
+  const headingTitleStyle = (data as Record<string, unknown>).headingTitleStyle as TextStyleConfig | undefined;
+  const headingSubtitleStyle = (data as Record<string, unknown>).headingSubtitleStyle as TextStyleConfig | undefined;
   const cols = d.columns || 2;
   const isFeatured = d.layout === "featured";
   const featuredIdx = d.featuredIndex ?? 0;
@@ -33,7 +35,7 @@ export default function EventCardsSection({ data, settings }: Props) {
     >
       <div className={`mx-auto ${settings.maxWidth || "max-w-6xl"}`}>
         {d.heading && (
-          <SectionHeading title={d.heading.title} subtitle={d.heading.subtitle} />
+          <SectionHeading title={d.heading.title} subtitle={d.heading.subtitle} titleStyle={headingTitleStyle ? textStyleConfigToCSS(headingTitleStyle) : undefined} subtitleStyle={headingSubtitleStyle ? textStyleConfigToCSS(headingSubtitleStyle) : undefined} />
         )}
         <div className={`grid ${GRID_COLS[cols] || GRID_COLS[2]} gap-8`}>
           {d.events.map((ev, i) => {

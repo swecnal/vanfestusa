@@ -3,8 +3,8 @@
 import { useState, useRef, useEffect } from "react";
 import type { FaqAccordionData, SectionSettings } from "@/lib/types";
 import { sectionSpacingStyles } from "@/lib/types";
-import type { SiteStyles } from "@/lib/styles";
-import { resolveButtonStylesInHtml, EMPTY_SITE_STYLES } from "@/lib/styles";
+import type { SiteStyles, TextStyleConfig } from "@/lib/styles";
+import { resolveButtonStylesInHtml, EMPTY_SITE_STYLES, textStyleConfigToCSS } from "@/lib/styles";
 
 interface Props {
   data: Record<string, unknown>;
@@ -14,6 +14,7 @@ interface Props {
 
 export default function FaqAccordionSection({ data, settings, siteStyles = EMPTY_SITE_STYLES }: Props) {
   const d = data as unknown as FaqAccordionData;
+  const headingStyle = (data as Record<string, unknown>).headingStyle as TextStyleConfig | undefined;
   const [openItems, setOpenItems] = useState<Set<number>>(new Set());
   const [allOpen, setAllOpen] = useState(false);
   const refs = useRef<(HTMLDivElement | null)[]>([]);
@@ -50,7 +51,7 @@ export default function FaqAccordionSection({ data, settings, siteStyles = EMPTY
     >
       <div className={`mx-auto ${settings.maxWidth || "max-w-4xl"}`}>
         {d.heading && (
-          <h2 className="font-display font-black text-3xl md:text-4xl text-charcoal mb-8 text-center">
+          <h2 className="font-display font-black text-3xl md:text-4xl text-charcoal mb-8 text-center" style={headingStyle ? textStyleConfigToCSS(headingStyle) : undefined}>
             {d.heading}
           </h2>
         )}

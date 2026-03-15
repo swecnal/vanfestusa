@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import type { ScheduleAccordionData, SectionSettings } from "@/lib/types";
 import { sectionSpacingStyles } from "@/lib/types";
+import { textStyleConfigToCSS, type TextStyleConfig } from "@/lib/styles";
 
 interface Props {
   data: Record<string, unknown>;
@@ -11,6 +12,7 @@ interface Props {
 
 export default function ScheduleAccordionSection({ data, settings }: Props) {
   const d = data as unknown as ScheduleAccordionData;
+  const headingStyle = (data as Record<string, unknown>).headingStyle as TextStyleConfig | undefined;
   const [openDays, setOpenDays] = useState<Set<number>>(new Set());
   const [allOpen, setAllOpen] = useState(false);
   const refs = useRef<(HTMLDivElement | null)[]>([]);
@@ -58,7 +60,7 @@ export default function ScheduleAccordionSection({ data, settings }: Props) {
     >
       <div className={`mx-auto ${settings.maxWidth || "max-w-5xl"}`}>
         {d.heading && (
-          <h2 className="font-display font-black text-3xl md:text-4xl text-charcoal mb-4 text-center">
+          <h2 className="font-display font-black text-3xl md:text-4xl text-charcoal mb-4 text-center" style={headingStyle ? textStyleConfigToCSS(headingStyle) : undefined}>
             {d.heading}
           </h2>
         )}

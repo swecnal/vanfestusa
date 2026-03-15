@@ -1,7 +1,7 @@
 import SectionHeading from "@/components/SectionHeading";
 import type { FeatureGridData, SectionSettings } from "@/lib/types";
 import { sectionSpacingStyles } from "@/lib/types";
-import { type SiteStyles, EMPTY_SITE_STYLES, findButtonStyle, buttonStyleToCSS, textStyleConfigToCSS } from "@/lib/styles";
+import { type SiteStyles, type TextStyleConfig, EMPTY_SITE_STYLES, findButtonStyle, buttonStyleToCSS, textStyleConfigToCSS } from "@/lib/styles";
 
 interface Props {
   data: Record<string, unknown>;
@@ -17,6 +17,8 @@ const GRID_COLS: Record<number, string> = {
 
 export default function FeatureGridSection({ data, settings, siteStyles = EMPTY_SITE_STYLES }: Props) {
   const d = data as unknown as FeatureGridData;
+  const headingTitleStyle = (data as Record<string, unknown>).headingTitleStyle as TextStyleConfig | undefined;
+  const headingSubtitleStyle = (data as Record<string, unknown>).headingSubtitleStyle as TextStyleConfig | undefined;
   const isLight = d.heading?.light || settings.bgColor === "charcoal";
   const cols = d.columns || 3;
 
@@ -33,6 +35,8 @@ export default function FeatureGridSection({ data, settings, siteStyles = EMPTY_
             title={d.heading.title}
             subtitle={d.heading.subtitle}
             light={d.heading.light}
+            titleStyle={headingTitleStyle ? textStyleConfigToCSS(headingTitleStyle) : undefined}
+            subtitleStyle={headingSubtitleStyle ? textStyleConfigToCSS(headingSubtitleStyle) : undefined}
           />
         )}
         <div className={`grid ${GRID_COLS[cols] || GRID_COLS[3]} gap-6`}>

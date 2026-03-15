@@ -178,6 +178,8 @@ export interface HeroSimpleData {
   subtitle?: string;
   light?: boolean;
   bgImage?: string;
+  titleStyle?: import("@/lib/styles").TextStyleConfig;
+  subtitleStyle?: import("@/lib/styles").TextStyleConfig;
 }
 
 export interface TextBlockData {
@@ -189,6 +191,8 @@ export interface TextBlockData {
 export interface TwoColumnCardsData {
   heading?: string;
   headingSubtitle?: string;
+  headingStyle?: import("@/lib/styles").TextStyleConfig;
+  headingSubtitleStyle?: import("@/lib/styles").TextStyleConfig;
   columns?: 1 | 2 | 3 | 4;
   cards: Array<{
     title: string;
@@ -208,6 +212,8 @@ export interface TwoColumnCardsData {
 
 export interface FeatureGridData {
   heading?: { title: string; subtitle?: string; light?: boolean };
+  headingTitleStyle?: import("@/lib/styles").TextStyleConfig;
+  headingSubtitleStyle?: import("@/lib/styles").TextStyleConfig;
   columns?: 2 | 3 | 4;
   items: Array<{
     iconSvg?: string;
@@ -230,6 +236,8 @@ export interface FeatureGridData {
 
 export interface EventCardsData {
   heading?: { title: string; subtitle?: string };
+  headingTitleStyle?: import("@/lib/styles").TextStyleConfig;
+  headingSubtitleStyle?: import("@/lib/styles").TextStyleConfig;
   columns?: 1 | 2 | 3;
   layout?: "equal" | "featured";
   featuredIndex?: number;
@@ -256,6 +264,7 @@ export interface EventCardsData {
 
 export interface CtaCardsData {
   heading?: { title: string; subtitle?: string };
+  headingStyle?: import("@/lib/styles").TextStyleConfig;
   cards: Array<{
     title: string;
     description: string;
@@ -268,6 +277,8 @@ export interface CtaCardsData {
 export interface CtaSectionData {
   title: string;
   subtitle?: string;
+  titleStyle?: import("@/lib/styles").TextStyleConfig;
+  subtitleStyle?: import("@/lib/styles").TextStyleConfig;
   light?: boolean;
   bgColor?: string;
   buttons: Array<{
@@ -281,6 +292,7 @@ export interface CtaSectionData {
 
 export interface FaqAccordionData {
   heading?: string;
+  headingStyle?: import("@/lib/styles").TextStyleConfig;
   showExpandAll?: boolean;
   items: Array<{
     question: string;
@@ -290,6 +302,7 @@ export interface FaqAccordionData {
 
 export interface ScheduleAccordionData {
   heading?: string;
+  headingStyle?: import("@/lib/styles").TextStyleConfig;
   disclaimer?: string;
   showExpandAll?: boolean;
   days: Array<{
@@ -307,6 +320,7 @@ export interface ScheduleAccordionData {
 
 export interface SponsorTiersData {
   heading?: string;
+  headingStyle?: import("@/lib/styles").TextStyleConfig;
   introText?: string;
   disclaimerText?: string;
   wrapInOuterAccordion?: boolean;
@@ -336,7 +350,9 @@ export interface SponsorListData {
 
 export interface SponsorMarqueeData {
   heading?: string;
+  headingStyle?: import("@/lib/styles").TextStyleConfig;
   subheading?: string;
+  subheadingStyle?: import("@/lib/styles").TextStyleConfig;
   ctaText?: string;
   ctaHref?: string;
   speed?: number;
@@ -350,6 +366,8 @@ export interface SponsorMarqueeData {
 
 export interface ImageCarouselData {
   heading?: { title: string; subtitle?: string; light?: boolean };
+  headingStyle?: import("@/lib/styles").TextStyleConfig;
+  subheadingStyle?: import("@/lib/styles").TextStyleConfig;
   images: Array<{ src: string; alt: string }>;
   autoplayInterval?: number;
   ctaButtons?: Array<{
@@ -368,6 +386,7 @@ export interface PhotoStripData {
 
 export interface ImageGalleryData {
   heading?: string;
+  headingStyle?: import("@/lib/styles").TextStyleConfig;
   images: Array<{ src: string; alt: string }>;
   columns?: 1 | 2 | 3 | 4;
   enableLightbox?: boolean;
@@ -448,6 +467,7 @@ export interface AccordionParentData {
 
 export interface ContactFormData {
   introText?: string;
+  formHeadingStyle?: import("@/lib/styles").TextStyleConfig;
   contactCards?: Array<{
     icon: string;
     title: string;

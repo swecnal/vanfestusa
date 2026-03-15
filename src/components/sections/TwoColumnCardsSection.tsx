@@ -1,7 +1,7 @@
 import SectionHeading from "@/components/SectionHeading";
 import type { TwoColumnCardsData, SectionSettings } from "@/lib/types";
 import { sectionSpacingStyles } from "@/lib/types";
-import { type SiteStyles, EMPTY_SITE_STYLES, findButtonStyle, buttonStyleToCSS, textStyleConfigToCSS, resolveButtonStylesInHtml } from "@/lib/styles";
+import { type SiteStyles, type TextStyleConfig, EMPTY_SITE_STYLES, findButtonStyle, buttonStyleToCSS, textStyleConfigToCSS, resolveButtonStylesInHtml } from "@/lib/styles";
 
 interface Props {
   data: Record<string, unknown>;
@@ -18,12 +18,14 @@ const GRID_COLS: Record<number, string> = {
 
 export default function TwoColumnCardsSection({ data, settings, siteStyles = EMPTY_SITE_STYLES }: Props) {
   const d = data as unknown as TwoColumnCardsData;
+  const headingStyleConfig = (data as Record<string, unknown>).headingStyle as TextStyleConfig | undefined;
+  const headingSubtitleStyleConfig = (data as Record<string, unknown>).headingSubtitleStyle as TextStyleConfig | undefined;
   const cols = d.columns || 2;
 
   return (
     <section style={sectionSpacingStyles(settings)} className={`px-4 ${settings.bgColor === "sand" ? "bg-sand" : "bg-white"} ${settings.customClasses || ""}`}>
       <div className={`mx-auto ${settings.maxWidth || "max-w-4xl"} text-center`}>
-        {d.heading && <SectionHeading title={d.heading} subtitle={d.headingSubtitle} />}
+        {d.heading && <SectionHeading title={d.heading} subtitle={d.headingSubtitle} titleStyle={headingStyleConfig ? textStyleConfigToCSS(headingStyleConfig) : undefined} subtitleStyle={headingSubtitleStyleConfig ? textStyleConfigToCSS(headingSubtitleStyleConfig) : undefined} />}
         <div className={`grid ${GRID_COLS[cols] || GRID_COLS[2]} gap-6 text-left`}>
           {d.cards.map((card, i) => {
             const isBackground = card.imagePosition === "background";
