@@ -1,5 +1,5 @@
 import type { Section } from "@/lib/types";
-import { backgroundConfigStyles } from "@/lib/types";
+import { backgroundConfigStyles, buildMobileStyleBlock } from "@/lib/types";
 import { type SiteStyles, EMPTY_SITE_STYLES } from "@/lib/styles";
 import HeroCarouselSection from "./HeroCarouselSection";
 import HeroSimpleSection from "./HeroSimpleSection";
@@ -29,11 +29,19 @@ interface Props {
   siteStyles?: SiteStyles;
 }
 
+function deviceVisibilityClass(dv?: string): string {
+  if (dv === "desktop_only") return "hidden md:block";
+  if (dv === "mobile_only") return "md:hidden";
+  return "";
+}
+
 export default function SectionRenderer({ section, siteStyles = EMPTY_SITE_STYLES }: Props) {
   if (!section.is_visible) return null;
 
   const { section_type, data, settings } = section;
   const sectionId = settings.sectionId;
+  const sectionCssId = `section-${section.id}`;
+  const visClass = deviceVisibilityClass(settings.deviceVisibility);
 
   const content = (() => {
     switch (section_type) {
@@ -88,30 +96,36 @@ export default function SectionRenderer({ section, siteStyles = EMPTY_SITE_STYLE
 
   if (!content) return null;
 
+  // Mobile CSS override style block
+  const mobileCSS = settings.mobileMode === "custom" ? buildMobileStyleBlock(sectionCssId, settings) : "";
+
   const bgConfig = settings.bgConfig;
   const hasBg = bgConfig?.type && bgConfig.type !== "none";
   const bgStyles = hasBg ? backgroundConfigStyles(bgConfig) : undefined;
   const isImageBg = bgConfig?.type === "image" && bgConfig.imageUrl;
   const imageOpacity = (bgConfig?.imageOpacity ?? 100) / 100;
 
-  // Wrap with background + anchor ID
-  if (hasBg || sectionId) {
-    return (
-      <div
-        id={sectionId || undefined}
-        className={hasBg ? "relative overflow-hidden" : undefined}
-        style={isImageBg ? undefined : bgStyles}
-      >
-        {isImageBg && (
-          <div
-            className="absolute inset-0"
-            style={{ ...bgStyles, opacity: imageOpacity }}
-          />
-        )}
-        {hasBg ? <div className="relative z-[1]">{content}</div> : content}
+  // Always wrap for section ID + visibility + mobile overrides
+  return (
+    <div
+      id={sectionCssId}
+      className={[hasBg ? "relative overflow-hidden" : "", visClass].filter(Boolean).join(" ") || undefined}
+      style={hasBg && !isImageBg ? bgStyles : undefined}
+    >
+      {mobileCSS && <style dangerouslySetInnerHTML={{ __html: mobileCSS }} />}
+      {isImageBg && (
+        <div
+          className="absolute inset-0"
+          style={{ ...bgStyles, opacity: imageOpacity }}
+        />
+      )}
+      <div className={[hasBg ? "relative z-[1]" : "", "section-content"].filter(Boolean).join(" ")}>
+        {content}
       </div>
-    );
-  }
-
-  return content;
+      {/* Anchor ID for scroll-to */}
+      {sectionId && sectionId !== sectionCssId && (
+        <div id={sectionId} className="absolute top-0" style={{ scrollMarginTop: settings.scrollMarginTop }} />
+      )}
+    </div>
+  );
 }

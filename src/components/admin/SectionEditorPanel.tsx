@@ -22,9 +22,10 @@ interface Props {
   onChange?: (data: Record<string, unknown>, settings: Record<string, unknown>) => void;
   stickyButtons?: boolean;
   onUngroupChild?: (accordionId: string, childIndex: number) => void;
+  previewMode?: "desktop" | "mobile";
 }
 
-export default function SectionEditorPanel({ section, onSave, saving, onChange, stickyButtons, onUngroupChild }: Props) {
+export default function SectionEditorPanel({ section, onSave, saving, onChange, stickyButtons, onUngroupChild, previewMode }: Props) {
   const [data, setData] = useState<Record<string, unknown>>(section.data);
   const [settings, setSettings] = useState<Record<string, unknown>>(section.settings as unknown as Record<string, unknown>);
   const [siteStyles, setSiteStyles] = useState<SiteStyles>(EMPTY_SITE_STYLES);
@@ -201,6 +202,200 @@ export default function SectionEditorPanel({ section, onSave, saving, onChange, 
               <option value="max-w-7xl">Full</option>
             </select>
           </Field>
+
+          {/* Device Visibility */}
+          <div>
+            <label className="block text-[11px] font-medium text-gray-600 mb-1">Device Visibility</label>
+            <div className="flex gap-1">
+              {([
+                { value: "both", label: "Both" },
+                { value: "desktop_only", label: "Desktop" },
+                { value: "mobile_only", label: "Mobile" },
+              ] as const).map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => {
+                    const next = { ...settings, deviceVisibility: opt.value === "both" ? undefined : opt.value };
+                    setSettings(next);
+                    onChange?.(data, next);
+                  }}
+                  className={`flex-1 text-[10px] py-1 rounded border transition-colors ${
+                    ((settings.deviceVisibility as string) || "both") === opt.value
+                      ? "bg-teal/15 border-teal text-teal font-semibold"
+                      : "border-gray-200 text-gray-500 hover:border-gray-300"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </details>
+
+      {/* Mobile Settings */}
+      <details className="border border-gray-200 rounded-lg" open={previewMode === "mobile"}>
+        <summary className="px-3 py-2 text-xs font-semibold text-gray-500 cursor-pointer hover:bg-gray-50">
+          Mobile Settings
+        </summary>
+        <div className="p-3 space-y-3 border-t border-gray-100">
+          {/* Auto / Custom toggle */}
+          <div>
+            <label className="block text-[11px] font-medium text-gray-600 mb-1">Mobile Mode</label>
+            <div className="flex gap-1">
+              {([
+                { value: "auto", label: "Auto", desc: "Tailwind handles responsive" },
+                { value: "custom", label: "Custom", desc: "Configure mobile overrides" },
+              ] as const).map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => {
+                    const next = { ...settings, mobileMode: opt.value === "auto" ? undefined : opt.value };
+                    setSettings(next);
+                    onChange?.(data, next);
+                  }}
+                  className={`flex-1 text-[10px] py-1 rounded border transition-colors ${
+                    ((settings.mobileMode as string) || "auto") === opt.value
+                      ? "bg-teal/15 border-teal text-teal font-semibold"
+                      : "border-gray-200 text-gray-500 hover:border-gray-300"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+            <p className="text-[9px] text-gray-400 mt-1">
+              {((settings.mobileMode as string) || "auto") === "auto"
+                ? "Responsive layout handled automatically"
+                : "Configure custom mobile padding, margin, max width & background"}
+            </p>
+          </div>
+
+          {(settings.mobileMode as string) === "custom" && (
+            <>
+              {/* Mobile Padding */}
+              <div>
+                <label className="block text-[11px] font-medium text-gray-600 mb-1">Mobile Padding</label>
+                <div className="flex gap-1 mb-1.5">
+                  {(["compact", "comfortable", "spacious"] as const).map((preset) => (
+                    <button
+                      key={preset}
+                      onClick={() => {
+                        const vals = SPACING_PRESETS.padding[preset];
+                        const next = { ...settings, mobilePaddingTop: vals.top, mobilePaddingBottom: vals.bottom, mobilePaddingLeft: vals.left, mobilePaddingRight: vals.right, mobilePaddingPreset: preset };
+                        setSettings(next);
+                        onChange?.(data, next);
+                      }}
+                      className={`flex-1 text-[10px] py-1 rounded border transition-colors capitalize ${
+                        (settings.mobilePaddingPreset as string) === preset
+                          ? "bg-teal/15 border-teal text-teal font-semibold"
+                          : "border-gray-200 text-gray-500 hover:border-gray-300"
+                      }`}
+                    >
+                      {preset}
+                    </button>
+                  ))}
+                </div>
+                <div className="grid grid-cols-2 gap-1">
+                  {(["Top", "Bottom", "Left", "Right"] as const).map((dir) => {
+                    const key = `mobilePadding${dir}` as keyof typeof settings;
+                    return (
+                      <div key={dir}>
+                        <label className="text-[9px] text-gray-400">{dir}</label>
+                        <input
+                          type="text"
+                          value={(settings[key] as string) || ""}
+                          onChange={(e) => {
+                            const next = { ...settings, [key]: e.target.value || undefined, mobilePaddingPreset: null };
+                            setSettings(next);
+                            onChange?.(data, next);
+                          }}
+                          className="input-sm"
+                          placeholder="0px"
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Mobile Margin */}
+              <div>
+                <label className="block text-[11px] font-medium text-gray-600 mb-1">Mobile Margin</label>
+                <div className="flex gap-1 mb-1.5">
+                  {(["compact", "comfortable", "spacious"] as const).map((preset) => (
+                    <button
+                      key={preset}
+                      onClick={() => {
+                        const vals = SPACING_PRESETS.margin[preset];
+                        const next = { ...settings, mobileMarginTop: vals.top, mobileMarginBottom: vals.bottom, mobileMarginLeft: vals.left, mobileMarginRight: vals.right, mobileMarginPreset: preset };
+                        setSettings(next);
+                        onChange?.(data, next);
+                      }}
+                      className={`flex-1 text-[10px] py-1 rounded border transition-colors capitalize ${
+                        (settings.mobileMarginPreset as string) === preset
+                          ? "bg-teal/15 border-teal text-teal font-semibold"
+                          : "border-gray-200 text-gray-500 hover:border-gray-300"
+                      }`}
+                    >
+                      {preset}
+                    </button>
+                  ))}
+                </div>
+                <div className="grid grid-cols-2 gap-1">
+                  {(["Top", "Bottom", "Left", "Right"] as const).map((dir) => {
+                    const key = `mobileMargin${dir}` as keyof typeof settings;
+                    return (
+                      <div key={dir}>
+                        <label className="text-[9px] text-gray-400">{dir}</label>
+                        <input
+                          type="text"
+                          value={(settings[key] as string) || ""}
+                          onChange={(e) => {
+                            const next = { ...settings, [key]: e.target.value || undefined, mobileMarginPreset: null };
+                            setSettings(next);
+                            onChange?.(data, next);
+                          }}
+                          className="input-sm"
+                          placeholder="0px"
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Mobile Max Width */}
+              <Field label="Mobile Max Width">
+                <select
+                  value={(settings.mobileMaxWidth as string) || ""}
+                  onChange={(e) => {
+                    const next = { ...settings, mobileMaxWidth: e.target.value || undefined };
+                    setSettings(next);
+                    onChange?.(data, next);
+                  }}
+                  className="input-sm"
+                >
+                  <option value="">Default</option>
+                  <option value="max-w-sm">Small</option>
+                  <option value="max-w-md">Medium</option>
+                  <option value="max-w-lg">Large</option>
+                  <option value="max-w-xl">XL</option>
+                  <option value="max-w-full">Full</option>
+                </select>
+              </Field>
+
+              {/* Mobile Background */}
+              <BackgroundEditor
+                value={settings.mobileBgConfig as BackgroundConfig | undefined}
+                onChange={(cfg) => {
+                  const next = { ...settings, mobileBgConfig: cfg };
+                  setSettings(next);
+                  onChange?.(data, next);
+                }}
+              />
+            </>
+          )}
         </div>
       </details>
 

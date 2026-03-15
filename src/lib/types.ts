@@ -134,6 +134,22 @@ export interface SectionSettings {
   sectionId?: string;
   scrollMarginTop?: string;
   customClasses?: string;
+  // Device visibility
+  deviceVisibility?: "both" | "mobile_only" | "desktop_only";
+  // Mobile overrides (only applied at <768px)
+  mobileMode?: "auto" | "custom";
+  mobilePaddingTop?: string;
+  mobilePaddingBottom?: string;
+  mobilePaddingLeft?: string;
+  mobilePaddingRight?: string;
+  mobileMarginTop?: string;
+  mobileMarginBottom?: string;
+  mobileMarginLeft?: string;
+  mobileMarginRight?: string;
+  mobilePaddingPreset?: "compact" | "comfortable" | "spacious" | null;
+  mobileMarginPreset?: "compact" | "comfortable" | "spacious" | null;
+  mobileMaxWidth?: string;
+  mobileBgConfig?: BackgroundConfig;
 }
 
 export type SpacingPreset = "compact" | "comfortable" | "spacious";
@@ -225,6 +241,74 @@ export function backgroundConfigStyles(config?: BackgroundConfig): React.CSSProp
   }
 
   return {};
+}
+
+/** Convert BackgroundConfig → CSS property strings (for <style> tag injection) */
+function backgroundConfigToCSS(config?: BackgroundConfig): string {
+  if (!config || config.type === "none") return "";
+
+  if (config.type === "solid") {
+    return `background-color: ${config.solidColor || "#ffffff"} !important;`;
+  }
+
+  if (config.type === "gradient") {
+    let colors = config.gradientColors || [{ color: "#ffffff" }, { color: "#000000" }];
+    if (config.gradientReverse) colors = [...colors].reverse();
+    const stops = colors.map((c) => {
+      const op = (c.opacity ?? 100) / 100;
+      return op < 1 ? hexToRgba(c.color, op) : c.color;
+    }).join(", ");
+    const bg = config.gradientType === "radial"
+      ? `radial-gradient(circle, ${stops})`
+      : `linear-gradient(${config.gradientAngle ?? 180}deg, ${stops})`;
+    return `background: ${bg} !important;`;
+  }
+
+  if (config.type === "image" && config.imageUrl) {
+    const sizing = config.imageSizing || "cover";
+    let css = `background-image: url(${config.imageUrl}) !important; background-position: center !important;`;
+    switch (sizing) {
+      case "cover": css += " background-size: cover !important;"; break;
+      case "contain": css += " background-size: contain !important; background-repeat: no-repeat !important;"; break;
+      case "stretch": css += " background-size: 100% 100% !important;"; break;
+      case "tile": css += " background-size: auto !important; background-repeat: repeat !important;"; break;
+      case "full": css += " background-size: 100% auto !important; background-repeat: no-repeat !important;"; break;
+    }
+    return css;
+  }
+
+  return "";
+}
+
+/** Build a <style> block with @media query for mobile overrides on a section */
+export function buildMobileStyleBlock(sectionCssId: string, settings: SectionSettings): string {
+  const rules: string[] = [];
+
+  // Spacing overrides
+  if (settings.mobilePaddingTop) rules.push(`padding-top: ${settings.mobilePaddingTop} !important`);
+  if (settings.mobilePaddingBottom) rules.push(`padding-bottom: ${settings.mobilePaddingBottom} !important`);
+  if (settings.mobilePaddingLeft) rules.push(`padding-left: ${settings.mobilePaddingLeft} !important`);
+  if (settings.mobilePaddingRight) rules.push(`padding-right: ${settings.mobilePaddingRight} !important`);
+  if (settings.mobileMarginTop) rules.push(`margin-top: ${settings.mobileMarginTop} !important`);
+  if (settings.mobileMarginBottom) rules.push(`margin-bottom: ${settings.mobileMarginBottom} !important`);
+  if (settings.mobileMarginLeft) rules.push(`margin-left: ${settings.mobileMarginLeft} !important`);
+  if (settings.mobileMarginRight) rules.push(`margin-right: ${settings.mobileMarginRight} !important`);
+  if (settings.mobileMaxWidth) rules.push(`max-width: ${settings.mobileMaxWidth} !important`);
+
+  // Background overrides
+  const bgCSS = backgroundConfigToCSS(settings.mobileBgConfig);
+
+  if (rules.length === 0 && !bgCSS) return "";
+
+  let css = `@media (max-width: 767px) {\n`;
+  if (rules.length > 0) {
+    css += `  #${sectionCssId} .section-content { ${rules.map(r => r + ";").join(" ")} }\n`;
+  }
+  if (bgCSS) {
+    css += `  #${sectionCssId} { ${bgCSS} }\n`;
+  }
+  css += `}`;
+  return css;
 }
 
 // ─── Section Data Shapes ───

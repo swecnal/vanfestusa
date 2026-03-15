@@ -67,6 +67,7 @@ function SortableLiveSection({
   editingSettings,
   activeDragId,
   activeDragType,
+  previewMode,
 }: {
   section: Section;
   isSelected: boolean;
@@ -81,6 +82,7 @@ function SortableLiveSection({
   editingSettings?: Record<string, unknown>;
   activeDragId?: string | null;
   activeDragType?: string | null;
+  previewMode: "desktop" | "mobile";
 }) {
   const [showAccordionMenu, setShowAccordionMenu] = useState(false);
   const { attributes, listeners, setNodeRef, transform, transition } =
@@ -101,6 +103,13 @@ function SortableLiveSection({
         settings: (editingSettings || section.settings) as SectionSettings,
       }
     : { ...section, is_visible: true };
+
+  // Check if section is visibility-hidden for the current preview mode
+  const dv = (displaySection.settings.deviceVisibility as string) || "both";
+  const isVisibilityMismatch =
+    (previewMode === "mobile" && dv === "desktop_only") ||
+    (previewMode === "desktop" && dv === "mobile_only");
+  const mismatchLabel = dv === "desktop_only" ? "Desktop Only" : dv === "mobile_only" ? "Mobile Only" : "";
 
   return (
     <div ref={setNodeRef} style={style} className="relative group/section">
@@ -209,9 +218,18 @@ function SortableLiveSection({
       </div>
 
       {/* Live section render */}
-      <div className={!section.is_visible ? "opacity-30" : ""}>
+      <div className={`${!section.is_visible ? "opacity-30" : ""} ${isVisibilityMismatch ? "opacity-20" : ""}`}>
         <SectionRenderer section={displaySection} siteStyles={siteStyles} />
       </div>
+
+      {/* Visibility mismatch badge */}
+      {isVisibilityMismatch && (
+        <div className="absolute inset-0 z-[18] pointer-events-none flex items-center justify-center" style={{ background: "repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,0.03) 10px, rgba(0,0,0,0.03) 20px)" }}>
+          <span className="bg-gray-500 text-white text-[10px] font-bold px-3 py-1 rounded-full shadow">
+            {mismatchLabel}
+          </span>
+        </div>
+      )}
 
       {/* Nest drop zone — appears on accordion sections when dragging a non-accordion section */}
       {section.section_type === "accordion_parent" &&
@@ -345,6 +363,7 @@ export default function PageEditorPage() {
 
   const { registerHandler, unregisterHandler } = usePageEditor();
   const [editPaneMode, setEditPaneMode] = useState<"floating" | "static">("floating");
+  const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">("desktop");
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -748,20 +767,58 @@ export default function PageEditorPage() {
               {page.is_published ? "Published" : "Draft"}
             </span>
           </div>
-          <a
-            href={page.slug}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-            title="Preview page"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
-            </svg>
-          </a>
+          <div className="flex items-center gap-2">
+            {/* Desktop / Mobile preview toggle */}
+            <div className="flex rounded-lg border border-gray-200 overflow-hidden">
+              <button
+                onClick={() => setPreviewMode("desktop")}
+                className={`flex items-center gap-1 px-2.5 py-1 text-[10px] font-semibold transition-colors ${
+                  previewMode === "desktop"
+                    ? "bg-teal/15 text-teal"
+                    : "text-gray-400 hover:text-gray-600 hover:bg-gray-50"
+                }`}
+                title="Desktop preview"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25A2.25 2.25 0 015.25 3h13.5A2.25 2.25 0 0121 5.25z" />
+                </svg>
+                Desktop
+              </button>
+              <button
+                onClick={() => setPreviewMode("mobile")}
+                className={`flex items-center gap-1 px-2.5 py-1 text-[10px] font-semibold transition-colors border-l border-gray-200 ${
+                  previewMode === "mobile"
+                    ? "bg-teal/15 text-teal"
+                    : "text-gray-400 hover:text-gray-600 hover:bg-gray-50"
+                }`}
+                title="Mobile preview (393px)"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3" />
+                </svg>
+                Mobile
+              </button>
+            </div>
+            <a
+              href={page.slug}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gray-400 hover:text-gray-600 transition-colors"
+              title="Preview page"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+              </svg>
+            </a>
+          </div>
         </div>
 
-        {/* Live sections */}
+        {/* Live sections — with optional mobile frame */}
+        <div className={previewMode === "mobile" ? "bg-gray-100 min-h-full py-4" : ""}>
+        <div
+          className={previewMode === "mobile" ? "mx-auto bg-white rounded-[2rem] shadow-xl border border-gray-300 overflow-hidden" : ""}
+          style={previewMode === "mobile" ? { maxWidth: 393 } : undefined}
+        >
         <div
           onDragEnter={(e) => {
             if (e.dataTransfer.types.includes("application/section-type")) {
@@ -843,6 +900,7 @@ export default function PageEditorPage() {
                           editingSettings={selectedSectionId === section.id && editingSettings ? editingSettings : undefined}
                           activeDragId={activeDragId}
                           activeDragType={dragSection?.section_type || null}
+                          previewMode={previewMode}
                         />
                         <DropZone index={idx + 1} onDrop={handleAddSectionAtIndex} isActive={externalDragActive} />
                       </div>
@@ -853,6 +911,8 @@ export default function PageEditorPage() {
             </div>
           )}
         </div>
+        </div>{/* end mobile frame */}
+        </div>{/* end mobile bg */}
       </div>
 
       {/* Editor panel — floating (overlay) or static (side column) */}
@@ -883,6 +943,7 @@ export default function PageEditorPage() {
               onChange={handleEditorChange}
               stickyButtons
               onUngroupChild={handleUngroupChild}
+              previewMode={previewMode}
             />
           </div>
         </div>
