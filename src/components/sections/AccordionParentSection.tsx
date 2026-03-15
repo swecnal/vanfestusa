@@ -103,9 +103,8 @@ export default function AccordionParentSection({ data, settings, siteStyles = EM
                     isBackground ? "text-white" : "text-charcoal"
                   }`}
                   style={textStyleConfigToCSS((d.titleStyle as TextStyleConfig) || {})}
-                >
-                  {d.title}
-                </h2>
+                  dangerouslySetInnerHTML={{ __html: d.title || "" }}
+                />
               )}
               {d.description && (
                 <p
@@ -113,9 +112,8 @@ export default function AccordionParentSection({ data, settings, siteStyles = EM
                     isBackground ? "text-white/80" : "text-charcoal/70"
                   }`}
                   style={textStyleConfigToCSS((d.descriptionStyle as TextStyleConfig) || {})}
-                >
-                  {d.description}
-                </p>
+                  dangerouslySetInnerHTML={{ __html: d.description || "" }}
+                />
               )}
             </div>
           </div>

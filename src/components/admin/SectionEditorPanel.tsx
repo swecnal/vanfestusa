@@ -282,23 +282,11 @@ function SectionFields({
       return (
         <div className="space-y-3">
           <Field label="Title">
-            <input
-              type="text"
-              value={(data.title as string) || ""}
-              onChange={(e) => updateData("title", e.target.value)}
-              className="input-sm"
-            />
+            <RichTextEditor content={(data.title as string) || ""} onChange={(html) => updateData("title", html)} siteStyles={siteStyles} />
           </Field>
-          <TextStyleEditor label="Title Style" value={(data.titleStyle as TextStyleConfig) || {}} onChange={(s) => updateData("titleStyle", s)} defaults={{ fontSize: "clamp(2.25rem, 5vw, 3.75rem)", fontWeight: "900", fontFamily: "Gothic A1" }} />
           <Field label="Subtitle">
-            <input
-              type="text"
-              value={(data.subtitle as string) || ""}
-              onChange={(e) => updateData("subtitle", e.target.value)}
-              className="input-sm"
-            />
+            <RichTextEditor content={(data.subtitle as string) || ""} onChange={(html) => updateData("subtitle", html)} siteStyles={siteStyles} />
           </Field>
-          <TextStyleEditor label="Subtitle Style" value={(data.subtitleStyle as TextStyleConfig) || {}} onChange={(s) => updateData("subtitleStyle", s)} defaults={{ fontSize: "clamp(1rem, 2vw, 1.25rem)", fontWeight: "400" }} />
           <Field label="Background Image">
             <ImagePicker
               value={(data.bgImage as string) || ""}
@@ -346,19 +334,8 @@ function SectionFields({
       return (
         <div className="space-y-3">
           <Field label="Title">
-            <input
-              type="text"
-              value={(data.title as string) || ""}
-              onChange={(e) => updateData("title", e.target.value)}
-              className="input-sm"
-            />
+            <RichTextEditor content={(data.title as string) || ""} onChange={(html) => updateData("title", html)} siteStyles={siteStyles} />
           </Field>
-          <TextStyleEditor
-            label="Title Style"
-            value={(data.titleStyle as TextStyleConfig) || {}}
-            onChange={(s) => updateData("titleStyle", s)}
-            defaults={{ fontSize: "clamp(1.875rem, 4vw, 2.25rem)", fontWeight: "900" }}
-          />
           <Field label="Image">
             <ImagePicker
               value={(data.image as string) || ""}
@@ -380,19 +357,8 @@ function SectionFields({
             </Field>
           )}
           <Field label="Description">
-            <textarea
-              value={(data.description as string) || ""}
-              onChange={(e) => updateData("description", e.target.value)}
-              className="input-sm"
-              rows={3}
-            />
+            <RichTextEditor content={(data.description as string) || ""} onChange={(html) => updateData("description", html)} siteStyles={siteStyles} />
           </Field>
-          <TextStyleEditor
-            label="Description Style"
-            value={(data.descriptionStyle as TextStyleConfig) || {}}
-            onChange={(s) => updateData("descriptionStyle", s)}
-            defaults={{ fontSize: "16px" }}
-          />
           <label className="flex items-center gap-2 text-sm">
             <input
               type="checkbox"
@@ -496,14 +462,8 @@ function SectionFields({
       return (
         <div className="space-y-3">
           <Field label="Heading">
-            <input
-              type="text"
-              value={(data.heading as string) || ""}
-              onChange={(e) => updateData("heading", e.target.value)}
-              className="input-sm"
-            />
+            <RichTextEditor content={(data.heading as string) || ""} onChange={(html) => updateData("heading", html)} siteStyles={siteStyles} />
           </Field>
-          <TextStyleEditor label="Heading Style" value={(data.headingStyle as TextStyleConfig) || {}} onChange={(s) => updateData("headingStyle", s)} defaults={{ fontSize: "clamp(1.875rem, 4vw, 2.25rem)", fontWeight: "900", fontFamily: "Gothic A1" }} />
           <Field label="FAQ Items">
             <ArrayEditor
               items={(data.items as Array<Record<string, string>>) || []}
@@ -524,23 +484,11 @@ function SectionFields({
       return (
         <div className="space-y-3">
           <Field label="Title">
-            <input
-              type="text"
-              value={(data.title as string) || ""}
-              onChange={(e) => updateData("title", e.target.value)}
-              className="input-sm"
-            />
+            <RichTextEditor content={(data.title as string) || ""} onChange={(html) => updateData("title", html)} siteStyles={siteStyles} />
           </Field>
-          <TextStyleEditor label="Title Style" value={(data.titleStyle as TextStyleConfig) || {}} onChange={(s) => updateData("titleStyle", s)} defaults={{ fontSize: "clamp(1.875rem, 4vw, 2.25rem)", fontWeight: "900", fontFamily: "Gothic A1" }} />
           <Field label="Subtitle">
-            <input
-              type="text"
-              value={(data.subtitle as string) || ""}
-              onChange={(e) => updateData("subtitle", e.target.value)}
-              className="input-sm"
-            />
+            <RichTextEditor content={(data.subtitle as string) || ""} onChange={(html) => updateData("subtitle", html)} siteStyles={siteStyles} />
           </Field>
-          <TextStyleEditor label="Subtitle Style" value={(data.subtitleStyle as TextStyleConfig) || {}} onChange={(s) => updateData("subtitleStyle", s)} defaults={{ fontSize: "clamp(1rem, 2vw, 1.25rem)", fontWeight: "400" }} />
           <label className="flex items-center gap-2 text-sm">
             <input
               type="checkbox"
@@ -925,14 +873,8 @@ function SectionFields({
       return (
         <div className="space-y-3">
           <Field label="Heading">
-            <input
-              type="text"
-              value={(data.heading as string) || ""}
-              onChange={(e) => updateData("heading", e.target.value)}
-              className="input-sm"
-            />
+            <RichTextEditor content={(data.heading as string) || ""} onChange={(html) => updateData("heading", html)} siteStyles={siteStyles} />
           </Field>
-          <TextStyleEditor label="Heading Style" value={(data.headingStyle as TextStyleConfig) || {}} onChange={(s) => updateData("headingStyle", s)} defaults={{ fontSize: "clamp(1.875rem, 4vw, 2.25rem)", fontWeight: "900" }} />
           <Field label="Columns">
             <select
               value={String(data.columns || 3)}
@@ -963,23 +905,15 @@ function SectionFields({
 
     case "event_cards":
       return (
-        <EventCardsEditor data={data} updateData={updateData} />
+        <EventCardsEditor data={data} updateData={updateData} siteStyles={siteStyles} />
       );
 
     case "cta_cards":
       return (
         <div className="space-y-3">
           <Field label="Heading Title">
-            <input
-              type="text"
-              value={((data.heading as Record<string, unknown>)?.title as string) || ""}
-              onChange={(e) =>
-                updateData("heading", { ...(data.heading as Record<string, unknown>), title: e.target.value })
-              }
-              className="input-sm"
-            />
+            <RichTextEditor content={((data.heading as Record<string, unknown>)?.title as string) || ""} onChange={(html) => updateData("heading", { ...(data.heading as Record<string, unknown>), title: html })} siteStyles={siteStyles} />
           </Field>
-          <TextStyleEditor label="Heading Style" value={(data.headingStyle as TextStyleConfig) || {}} onChange={(s) => updateData("headingStyle", s)} defaults={{ fontSize: "clamp(1.875rem, 4vw, 2.25rem)", fontWeight: "900" }} />
           <Field label="Columns">
             <select
               value={String(data.columns || 3)}
@@ -1004,23 +938,11 @@ function SectionFields({
       return (
         <div className="space-y-3">
           <Field label="Heading">
-            <input
-              type="text"
-              value={(data.heading as string) || "Our Sponsors"}
-              onChange={(e) => updateData("heading", e.target.value)}
-              className="input-sm"
-            />
+            <RichTextEditor content={(data.heading as string) || ""} onChange={(html) => updateData("heading", html)} siteStyles={siteStyles} />
           </Field>
-          <TextStyleEditor label="Heading Style" value={(data.headingStyle as TextStyleConfig) || {}} onChange={(s) => updateData("headingStyle", s)} defaults={{ fontSize: "clamp(1.875rem, 4vw, 2.25rem)", fontWeight: "900" }} />
           <Field label="Subheading">
-            <input
-              type="text"
-              value={(data.subheading as string) || ""}
-              onChange={(e) => updateData("subheading", e.target.value)}
-              className="input-sm"
-            />
+            <RichTextEditor content={(data.subheading as string) || ""} onChange={(html) => updateData("subheading", html)} siteStyles={siteStyles} />
           </Field>
-          <TextStyleEditor label="Subheading Style" value={(data.subheadingStyle as TextStyleConfig) || {}} onChange={(s) => updateData("subheadingStyle", s)} defaults={{ fontSize: "16px", fontWeight: "400" }} />
           <Field label="CTA Text">
             <input
               type="text"
@@ -1057,23 +979,11 @@ function SectionFields({
       return (
         <div className="space-y-3">
           <Field label="Heading">
-            <input
-              type="text"
-              value={typeof data.heading === "string" ? data.heading : ((data.heading as Record<string, unknown>)?.title as string) || ""}
-              onChange={(e) => updateData("heading", e.target.value)}
-              className="input-sm"
-            />
+            <RichTextEditor content={typeof data.heading === "string" ? data.heading : ((data.heading as Record<string, unknown>)?.title as string) || ""} onChange={(html) => updateData("heading", html)} siteStyles={siteStyles} />
           </Field>
-          <TextStyleEditor label="Heading Style" value={(data.headingStyle as TextStyleConfig) || {}} onChange={(s) => updateData("headingStyle", s)} defaults={{ fontSize: "clamp(1.875rem, 4vw, 2.25rem)", fontWeight: "900" }} />
           <Field label="Subheading">
-            <input
-              type="text"
-              value={(data.subheading as string) || ""}
-              onChange={(e) => updateData("subheading", e.target.value)}
-              className="input-sm"
-            />
+            <RichTextEditor content={(data.subheading as string) || ""} onChange={(html) => updateData("subheading", html)} siteStyles={siteStyles} />
           </Field>
-          <TextStyleEditor label="Subheading Style" value={(data.subheadingStyle as TextStyleConfig) || {}} onChange={(s) => updateData("subheadingStyle", s)} defaults={{ fontSize: "16px", fontWeight: "400" }} />
           <Field label="Background Image">
             <ImagePicker
               value={(data.bgImage as string) || ""}
@@ -1190,14 +1100,8 @@ function SectionFields({
             />
           </Field>
           <Field label="Form Heading">
-            <input
-              type="text"
-              value={(data.formHeading as string) || ""}
-              onChange={(e) => updateData("formHeading", e.target.value)}
-              className="input-sm"
-            />
+            <RichTextEditor content={(data.formHeading as string) || ""} onChange={(html) => updateData("formHeading", html)} siteStyles={siteStyles} />
           </Field>
-          <TextStyleEditor label="Form Heading Style" value={(data.formHeadingStyle as TextStyleConfig) || {}} onChange={(s) => updateData("formHeadingStyle", s)} defaults={{ fontSize: "clamp(1.875rem, 4vw, 2.25rem)", fontWeight: "900" }} />
           <Field label="Intro Text">
             <textarea
               value={(data.introText as string) || ""}
@@ -1213,14 +1117,8 @@ function SectionFields({
       return (
         <div className="space-y-3">
           <Field label="Heading">
-            <input
-              type="text"
-              value={(data.heading as string) || ""}
-              onChange={(e) => updateData("heading", e.target.value)}
-              className="input-sm"
-            />
+            <RichTextEditor content={(data.heading as string) || ""} onChange={(html) => updateData("heading", html)} siteStyles={siteStyles} />
           </Field>
-          <TextStyleEditor label="Heading Style" value={(data.headingStyle as TextStyleConfig) || {}} onChange={(s) => updateData("headingStyle", s)} defaults={{ fontSize: "clamp(1.875rem, 4vw, 2.25rem)", fontWeight: "900" }} />
           <Field label="Disclaimer">
             <input
               type="text"
@@ -1257,14 +1155,8 @@ function SectionFields({
       return (
         <div className="space-y-3">
           <Field label="Heading">
-            <input
-              type="text"
-              value={(data.heading as string) || ""}
-              onChange={(e) => updateData("heading", e.target.value)}
-              className="input-sm"
-            />
+            <RichTextEditor content={(data.heading as string) || ""} onChange={(html) => updateData("heading", html)} siteStyles={siteStyles} />
           </Field>
-          <TextStyleEditor label="Heading Style" value={(data.headingStyle as TextStyleConfig) || {}} onChange={(s) => updateData("headingStyle", s)} defaults={{ fontSize: "clamp(1.875rem, 4vw, 2.25rem)", fontWeight: "900" }} />
           <Field label="Intro Text">
             <textarea
               value={(data.introText as string) || ""}
@@ -1579,54 +1471,31 @@ function HeroCarouselEditor({
         </summary>
         <div className="p-3 space-y-3 border-t border-gray-100">
           <Field label="Label (above title)">
-            <input
-              type="text"
-              value={(overlay.label as string) || "Next Event"}
-              onChange={(e) => updateOverlay("label", e.target.value)}
-              className="input-sm"
-              placeholder="e.g. Next Event"
+            <RichTextEditor
+              content={(overlay.label as string) || ""}
+              onChange={(html) => updateOverlay("label", html)}
+              siteStyles={siteStyles}
             />
           </Field>
-          <TextStyleEditor
-            label="Label Style"
-            value={(overlay.labelStyle as TextStyleConfig) || {}}
-            onChange={(s) => updateOverlay("labelStyle", s)}
-            defaults={{ fontSize: "text-sm md:text-base", fontWeight: "600", fontFamily: "Gothic A1" }}
-          />
           <Field label="Main Text">
-            <input
-              type="text"
-              value={(overlay.eventName as string) || ""}
-              onChange={(e) => updateOverlay("eventName", e.target.value)}
-              className="input-sm"
+            <RichTextEditor
+              content={(overlay.eventName as string) || ""}
+              onChange={(html) => updateOverlay("eventName", html)}
+              siteStyles={siteStyles}
             />
           </Field>
-          <TextStyleEditor
-            label="Main Text Style"
-            value={(overlay.eventNameStyle as TextStyleConfig) || {}}
-            onChange={(s) => updateOverlay("eventNameStyle", s)}
-            defaults={{ fontSize: "clamp(2.5rem, 6vw, 5rem)", fontWeight: "700", fontFamily: "EB Garamond" }}
-          />
           <Field label="Tagline">
-            <textarea
-              value={(overlay.tagline as string) || ""}
-              onChange={(e) => updateOverlay("tagline", e.target.value)}
-              className="input-sm"
-              rows={2}
+            <RichTextEditor
+              content={(overlay.tagline as string) || ""}
+              onChange={(html) => updateOverlay("tagline", html)}
+              siteStyles={siteStyles}
             />
           </Field>
-          <TextStyleEditor
-            label="Tagline Style"
-            value={(overlay.taglineStyle as TextStyleConfig) || {}}
-            onChange={(s) => updateOverlay("taglineStyle", s)}
-            defaults={{ fontSize: "clamp(1.25rem, 2.5vw, 1.875rem)", fontWeight: "700" }}
-          />
           <Field label="Location">
-            <input
-              type="text"
-              value={(overlay.location as string) || ""}
-              onChange={(e) => updateOverlay("location", e.target.value)}
-              className="input-sm"
+            <RichTextEditor
+              content={(overlay.location as string) || ""}
+              onChange={(html) => updateOverlay("location", html)}
+              siteStyles={siteStyles}
             />
           </Field>
           <Field label="Location URL (Google Maps)">
@@ -1638,27 +1507,13 @@ function HeroCarouselEditor({
               placeholder="https://www.google.com/maps/..."
             />
           </Field>
-          <TextStyleEditor
-            label="Location Style"
-            value={(overlay.locationStyle as TextStyleConfig) || {}}
-            onChange={(s) => updateOverlay("locationStyle", s)}
-            defaults={{ fontSize: "text-base md:text-xl", fontWeight: "600" }}
-          />
           <Field label="Dates">
-            <input
-              type="text"
-              value={(overlay.dates as string) || ""}
-              onChange={(e) => updateOverlay("dates", e.target.value)}
-              className="input-sm"
-              placeholder="e.g. August 20th - 24th, 2026"
+            <RichTextEditor
+              content={(overlay.dates as string) || ""}
+              onChange={(html) => updateOverlay("dates", html)}
+              siteStyles={siteStyles}
             />
           </Field>
-          <TextStyleEditor
-            label="Dates Style"
-            value={(overlay.datesStyle as TextStyleConfig) || {}}
-            onChange={(s) => updateOverlay("datesStyle", s)}
-            defaults={{ fontSize: "text-base md:text-xl", fontWeight: "600" }}
-          />
         </div>
       </details>
 
@@ -1837,9 +1692,11 @@ function TextBlockEditor({
 function EventCardsEditor({
   data,
   updateData,
+  siteStyles,
 }: {
   data: Record<string, unknown>;
   updateData: (key: string, value: unknown) => void;
+  siteStyles: SiteStyles;
 }) {
   const heading = (data.heading as Record<string, unknown>) || {};
   const events = (data.events as Array<Record<string, unknown>>) || [];
@@ -1853,23 +1710,11 @@ function EventCardsEditor({
   return (
     <div className="space-y-3">
       <Field label="Heading Title">
-        <input
-          type="text"
-          value={(heading.title as string) || ""}
-          onChange={(e) => updateData("heading", { ...heading, title: e.target.value })}
-          className="input-sm"
-        />
+        <RichTextEditor content={(heading.title as string) || ""} onChange={(html) => updateData("heading", { ...heading, title: html })} siteStyles={siteStyles} />
       </Field>
-      <TextStyleEditor label="Heading Title Style" value={(data.headingTitleStyle as TextStyleConfig) || {}} onChange={(s) => updateData("headingTitleStyle", s)} defaults={{ fontSize: "clamp(1.875rem, 4vw, 2.25rem)", fontWeight: "900", fontFamily: "Gothic A1" }} />
       <Field label="Heading Subtitle">
-        <input
-          type="text"
-          value={(heading.subtitle as string) || ""}
-          onChange={(e) => updateData("heading", { ...heading, subtitle: e.target.value })}
-          className="input-sm"
-        />
+        <RichTextEditor content={(heading.subtitle as string) || ""} onChange={(html) => updateData("heading", { ...heading, subtitle: html })} siteStyles={siteStyles} />
       </Field>
-      <TextStyleEditor label="Heading Subtitle Style" value={(data.headingSubtitleStyle as TextStyleConfig) || {}} onChange={(s) => updateData("headingSubtitleStyle", s)} defaults={{ fontSize: "16px", fontWeight: "400" }} />
 
       {/* Layout controls */}
       <Field label="Columns">
@@ -2016,23 +1861,11 @@ function FeatureGridEditor({
   return (
     <div className="space-y-3">
       <Field label="Heading Title">
-        <input
-          type="text"
-          value={(heading.title as string) || ""}
-          onChange={(e) => updateData("heading", { ...heading, title: e.target.value })}
-          className="input-sm"
-        />
+        <RichTextEditor content={(heading.title as string) || ""} onChange={(html) => updateData("heading", { ...heading, title: html })} siteStyles={siteStyles} />
       </Field>
-      <TextStyleEditor label="Heading Title Style" value={(data.headingTitleStyle as TextStyleConfig) || {}} onChange={(s) => updateData("headingTitleStyle", s)} defaults={{ fontSize: "clamp(1.875rem, 4vw, 2.25rem)", fontWeight: "900", fontFamily: "Gothic A1" }} />
       <Field label="Heading Subtitle">
-        <input
-          type="text"
-          value={(heading.subtitle as string) || ""}
-          onChange={(e) => updateData("heading", { ...heading, subtitle: e.target.value })}
-          className="input-sm"
-        />
+        <RichTextEditor content={(heading.subtitle as string) || ""} onChange={(html) => updateData("heading", { ...heading, subtitle: html })} siteStyles={siteStyles} />
       </Field>
-      <TextStyleEditor label="Heading Subtitle Style" value={(data.headingSubtitleStyle as TextStyleConfig) || {}} onChange={(s) => updateData("headingSubtitleStyle", s)} defaults={{ fontSize: "16px", fontWeight: "400" }} />
       <label className="flex items-center gap-2 text-sm">
         <input
           type="checkbox"
@@ -2185,23 +2018,11 @@ function ColumnCardsEditor({
   return (
     <div className="space-y-3">
       <Field label="Heading">
-        <input
-          type="text"
-          value={(data.heading as string) || ""}
-          onChange={(e) => updateData("heading", e.target.value)}
-          className="input-sm"
-        />
+        <RichTextEditor content={(data.heading as string) || ""} onChange={(html) => updateData("heading", html)} siteStyles={siteStyles} />
       </Field>
-      <TextStyleEditor label="Heading Style" value={(data.headingStyle as TextStyleConfig) || {}} onChange={(s) => updateData("headingStyle", s)} defaults={{ fontSize: "clamp(1.875rem, 4vw, 2.25rem)", fontWeight: "900", fontFamily: "Gothic A1" }} />
       <Field label="Heading Subtitle">
-        <input
-          type="text"
-          value={(data.headingSubtitle as string) || ""}
-          onChange={(e) => updateData("headingSubtitle", e.target.value)}
-          className="input-sm"
-        />
+        <RichTextEditor content={(data.headingSubtitle as string) || ""} onChange={(html) => updateData("headingSubtitle", html)} siteStyles={siteStyles} />
       </Field>
-      <TextStyleEditor label="Subtitle Style" value={(data.headingSubtitleStyle as TextStyleConfig) || {}} onChange={(s) => updateData("headingSubtitleStyle", s)} defaults={{ fontSize: "16px", fontWeight: "400" }} />
       <Field label="Columns">
         <select
           value={String(data.columns || 2)}

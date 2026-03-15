@@ -43,9 +43,7 @@ export default function ContactFormSection({ data, settings }: Props) {
           </div>
         )}
         {d.formHeading && (
-          <h3 className="font-display font-bold text-2xl text-charcoal mb-6 text-center" style={formHeadingStyle ? textStyleConfigToCSS(formHeadingStyle) : undefined}>
-            {d.formHeading}
-          </h3>
+          <h3 className="font-display font-bold text-2xl text-charcoal mb-6 text-center" style={formHeadingStyle ? textStyleConfigToCSS(formHeadingStyle) : undefined} dangerouslySetInnerHTML={{ __html: d.formHeading || "" }} />
         )}
         <form onSubmit={handleSubmit} className="space-y-4 max-w-xl mx-auto">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

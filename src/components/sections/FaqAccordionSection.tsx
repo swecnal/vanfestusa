@@ -51,9 +51,7 @@ export default function FaqAccordionSection({ data, settings, siteStyles = EMPTY
     >
       <div className={`mx-auto ${settings.maxWidth || "max-w-4xl"}`}>
         {d.heading && (
-          <h2 className="font-display font-black text-3xl md:text-4xl text-charcoal mb-8 text-center" style={headingStyle ? textStyleConfigToCSS(headingStyle) : undefined}>
-            {d.heading}
-          </h2>
+          <h2 className="font-display font-black text-3xl md:text-4xl text-charcoal mb-8 text-center" style={headingStyle ? textStyleConfigToCSS(headingStyle) : undefined} dangerouslySetInnerHTML={{ __html: d.heading || "" }} />
         )}
         {d.showExpandAll && (
           <div className="flex justify-end mb-4">

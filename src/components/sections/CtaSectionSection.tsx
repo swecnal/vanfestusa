@@ -55,18 +55,16 @@ export default function CtaSectionSection({ data, settings, siteStyles = EMPTY_S
             isLight ? "text-white" : "text-charcoal"
           }`}
           style={titleStyle ? textStyleConfigToCSS(titleStyle) : undefined}
-        >
-          {d.title}
-        </h2>
+          dangerouslySetInnerHTML={{ __html: d.title || "" }}
+        />
         {d.subtitle && (
           <p
             className={`text-lg mb-8 ${
               isLight ? "text-white/70" : "text-charcoal/60"
             }`}
             style={subtitleStyle ? textStyleConfigToCSS(subtitleStyle) : undefined}
-          >
-            {d.subtitle}
-          </p>
+            dangerouslySetInnerHTML={{ __html: d.subtitle || "" }}
+          />
         )}
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           {d.buttons.map((btn, i) => {

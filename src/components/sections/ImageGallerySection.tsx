@@ -30,9 +30,7 @@ export default function ImageGallerySection({ data, settings }: Props) {
     <section style={sectionSpacingStyles(settings)} className={`px-4 bg-white ${settings.customClasses || ""}`}>
       <div className={`mx-auto ${settings.maxWidth || "max-w-6xl"}`}>
         {d.heading && (
-          <h2 className="font-display font-black text-3xl text-charcoal mb-8 text-center" style={headingStyle ? textStyleConfigToCSS(headingStyle) : undefined}>
-            {d.heading}
-          </h2>
+          <h2 className="font-display font-black text-3xl text-charcoal mb-8 text-center" style={headingStyle ? textStyleConfigToCSS(headingStyle) : undefined} dangerouslySetInnerHTML={{ __html: d.heading || "" }} />
         )}
         <div className={`${colClass} gap-4`}>
           {d.images.map((img, i) => (

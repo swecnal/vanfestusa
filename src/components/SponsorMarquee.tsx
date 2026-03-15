@@ -38,12 +38,8 @@ export default function SponsorMarquee({
   return (
     <section className="py-16 px-4 bg-sand">
       <div className="mx-auto max-w-6xl text-center mb-10">
-        <h2 className="font-display font-black text-3xl sm:text-4xl text-charcoal mb-3" style={headingStyle}>
-          {heading}
-        </h2>
-        <p className="text-charcoal/60 text-lg" style={subheadingStyle}>
-          {subheading}
-        </p>
+        <h2 className="font-display font-black text-3xl sm:text-4xl text-charcoal mb-3" style={headingStyle} dangerouslySetInnerHTML={{ __html: heading || "" }} />
+        <p className="text-charcoal/60 text-lg" style={subheadingStyle} dangerouslySetInnerHTML={{ __html: subheading || "" }} />
       </div>
 
       {/* Marquee container */}

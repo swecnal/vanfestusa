@@ -16,18 +16,16 @@ export default function SectionHeading({ title, subtitle, light, titleStyle, sub
           light ? "text-white" : "text-charcoal"
         }`}
         style={titleStyle}
-      >
-        {title}
-      </h2>
+        dangerouslySetInnerHTML={{ __html: title || "" }}
+      />
       {subtitle && (
         <p
           className={`text-lg max-w-2xl mx-auto ${
             light ? "text-white/70" : "text-charcoal/60"
           }`}
           style={subtitleStyle}
-        >
-          {subtitle}
-        </p>
+          dangerouslySetInnerHTML={{ __html: subtitle || "" }}
+        />
       )}
       <div className="mt-4 mx-auto w-20 h-1 bg-teal rounded-full" />
     </div>
