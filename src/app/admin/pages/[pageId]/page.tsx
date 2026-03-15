@@ -815,39 +815,7 @@ export default function PageEditorPage() {
           </div>
         </div>
 
-        {/* Mobile preview: iframe in phone frame */}
-        {previewMode === "mobile" && (
-          <div className="bg-gray-100 min-h-full flex flex-col items-center py-4">
-            {/* Phone frame */}
-            <div
-              className="bg-gray-900 rounded-[3rem] p-3 shadow-2xl"
-              style={{ width: 419 }}
-            >
-              {/* Notch */}
-              <div className="flex justify-center mb-1">
-                <div className="w-28 h-6 bg-gray-900 rounded-b-2xl" />
-              </div>
-              <div className="rounded-[2.2rem] overflow-hidden bg-white" style={{ width: 393, height: 750 }}>
-                <iframe
-                  key={iframeKey}
-                  src={`/preview/${pageId}`}
-                  className="w-full h-full border-0"
-                  title="Mobile preview"
-                />
-              </div>
-              {/* Home indicator */}
-              <div className="flex justify-center mt-2">
-                <div className="w-32 h-1 bg-gray-600 rounded-full" />
-              </div>
-            </div>
-            <p className="text-[10px] text-gray-400 mt-3">
-              Save changes to update preview
-            </p>
-          </div>
-        )}
-
-        {/* Desktop preview: live editable sections */}
-        {previewMode === "desktop" && (
+        {/* Live editable sections (always shown) */}
         <div
           onDragEnter={(e) => {
             if (e.dataTransfer.types.includes("application/section-type")) {
@@ -940,8 +908,31 @@ export default function PageEditorPage() {
             </div>
           )}
         </div>
-        )}
       </div>
+
+      {/* Floating mobile phone preview */}
+      {previewMode === "mobile" && (
+        <div className="fixed bottom-4 left-4 z-50 flex flex-col items-center">
+          <div
+            className="bg-gray-900 rounded-[1.8rem] p-2 shadow-2xl"
+            style={{ width: 232 }}
+          >
+            <div className="rounded-[1.4rem] overflow-hidden bg-white" style={{ width: 216, height: 468 }}>
+              <iframe
+                key={iframeKey}
+                src={`/preview/${pageId}`}
+                className="border-0"
+                style={{ width: 393, height: 852, transform: "scale(0.549)", transformOrigin: "top left" }}
+                title="Mobile preview"
+              />
+            </div>
+            <div className="flex justify-center mt-1">
+              <div className="w-16 h-0.5 bg-gray-600 rounded-full" />
+            </div>
+          </div>
+          <p className="text-[9px] text-gray-400 mt-1">Save to refresh</p>
+        </div>
+      )}
 
       {/* Editor panel — floating (overlay) or static (side column) */}
       {selectedSection && (
