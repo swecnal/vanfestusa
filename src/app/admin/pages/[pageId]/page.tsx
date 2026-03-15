@@ -31,6 +31,7 @@ import { SECTION_DEFAULTS } from "@/lib/section-defaults";
 import { type SiteStyles, EMPTY_SITE_STYLES } from "@/lib/styles";
 import SectionRenderer from "@/components/sections/SectionRenderer";
 import SectionEditorPanel from "@/components/admin/SectionEditorPanel";
+import ConfirmModal from "@/components/admin/ConfirmModal";
 
 interface PageData {
   id: string;
@@ -313,6 +314,23 @@ export default function PageEditorPage() {
   const [editingData, setEditingData] = useState<Record<string, unknown> | null>(null);
   const [editingSettings, setEditingSettings] = useState<Record<string, unknown> | null>(null);
   const dragCounter = useRef(0);
+  // Dirty tracking for unsaved changes
+  const [isDirty, setIsDirty] = useState(false);
+  // Confirm modal state
+  const [confirmModal, setConfirmModal] = useState<{
+    open: boolean;
+    title: string;
+    message: string;
+    confirmLabel?: string;
+    cancelLabel?: string;
+    destructive?: boolean;
+    onConfirm: () => void;
+    onCancel?: () => void;
+    altLabel?: string;
+    onAlt?: () => void;
+  }>({ open: false, title: "", message: "", onConfirm: () => {} });
+  // Pending selection when dirty
+  const pendingSelectRef = useRef<string | null | undefined>(undefined);
 
   const { registerHandler, unregisterHandler } = usePageEditor();
   const [editPaneMode, setEditPaneMode] = useState<"floating" | "static">("floating");
@@ -404,21 +422,26 @@ export default function PageEditorPage() {
     });
   };
 
-  const handleDeleteSection = async (sectionId: string) => {
-    if (!confirm("Delete this section?")) return;
-
-    setSections((prev) => prev.filter((s) => s.id !== sectionId));
-    if (selectedSectionId === sectionId) {
-      setSelectedSectionId(null);
-      setEditingData(null);
-      setEditingSettings(null);
-    }
-
-    await fetch(`/api/pages/${pageId}/sections/${sectionId}`, {
-      method: "DELETE",
+  const handleDeleteSection = (sectionId: string) => {
+    setConfirmModal({
+      open: true,
+      title: "Delete Section",
+      message: "Are you sure you want to delete this section? This cannot be undone.",
+      confirmLabel: "Delete",
+      destructive: true,
+      onConfirm: async () => {
+        setConfirmModal((prev) => ({ ...prev, open: false }));
+        setSections((prev) => prev.filter((s) => s.id !== sectionId));
+        if (selectedSectionId === sectionId) {
+          setSelectedSectionId(null);
+          setEditingData(null);
+          setEditingSettings(null);
+          setIsDirty(false);
+        }
+        await fetch(`/api/pages/${pageId}/sections/${sectionId}`, { method: "DELETE" });
+        toast.success("Section deleted");
+      },
     });
-
-    toast.success("Section deleted");
   };
 
   const handleAddSectionAtIndex = useCallback(async (type: SectionType, index?: number) => {
@@ -477,6 +500,7 @@ export default function PageEditorPage() {
     if (res.ok) {
       const { section } = await res.json();
       setSections((prev) => prev.map((s) => (s.id === section.id ? section : s)));
+      setIsDirty(false);
       toast.success("Saved");
     } else {
       toast.error("Failed to save");
@@ -488,6 +512,7 @@ export default function PageEditorPage() {
   const handleEditorChange = useCallback((data: Record<string, unknown>, settings: Record<string, unknown>) => {
     setEditingData(data);
     setEditingSettings(settings);
+    setIsDirty(true);
   }, []);
 
   // Accordion groups on the page (for "move into accordion" feature)
@@ -496,53 +521,60 @@ export default function PageEditorPage() {
     .map((s) => ({ id: s.id, title: (s.data.title as string) || "Accordion Group" }));
 
   // Move a section into an accordion group
-  const handleMoveToAccordion = async (sectionId: string, accordionId: string) => {
+  const handleMoveToAccordion = (sectionId: string, accordionId: string) => {
     const section = sections.find((s) => s.id === sectionId);
     const accordion = sections.find((s) => s.id === accordionId);
     if (!section || !accordion) return;
 
     const label = SECTION_TYPE_LABELS[section.section_type as SectionType] || section.section_type;
-    if (!confirm(`Move "${label}" into "${(accordion.data.title as string) || "Accordion Group"}"?`)) return;
+    const accTitle = (accordion.data.title as string) || "Accordion Group";
 
-    // Add section as accordion child
-    const accChildren = (accordion.data.children as Array<Record<string, unknown>>) || [];
-    const newChild = {
-      title: (section.data.title as string) || (section.data.heading as string) || label,
-      body: "",
-      sectionType: section.section_type,
-      sectionData: section.data,
-      sectionSettings: section.settings,
-    };
-    const updatedAccordionData = { ...accordion.data, children: [...accChildren, newChild] };
+    setConfirmModal({
+      open: true,
+      title: "Move to Accordion",
+      message: `Move "${label}" into "${accTitle}"?`,
+      confirmLabel: "Move",
+      onConfirm: async () => {
+        setConfirmModal((prev) => ({ ...prev, open: false }));
 
-    // Save updated accordion
-    await fetch(`/api/pages/${pageId}/sections/${accordionId}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ data: updatedAccordionData }),
+        const accChildren = (accordion.data.children as Array<Record<string, unknown>>) || [];
+        const newChild = {
+          title: (section.data.title as string) || (section.data.heading as string) || label,
+          body: "",
+          sectionType: section.section_type,
+          sectionData: section.data,
+          sectionSettings: section.settings,
+        };
+        const updatedAccordionData = { ...accordion.data, children: [...accChildren, newChild] };
+
+        await fetch(`/api/pages/${pageId}/sections/${accordionId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ data: updatedAccordionData }),
+        });
+
+        await fetch(`/api/pages/${pageId}/sections/${sectionId}`, { method: "DELETE" });
+
+        setSections((prev) =>
+          prev
+            .map((s) => (s.id === accordionId ? { ...s, data: updatedAccordionData } : s))
+            .filter((s) => s.id !== sectionId)
+        );
+
+        if (selectedSectionId === sectionId) {
+          setSelectedSectionId(accordionId);
+          setEditingData(null);
+          setEditingSettings(null);
+          setIsDirty(false);
+        }
+
+        toast.success(`Moved ${label} into accordion`);
+      },
     });
-
-    // Delete the original section
-    await fetch(`/api/pages/${pageId}/sections/${sectionId}`, { method: "DELETE" });
-
-    // Update local state
-    setSections((prev) =>
-      prev
-        .map((s) => (s.id === accordionId ? { ...s, data: updatedAccordionData } : s))
-        .filter((s) => s.id !== sectionId)
-    );
-
-    if (selectedSectionId === sectionId) {
-      setSelectedSectionId(accordionId);
-      setEditingData(null);
-      setEditingSettings(null);
-    }
-
-    toast.success(`Moved ${label} into accordion`);
   };
 
   // Ungroup: extract an accordion child back out as a standalone section
-  const handleUngroupChild = async (accordionId: string, childIndex: number) => {
+  const handleUngroupChild = (accordionId: string, childIndex: number) => {
     const accordion = sections.find((s) => s.id === accordionId);
     if (!accordion) return;
     const accChildren = (accordion.data.children as Array<Record<string, unknown>>) || [];
@@ -550,52 +582,59 @@ export default function PageEditorPage() {
     if (!child || !child.sectionType) return;
 
     const label = SECTION_TYPE_LABELS[child.sectionType as SectionType] || (child.sectionType as string);
-    if (!confirm(`Extract "${child.title || label}" out of the accordion as a standalone section?`)) return;
 
-    // Create new standalone section
-    const res = await fetch(`/api/pages/${pageId}/sections`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        section_type: child.sectionType,
-        data: child.sectionData || {},
-        settings: child.sectionSettings || {},
-      }),
+    setConfirmModal({
+      open: true,
+      title: "Ungroup Section",
+      message: `Extract "${child.title || label}" out of the accordion as a standalone section?`,
+      confirmLabel: "Extract",
+      onConfirm: async () => {
+        setConfirmModal((prev) => ({ ...prev, open: false }));
+
+        const res = await fetch(`/api/pages/${pageId}/sections`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            section_type: child.sectionType,
+            data: child.sectionData || {},
+            settings: child.sectionSettings || {},
+          }),
+        });
+
+        if (!res.ok) {
+          toast.error("Failed to ungroup");
+          return;
+        }
+
+        const { section: newSection } = await res.json();
+
+        const updatedChildren = accChildren.filter((_, idx) => idx !== childIndex);
+        const updatedAccordionData = { ...accordion.data, children: updatedChildren };
+
+        await fetch(`/api/pages/${pageId}/sections/${accordionId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ data: updatedAccordionData }),
+        });
+
+        setSections((prev) => {
+          const accIdx = prev.findIndex((s) => s.id === accordionId);
+          const updated = prev.map((s) => (s.id === accordionId ? { ...s, data: updatedAccordionData } : s));
+          updated.splice(accIdx + 1, 0, newSection);
+          return updated;
+        });
+
+        setSelectedSectionId(newSection.id);
+        setEditingData(null);
+        setEditingSettings(null);
+        setIsDirty(false);
+        toast.success(`Ungrouped ${label}`);
+      },
     });
-
-    if (!res.ok) {
-      toast.error("Failed to ungroup");
-      return;
-    }
-
-    const { section: newSection } = await res.json();
-
-    // Remove child from accordion
-    const updatedChildren = accChildren.filter((_, idx) => idx !== childIndex);
-    const updatedAccordionData = { ...accordion.data, children: updatedChildren };
-
-    await fetch(`/api/pages/${pageId}/sections/${accordionId}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ data: updatedAccordionData }),
-    });
-
-    // Update local state: add new section after accordion, update accordion data
-    setSections((prev) => {
-      const accIdx = prev.findIndex((s) => s.id === accordionId);
-      const updated = prev.map((s) => (s.id === accordionId ? { ...s, data: updatedAccordionData } : s));
-      updated.splice(accIdx + 1, 0, newSection);
-      return updated;
-    });
-
-    setSelectedSectionId(newSection.id);
-    setEditingData(null);
-    setEditingSettings(null);
-    toast.success(`Ungrouped ${label}`);
   };
 
-  // Click-to-toggle: clicking the same section deselects it, clicking a different one switches
-  const handleSelectSection = useCallback((id: string | null) => {
+  // Actually switch to a new section (no guard)
+  const doSelectSection = useCallback((id: string | null) => {
     if (id !== null && id === selectedSectionId) {
       setSelectedSectionId(null);
     } else {
@@ -603,7 +642,38 @@ export default function PageEditorPage() {
     }
     setEditingData(null);
     setEditingSettings(null);
+    setIsDirty(false);
   }, [selectedSectionId]);
+
+  // Click-to-toggle with unsaved changes guard
+  const handleSelectSection = useCallback((id: string | null) => {
+    // If switching away from a dirty section, prompt
+    if (isDirty && selectedSectionId && id !== selectedSectionId) {
+      pendingSelectRef.current = id;
+      setConfirmModal({
+        open: true,
+        title: "Unsaved Changes",
+        message: "You have unsaved changes. Would you like to save before switching?",
+        confirmLabel: "Save",
+        altLabel: "Don\u2019t Save",
+        onConfirm: () => {
+          setConfirmModal((prev) => ({ ...prev, open: false }));
+          // Save, then switch
+          if (editingData) {
+            handleSaveSection(selectedSectionId, editingData, editingSettings || undefined).then(() => {
+              doSelectSection(pendingSelectRef.current ?? null);
+            });
+          }
+        },
+        onAlt: () => {
+          setConfirmModal((prev) => ({ ...prev, open: false }));
+          doSelectSection(pendingSelectRef.current ?? null);
+        },
+      });
+      return;
+    }
+    doSelectSection(id);
+  }, [selectedSectionId, isDirty, editingData, editingSettings, doSelectSection, handleSaveSection]);
 
   if (loading) {
     return <div className="text-center text-gray-400 py-12">Loading...</div>;
@@ -770,6 +840,20 @@ export default function PageEditorPage() {
           </div>
         </div>
       )}
+
+      {/* Confirm modal */}
+      <ConfirmModal
+        open={confirmModal.open}
+        title={confirmModal.title}
+        message={confirmModal.message}
+        confirmLabel={confirmModal.confirmLabel}
+        cancelLabel={confirmModal.cancelLabel}
+        destructive={confirmModal.destructive}
+        onConfirm={confirmModal.onConfirm}
+        onCancel={confirmModal.onCancel || (() => setConfirmModal((prev) => ({ ...prev, open: false })))}
+        altLabel={confirmModal.altLabel}
+        onAlt={confirmModal.onAlt}
+      />
     </div>
   );
 }

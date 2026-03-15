@@ -109,6 +109,7 @@ export default function SectionEditorPanel({ section, onSave, saving, onChange, 
                   onClick={() => {
                     const vals = SPACING_PRESETS.padding[preset];
                     const next = { ...settings, paddingTop: vals.top, paddingBottom: vals.bottom, paddingLeft: vals.left, paddingRight: vals.right, paddingPreset: preset, paddingY: undefined };
+                    setSettings(next);
                     onChange?.(data, next);
                   }}
                   className={`flex-1 text-[10px] py-1 rounded border transition-colors capitalize ${
@@ -132,6 +133,7 @@ export default function SectionEditorPanel({ section, onSave, saving, onChange, 
                       value={(settings[key] as string) || ""}
                       onChange={(e) => {
                         const next = { ...settings, [key]: e.target.value || undefined, paddingPreset: null, paddingY: undefined };
+                        setSettings(next);
                         onChange?.(data, next);
                       }}
                       className="input-sm"
@@ -153,6 +155,7 @@ export default function SectionEditorPanel({ section, onSave, saving, onChange, 
                   onClick={() => {
                     const vals = SPACING_PRESETS.margin[preset];
                     const next = { ...settings, marginTop: vals.top, marginBottom: vals.bottom, marginLeft: vals.left, marginRight: vals.right, marginPreset: preset };
+                    setSettings(next);
                     onChange?.(data, next);
                   }}
                   className={`flex-1 text-[10px] py-1 rounded border transition-colors capitalize ${
@@ -176,6 +179,7 @@ export default function SectionEditorPanel({ section, onSave, saving, onChange, 
                       value={(settings[key] as string) || ""}
                       onChange={(e) => {
                         const next = { ...settings, [key]: e.target.value || undefined, marginPreset: null };
+                        setSettings(next);
                         onChange?.(data, next);
                       }}
                       className="input-sm"
@@ -868,6 +872,7 @@ function SectionFields({
                 ["dancing", "Dancing People"],
                 ["campfireWithPeople", "Campfire w/ People"],
                 ["campfireSolo", "Solo Campfire"],
+                ["convertedVans", "Converted Vans & Buses"],
                 ["peopleMeandering", "People Walking"],
                 ["walkingPeople", "Walking Across Scene"],
               ] as const).map(([key, label]) => (

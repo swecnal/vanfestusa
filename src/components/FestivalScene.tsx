@@ -22,7 +22,7 @@ const SKIN_TONES = ["#D4A574", "#C68E5B", "#E8C39E", "#A0785A", "#F0D5B8"];
 const SHIRT_COLORS = ["#1CA288", "#6366F1", "#DC2626", "#F59E0B", "#2563EB", "#EC4899", "#059669", "#8B5CF6"];
 
 // ─── Element types ───
-type FestivalElementType = "tent" | "vendorBooth" | "stage" | "dancing" | "campfireWithPeople" | "campfireSolo" | "peopleMeandering";
+type FestivalElementType = "tent" | "vendorBooth" | "stage" | "dancing" | "campfireWithPeople" | "campfireSolo" | "peopleMeandering" | "convertedVans";
 
 interface PlacedElement {
   type: FestivalElementType;
@@ -38,6 +38,7 @@ const ELEMENT_WIDTHS: Record<FestivalElementType, number> = {
   campfireWithPeople: 85,
   campfireSolo: 40,
   peopleMeandering: 55,
+  convertedVans: 75,
 };
 
 // ─── SVG element renderers ───
@@ -249,6 +250,56 @@ function renderPeopleMeandering(rng: () => number) {
   );
 }
 
+function renderConvertedVans(rng: () => number) {
+  const bodyColor = pickRandom(TENT_COLORS, rng);
+  const bodyColor2 = pickRandom(TENT_COLORS, rng);
+  const isVW = rng() > 0.5;
+  return (
+    <svg width={75} height={58} viewBox="0 0 75 58" fill="none">
+      {/* Van 1 - smaller, parked */}
+      {isVW ? (
+        <>
+          {/* VW-style van */}
+          <path d="M5 30 L5 48 L42 48 L42 36 L38 28 L35 26 L12 26 L8 30 Z" fill={bodyColor} stroke="#555" strokeWidth={1.5} strokeLinejoin="round" />
+          <path d="M36 28 L39 32 L42 38 L42 42 L34 42 L34 28 Z" fill="#F5F0E8" stroke="#555" strokeWidth={1} fillOpacity={0.8} />
+          <rect x={18} y={30} width={12} height={8} rx={2} fill="#F5F0E8" stroke="#555" strokeWidth={0.8} fillOpacity={0.7} />
+          {/* Roof rack */}
+          <line x1={10} y1={26} x2={32} y2={26} stroke="#888" strokeWidth={1.5} />
+          <rect x={14} y={22} width={16} height={4} rx={1} fill="#78716C" fillOpacity={0.5} />
+          {/* Wheels */}
+          <circle cx={14} cy={50} r={5} fill="#2d2d2d" stroke="#555" strokeWidth={1} />
+          <circle cx={14} cy={50} r={2.5} fill="#555" />
+          <circle cx={36} cy={50} r={5} fill="#2d2d2d" stroke="#555" strokeWidth={1} />
+          <circle cx={36} cy={50} r={2.5} fill="#555" />
+        </>
+      ) : (
+        <>
+          {/* Sprinter-style van */}
+          <path d="M3 24 L3 48 L45 48 L45 34 L42 28 L38 24 Z" fill={bodyColor} stroke="#555" strokeWidth={1.5} strokeLinejoin="round" />
+          <path d="M39 26 L43 30 L45 36 L45 40 L37 40 Z" fill="#F5F0E8" stroke="#555" strokeWidth={1} fillOpacity={0.8} />
+          <rect x={24} y={28} width={10} height={8} rx={2} fill="#F5F0E8" stroke="#555" strokeWidth={0.8} fillOpacity={0.7} />
+          {/* Solar panel */}
+          <rect x={10} y={20} width={22} height={4} rx={1} fill="#1CA288" fillOpacity={0.5} stroke="#1CA288" strokeWidth={0.5} />
+          {/* Wheels */}
+          <circle cx={12} cy={50} r={5} fill="#2d2d2d" stroke="#555" strokeWidth={1} />
+          <circle cx={12} cy={50} r={2.5} fill="#555" />
+          <circle cx={38} cy={50} r={5} fill="#2d2d2d" stroke="#555" strokeWidth={1} />
+          <circle cx={38} cy={50} r={2.5} fill="#555" />
+        </>
+      )}
+      {/* Van 2 - smaller behind */}
+      <g opacity={0.7}>
+        <path d="M48 32 L48 48 L72 48 L72 38 L69 34 L66 32 Z" fill={bodyColor2} stroke="#555" strokeWidth={1} strokeLinejoin="round" />
+        <path d="M67 33 L70 36 L72 39 L72 42 L65 42 L65 33 Z" fill="#F5F0E8" stroke="#555" strokeWidth={0.8} fillOpacity={0.7} />
+        <circle cx={54} cy={50} r={4} fill="#2d2d2d" stroke="#555" strokeWidth={0.8} />
+        <circle cx={67} cy={50} r={4} fill="#2d2d2d" stroke="#555" strokeWidth={0.8} />
+      </g>
+      {/* Ground shadow */}
+      <ellipse cx={38} cy={54} rx={34} ry={2.5} fill="#333" fillOpacity={0.06} />
+    </svg>
+  );
+}
+
 // ─── Walking figure ───
 function renderWalker(skin: string, shirt: string, facingRight: boolean) {
   const dir = facingRight ? 1 : -1;
@@ -275,6 +326,7 @@ function renderElement(type: FestivalElementType, colorSeed: number) {
     case "campfireWithPeople": return renderCampfireWithPeople(rng);
     case "campfireSolo": return renderCampfireSolo(rng);
     case "peopleMeandering": return renderPeopleMeandering(rng);
+    case "convertedVans": return renderConvertedVans(rng);
   }
 }
 
@@ -288,6 +340,7 @@ export interface FestivalElements {
   tents?: boolean;
   peopleMeandering?: boolean;
   walkingPeople?: boolean;
+  convertedVans?: boolean;
 }
 
 const ALL_ON: FestivalElements = {
@@ -296,6 +349,7 @@ const ALL_ON: FestivalElements = {
   dancing: true,
   campfireWithPeople: true,
   campfireSolo: false,
+  convertedVans: true,
   tents: true,
   peopleMeandering: true,
 };
@@ -323,6 +377,7 @@ export default function FestivalScene({
     if (elements.campfireWithPeople) types.push("campfireWithPeople");
     if (elements.campfireSolo) types.push("campfireSolo");
     if (elements.peopleMeandering) { types.push("peopleMeandering"); types.push("peopleMeandering"); }
+    if (elements.convertedVans) { types.push("convertedVans"); types.push("convertedVans"); }
 
     if (types.length === 0) return [];
 
