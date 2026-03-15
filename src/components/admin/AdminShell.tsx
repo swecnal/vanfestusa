@@ -20,7 +20,7 @@ const ELEMENT_GROUPS: { label: string; items: { type: SectionType; label: string
   { label: "Actions", items: [{ type: "contact_form", label: "Contact Form" }, { type: "cta_section", label: "CTA Section" }] },
   { label: "Cards & Grids", items: [{ type: "two_column_cards", label: "Column Cards" }, { type: "cta_cards", label: "CTA Cards" }, { type: "event_cards", label: "Event Cards" }, { type: "feature_grid", label: "Feature Grid" }] },
   { label: "Content", items: [{ type: "html_block", label: "HTML Block" }, { type: "text_block", label: "Text Block" }] },
-  { label: "Decorative", items: [{ type: "wave_divider", label: "Divider" }, { type: "vehicle_convoy", label: "Vehicle Convoy" }, { type: "vehicle_stream", label: "Vehicle Stream" }] },
+  { label: "Decorative", items: [{ type: "wave_divider", label: "Divider" }] },
   { label: "Heroes", items: [{ type: "hero_simple", label: "Hero Banner" }, { type: "hero_carousel", label: "Hero Carousel" }] },
   { label: "Media", items: [{ type: "image_carousel", label: "Image Carousel" }, { type: "image_gallery", label: "Image Gallery" }, { type: "sponsor_marquee", label: "Marquee" }, { type: "photo_strip", label: "Photo Strip" }] },
 ];
