@@ -107,7 +107,7 @@ function SortableLiveSection({
       {/* Click target overlay - captures clicks without interfering with section rendering */}
       <div
         onClick={onSelect}
-        className={`absolute inset-0 z-[15] cursor-pointer transition-all ${
+        className={`absolute inset-0 z-20 cursor-pointer transition-all ${
           isSelected
             ? "ring-2 ring-teal ring-inset shadow-lg shadow-teal/10"
             : "hover:ring-1 hover:ring-gray-400 hover:ring-inset"
@@ -115,7 +115,7 @@ function SortableLiveSection({
       />
 
       {/* Section type label — appears on hover */}
-      <div className={`absolute top-2 left-2 z-20 transition-opacity ${
+      <div className={`absolute top-2 left-2 z-30 transition-opacity ${
         isSelected ? "opacity-100" : "opacity-0 group-hover/section:opacity-100"
       }`}>
         <span className={`text-[10px] uppercase tracking-wider font-semibold px-2 py-1 rounded shadow-sm ${
@@ -127,7 +127,7 @@ function SortableLiveSection({
       </div>
 
       {/* Floating action bar */}
-      <div className={`absolute top-2 right-2 z-20 flex items-center gap-1 transition-opacity ${
+      <div className={`absolute top-2 right-2 z-30 flex items-center gap-1 transition-opacity ${
         isSelected ? "opacity-100" : "opacity-0 group-hover/section:opacity-100"
       }`}>
         <button
