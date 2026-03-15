@@ -108,7 +108,7 @@ export default function SectionRenderer({ section, siteStyles = EMPTY_SITE_STYLE
             style={{ ...bgStyles, opacity: imageOpacity }}
           />
         )}
-        {hasBg ? <div className="relative z-10">{content}</div> : content}
+        {hasBg ? <div className="relative z-[1]">{content}</div> : content}
       </div>
     );
   }

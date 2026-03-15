@@ -107,7 +107,7 @@ function SortableLiveSection({
       {/* Click target overlay - captures clicks without interfering with section rendering */}
       <div
         onClick={onSelect}
-        className={`absolute inset-0 z-10 cursor-pointer transition-all ${
+        className={`absolute inset-0 z-[15] cursor-pointer transition-all ${
           isSelected
             ? "ring-2 ring-teal ring-inset shadow-lg shadow-teal/10"
             : "hover:ring-1 hover:ring-gray-400 hover:ring-inset"
