@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { Section, SectionType, BackgroundConfig } from "@/lib/types";
 import { SECTION_TYPE_LABELS, SPACING_PRESETS } from "@/lib/types";
 import RichTextEditor from "./RichTextEditor";
@@ -13,6 +13,7 @@ import {
   type TextStyleConfig,
   EMPTY_SITE_STYLES,
   buttonStyleToCSS,
+  findButtonStyle,
 } from "@/lib/styles";
 
 interface Props {
@@ -694,31 +695,17 @@ function SectionFields({
               <summary className="px-3 py-2 text-xs font-semibold text-gray-600 cursor-pointer hover:bg-gray-50">
                 Button {i + 1}: {(btn.text as string) || "Untitled"}
               </summary>
-              <div className="p-3 space-y-3 border-t border-gray-100">
-                <Field label="Text">
-                  <input type="text" value={(btn.text as string) || ""} onChange={(e) => updateCtaButton(i, "text", e.target.value)} className="input-sm" />
-                </Field>
-                <Field label="URL">
-                  <input type="text" value={(btn.href as string) || ""} onChange={(e) => updateCtaButton(i, "href", e.target.value)} className="input-sm" />
-                </Field>
-                <Field label="Variant">
-                  <select value={(btn.variant as string) || "primary"} onChange={(e) => updateCtaButton(i, "variant", e.target.value)} className="input-sm">
-                    <option value="primary">Primary</option>
-                    <option value="secondary">Secondary</option>
-                    <option value="outline">Outline</option>
-                  </select>
-                </Field>
-                <ButtonStylePicker
-                  value={btn.styleId as string | undefined}
-                  onChange={(id) => updateCtaButton(i, "styleId", id)}
+              <div className="p-3 border-t border-gray-100">
+                <ButtonFieldEditor
+                  value={btn as ButtonFieldData}
+                  onChange={(updated) => {
+                    const next = [...ctaButtons];
+                    next[i] = { ...next[i], ...updated };
+                    updateData("buttons", next);
+                  }}
+                  onRemove={() => updateData("buttons", ctaButtons.filter((_, idx) => idx !== i))}
                   siteStyles={siteStyles}
                 />
-                <button
-                  onClick={() => updateData("buttons", ctaButtons.filter((_, idx) => idx !== i))}
-                  className="text-red-400 hover:text-red-600 text-xs font-semibold"
-                >
-                  Remove Button
-                </button>
               </div>
             </details>
           ))}
@@ -1137,28 +1124,12 @@ function SectionFields({
           </Field>
           <details className="border border-gray-200 rounded-lg" open>
             <summary className="px-3 py-2 text-xs font-semibold text-gray-500 cursor-pointer hover:bg-gray-50">Button</summary>
-            <div className="p-3 space-y-2 border-t border-gray-100">
-              <Field label="Text">
-                <input
-                  type="text"
-                  value={(data.ctaText as string) || "Become a Sponsor"}
-                  onChange={(e) => updateData("ctaText", e.target.value)}
-                  className="input-sm"
-                />
-              </Field>
-              <Field label="URL">
-                <input
-                  type="text"
-                  value={(data.ctaHref as string) || "/get-involved#sponsors"}
-                  onChange={(e) => updateData("ctaHref", e.target.value)}
-                  className="input-sm"
-                />
-              </Field>
-              <ButtonStylePicker
-                value={data.ctaStyleId as string | undefined}
-                onChange={(id) => updateData("ctaStyleId", id)}
+            <div className="p-3 border-t border-gray-100">
+              <ButtonFieldEditor
+                value={{ text: (data.ctaText as string) || "Become a Sponsor", href: (data.ctaHref as string) || "/get-involved#sponsors", styleId: (data.ctaStyleId as string) || undefined, marginTop: (data.ctaMarginTop as string) || undefined, marginBottom: (data.ctaMarginBottom as string) || undefined, customStyle: (data.ctaCustomStyle as ButtonStyle) || undefined } as ButtonFieldData}
+                onChange={(updated) => { updateData("ctaText", updated.text); updateData("ctaHref", updated.href); updateData("ctaStyleId", updated.styleId); updateData("ctaMarginTop", updated.marginTop); updateData("ctaMarginBottom", updated.marginBottom); updateData("ctaCustomStyle", updated.customStyle); }}
                 siteStyles={siteStyles}
-                label="Style"
+                showExternal={false}
               />
             </div>
           </details>
@@ -1212,47 +1183,28 @@ function SectionFields({
           {/* CTA Buttons */}
           {((data.ctaButtons as Array<Record<string, unknown>>) || []).map((btn, i) => {
             const ctaBtns = (data.ctaButtons as Array<Record<string, unknown>>) || [];
-            const updateCtaBtn = (key: string, value: unknown) => {
-              const next = [...ctaBtns];
-              next[i] = { ...next[i], [key]: value };
-              updateData("ctaButtons", next);
-            };
             return (
               <details key={i} className="border border-gray-200 rounded-lg">
                 <summary className="px-3 py-2 text-xs font-semibold text-gray-600 cursor-pointer hover:bg-gray-50">
                   Button {i + 1}: {(btn.text as string) || "Untitled"}
                 </summary>
-                <div className="p-3 space-y-3 border-t border-gray-100">
-                  <Field label="Text">
-                    <input type="text" value={(btn.text as string) || ""} onChange={(e) => updateCtaBtn("text", e.target.value)} className="input-sm" />
-                  </Field>
-                  <Field label="URL">
-                    <input type="text" value={(btn.href as string) || ""} onChange={(e) => updateCtaBtn("href", e.target.value)} className="input-sm" />
-                  </Field>
-                  <Field label="Variant">
-                    <select value={(btn.variant as string) || "primary"} onChange={(e) => updateCtaBtn("variant", e.target.value)} className="input-sm">
-                      <option value="primary">Primary</option>
-                      <option value="secondary">Secondary</option>
-                      <option value="outline">Outline</option>
-                    </select>
-                  </Field>
-                  <ButtonStylePicker
-                    value={btn.styleId as string | undefined}
-                    onChange={(id) => updateCtaBtn("styleId", id)}
+                <div className="p-3 border-t border-gray-100">
+                  <ButtonFieldEditor
+                    value={btn as ButtonFieldData}
+                    onChange={(updated) => {
+                      const next = [...ctaBtns];
+                      next[i] = { ...next[i], ...updated };
+                      updateData("ctaButtons", next);
+                    }}
+                    onRemove={() => updateData("ctaButtons", ctaBtns.filter((_, idx) => idx !== i))}
                     siteStyles={siteStyles}
                   />
-                  <button
-                    onClick={() => updateData("ctaButtons", ctaBtns.filter((_, idx) => idx !== i))}
-                    className="text-red-400 hover:text-red-600 text-xs font-semibold"
-                  >
-                    Remove Button
-                  </button>
                 </div>
               </details>
             );
           })}
           <button
-            onClick={() => updateData("ctaButtons", [...((data.ctaButtons as Array<Record<string, unknown>>) || []), { text: "Button", href: "#", variant: "primary" }])}
+            onClick={() => updateData("ctaButtons", [...((data.ctaButtons as Array<Record<string, unknown>>) || []), { text: "Button", href: "#" }])}
             className="text-teal hover:text-teal-dark text-xs font-semibold"
           >
             + Add Button
@@ -1868,36 +1820,10 @@ function HeroCarouselEditor({
         <summary className="px-3 py-2 text-xs font-semibold text-gray-600 cursor-pointer hover:bg-gray-50">
           Primary Button
         </summary>
-        <div className="p-3 space-y-3 border-t border-gray-100">
-          <Field label="Button Text">
-            <input
-              type="text"
-              value={(primaryCta.text as string) || ""}
-              onChange={(e) => updatePrimaryCta("text", e.target.value)}
-              className="input-sm"
-              placeholder="Get Tickets"
-            />
-          </Field>
-          <Field label="Button URL">
-            <input
-              type="url"
-              value={(primaryCta.href as string) || ""}
-              onChange={(e) => updatePrimaryCta("href", e.target.value)}
-              className="input-sm"
-              placeholder="https://..."
-            />
-          </Field>
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={(primaryCta.external as boolean) !== false}
-              onChange={(e) => updatePrimaryCta("external", e.target.checked)}
-            />
-            Open in new tab
-          </label>
-          <ButtonStylePicker
-            value={primaryCta.styleId as string | undefined}
-            onChange={(id) => updatePrimaryCta("styleId", id)}
+        <div className="p-3 border-t border-gray-100">
+          <ButtonFieldEditor
+            value={primaryCta as ButtonFieldData}
+            onChange={(updated) => updateData("primaryCta", { ...primaryCta, ...updated })}
             siteStyles={siteStyles}
           />
         </div>
@@ -1908,36 +1834,10 @@ function HeroCarouselEditor({
         <summary className="px-3 py-2 text-xs font-semibold text-gray-600 cursor-pointer hover:bg-gray-50">
           Secondary Button
         </summary>
-        <div className="p-3 space-y-3 border-t border-gray-100">
-          <Field label="Button Text">
-            <input
-              type="text"
-              value={(secondaryCta.text as string) || ""}
-              onChange={(e) => updateSecondaryCta("text", e.target.value)}
-              className="input-sm"
-              placeholder="Learn More"
-            />
-          </Field>
-          <Field label="Button URL">
-            <input
-              type="text"
-              value={(secondaryCta.href as string) || ""}
-              onChange={(e) => updateSecondaryCta("href", e.target.value)}
-              className="input-sm"
-              placeholder="/events/escape"
-            />
-          </Field>
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={(secondaryCta.external as boolean) || false}
-              onChange={(e) => updateSecondaryCta("external", e.target.checked)}
-            />
-            Open in new tab
-          </label>
-          <ButtonStylePicker
-            value={secondaryCta.styleId as string | undefined}
-            onChange={(id) => updateSecondaryCta("styleId", id)}
+        <div className="p-3 border-t border-gray-100">
+          <ButtonFieldEditor
+            value={secondaryCta as ButtonFieldData}
+            onChange={(updated) => updateData("secondaryCta", { ...secondaryCta, ...updated })}
             siteStyles={siteStyles}
           />
         </div>
@@ -2136,9 +2036,17 @@ function EventCardsEditor({
             <Field label="Link (href)">
               <input type="text" value={(ev.href as string) || ""} onChange={(e) => updateEvent(i, "href", e.target.value)} className="input-sm" />
             </Field>
-            <Field label="Ticket URL">
-              <input type="text" value={(ev.ticketUrl as string) || ""} onChange={(e) => updateEvent(i, "ticketUrl", e.target.value)} className="input-sm" />
-            </Field>
+            <details className="border border-gray-100 rounded-lg">
+              <summary className="px-2 py-1.5 text-[10px] font-semibold text-gray-400 uppercase cursor-pointer hover:bg-gray-50">Ticket Button</summary>
+              <div className="p-2 border-t border-gray-100">
+                <ButtonFieldEditor
+                  value={{ text: (ev.ticketBtnText as string) || "Get Tickets", href: (ev.ticketUrl as string) || "", styleId: (ev.ticketStyleId as string) || undefined, marginTop: (ev.ticketMarginTop as string) || undefined, marginBottom: (ev.ticketMarginBottom as string) || undefined, customStyle: (ev.ticketCustomStyle as ButtonStyle) || undefined, external: true } as ButtonFieldData}
+                  onChange={(updated) => { updateEvent(i, "ticketUrl", updated.href); updateEvent(i, "ticketBtnText", updated.text); updateEvent(i, "ticketStyleId", updated.styleId); updateEvent(i, "ticketMarginTop", updated.marginTop); updateEvent(i, "ticketMarginBottom", updated.marginBottom); updateEvent(i, "ticketCustomStyle", updated.customStyle); }}
+                  siteStyles={siteStyles}
+                  showExternal={false}
+                />
+              </div>
+            </details>
             <Field label="Gradient (CSS)">
               <input type="text" value={(ev.gradient as string) || ""} onChange={(e) => updateEvent(i, "gradient", e.target.value)} className="input-sm" placeholder="from-teal to-charcoal" />
             </Field>
@@ -2282,31 +2190,12 @@ function FeatureGridEditor({
                     <option value="link">Link</option>
                   </select>
                 </Field>
-                <Field label="Text">
-                  <input type="text" value={((item.action as Record<string, unknown>)?.text as string) || ""} onChange={(e) => updateItemAction(i, "text", e.target.value)} className="input-sm" />
-                </Field>
-                <Field label="URL">
-                  <input type="text" value={((item.action as Record<string, unknown>)?.href as string) || ""} onChange={(e) => updateItemAction(i, "href", e.target.value)} className="input-sm" />
-                </Field>
-                <label className="flex items-center gap-2 text-xs">
-                  <input type="checkbox" checked={((item.action as Record<string, unknown>)?.external as boolean) || false} onChange={(e) => updateItemAction(i, "external", e.target.checked)} />
-                  Open in new tab
-                </label>
-                {((item.action as Record<string, unknown>)?.type as string) === "button" && (
-                  <ButtonStylePicker
-                    value={(item.action as Record<string, unknown>)?.styleId as string | undefined}
-                    onChange={(id) => updateItemAction(i, "styleId", id)}
-                    siteStyles={siteStyles}
-                  />
-                )}
-                {((item.action as Record<string, unknown>)?.text as string) && (
-                  <button
-                    onClick={() => updateItem(i, "action", undefined)}
-                    className="text-red-400 hover:text-red-600 text-[10px] font-semibold"
-                  >
-                    Remove Action
-                  </button>
-                )}
+                <ButtonFieldEditor
+                  value={(item.action as ButtonFieldData) || {}}
+                  onChange={(updated) => updateItem(i, "action", { ...((item.action as Record<string, unknown>) || {}), ...updated })}
+                  onRemove={((item.action as Record<string, unknown>)?.text as string) ? () => updateItem(i, "action", undefined) : undefined}
+                  siteStyles={siteStyles}
+                />
               </div>
             </details>
 
@@ -2538,30 +2427,13 @@ function ColumnCardsEditor({
                 <summary className="px-2 py-1.5 text-[10px] font-semibold text-gray-400 uppercase cursor-pointer hover:bg-gray-50">
                   Card Button
                 </summary>
-                <div className="p-2 space-y-2 border-t border-gray-100">
-                  <Field label="Text">
-                    <input type="text" value={((card.button as Record<string, unknown>)?.text as string) || ""} onChange={(e) => updateCardButton(i, "text", e.target.value)} className="input-sm" placeholder="Button text" />
-                  </Field>
-                  <Field label="URL">
-                    <input type="text" value={((card.button as Record<string, unknown>)?.href as string) || ""} onChange={(e) => updateCardButton(i, "href", e.target.value)} className="input-sm" placeholder="/page or https://..." />
-                  </Field>
-                  <label className="flex items-center gap-2 text-xs">
-                    <input type="checkbox" checked={((card.button as Record<string, unknown>)?.external as boolean) || false} onChange={(e) => updateCardButton(i, "external", e.target.checked)} />
-                    Open in new tab
-                  </label>
-                  <ButtonStylePicker
-                    value={(card.button as Record<string, unknown>)?.styleId as string | undefined}
-                    onChange={(id) => updateCardButton(i, "styleId", id)}
+                <div className="p-2 border-t border-gray-100">
+                  <ButtonFieldEditor
+                    value={(card.button as ButtonFieldData) || {}}
+                    onChange={(updated) => updateCard(i, "button", { ...((card.button as Record<string, unknown>) || {}), ...updated })}
+                    onRemove={((card.button as Record<string, unknown>)?.text as string) ? () => updateCard(i, "button", undefined) : undefined}
                     siteStyles={siteStyles}
                   />
-                  {((card.button as Record<string, unknown>)?.text as string) && (
-                    <button
-                      onClick={() => updateCard(i, "button", undefined)}
-                      className="text-red-400 hover:text-red-600 text-[10px] font-semibold"
-                    >
-                      Remove Button
-                    </button>
-                  )}
                 </div>
               </details>
             </div>
@@ -2572,64 +2444,334 @@ function ColumnCardsEditor({
   );
 }
 
-function ButtonStylePicker({
+/* ─── Universal Button Field Editor ─── */
+const FONT_OPTIONS_BTN = ["Poppins", "Gothic A1", "EB Garamond", "Orbitron", "inherit"];
+const FONT_WEIGHT_OPTIONS_BTN = ["300", "400", "500", "600", "700", "800", "900"];
+
+function defaultCustomBtnStyle(): ButtonStyle {
+  return {
+    id: `custom-${Date.now()}`,
+    name: "Custom",
+    fontSize: "16px",
+    fontWeight: "600",
+    fontFamily: "Poppins",
+    textColor: "#ffffff",
+    bgColor: "#1CA288",
+    hoverBgColor: "#17806C",
+    borderWidth: "0px",
+    borderColor: "transparent",
+    borderRadius: "12px",
+    paddingX: "32px",
+    paddingY: "14px",
+    shadow: "none",
+    hoverShadow: "none",
+    textTransform: "none",
+    marginTop: "0px",
+    marginBottom: "0px",
+  };
+}
+
+function BtnColorField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+  const ref = useRef<HTMLInputElement>(null);
+  const isLight = (() => {
+    const c = value.replace("#", "");
+    if (c.length < 6) return false;
+    const r = parseInt(c.substring(0, 2), 16);
+    const g = parseInt(c.substring(2, 4), 16);
+    const b = parseInt(c.substring(4, 6), 16);
+    return (r * 299 + g * 587 + b * 114) / 1000 > 160;
+  })();
+  return (
+    <div>
+      <label className="text-[8px] text-gray-400 block">{label}</label>
+      <button onClick={() => ref.current?.click()} className="relative w-full h-5 rounded border border-gray-200 overflow-hidden" style={{ backgroundColor: value }}>
+        <input ref={ref} type="color" value={value} onChange={(e) => onChange(e.target.value)} className="absolute inset-0 opacity-0 cursor-pointer" />
+        <span className="absolute inset-0 flex items-center justify-center text-[7px] font-bold" style={{ color: isLight ? "#333" : "#fff" }}>{value}</span>
+      </button>
+    </div>
+  );
+}
+
+function BtnCustomStyleEditor({ style, onChange, onSave }: { style: ButtonStyle; onChange: (s: ButtonStyle) => void; onSave: () => void }) {
+  const update = (key: keyof ButtonStyle, val: string) => onChange({ ...style, [key]: val });
+  return (
+    <div className="space-y-2 border-t border-gray-200 pt-2">
+      <div className="flex justify-center py-1">
+        <span style={buttonStyleToCSS(style)} className="pointer-events-none text-[12px]">Preview</span>
+      </div>
+      <div className="grid grid-cols-3 gap-1">
+        <BtnColorField label="BG" value={style.bgColor} onChange={(v) => update("bgColor", v)} />
+        <BtnColorField label="Text" value={style.textColor} onChange={(v) => update("textColor", v)} />
+        <BtnColorField label="Border" value={style.borderColor} onChange={(v) => update("borderColor", v)} />
+      </div>
+      <div className="grid grid-cols-3 gap-1">
+        <div>
+          <label className="text-[8px] text-gray-400 block">Font</label>
+          <select value={style.fontFamily} onChange={(e) => update("fontFamily", e.target.value)} className="w-full h-5 text-[9px] border border-gray-200 rounded bg-white px-0.5">
+            {FONT_OPTIONS_BTN.map((f) => <option key={f} value={f}>{f}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="text-[8px] text-gray-400 block">Weight</label>
+          <select value={style.fontWeight} onChange={(e) => update("fontWeight", e.target.value)} className="w-full h-5 text-[9px] border border-gray-200 rounded bg-white px-0.5">
+            {FONT_WEIGHT_OPTIONS_BTN.map((w) => <option key={w} value={w}>{w}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="text-[8px] text-gray-400 block">Size</label>
+          <input type="text" value={style.fontSize} onChange={(e) => update("fontSize", e.target.value)} className="w-full h-5 text-[9px] border border-gray-200 rounded bg-white px-1" />
+        </div>
+      </div>
+      <div className="grid grid-cols-3 gap-1">
+        <div>
+          <label className="text-[8px] text-gray-400 block">Bdr Width</label>
+          <input type="text" value={style.borderWidth} onChange={(e) => update("borderWidth", e.target.value)} className="w-full h-5 text-[9px] border border-gray-200 rounded bg-white px-1" />
+        </div>
+        <div>
+          <label className="text-[8px] text-gray-400 block">Radius</label>
+          <input type="text" value={style.borderRadius} onChange={(e) => update("borderRadius", e.target.value)} className="w-full h-5 text-[9px] border border-gray-200 rounded bg-white px-1" />
+        </div>
+        <div>
+          <label className="text-[8px] text-gray-400 block">Transform</label>
+          <select value={style.textTransform} onChange={(e) => update("textTransform", e.target.value)} className="w-full h-5 text-[9px] border border-gray-200 rounded bg-white px-0.5">
+            <option value="none">None</option>
+            <option value="uppercase">Upper</option>
+            <option value="lowercase">Lower</option>
+            <option value="capitalize">Capital</option>
+          </select>
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-1">
+        <div>
+          <label className="text-[8px] text-gray-400 block">Pad X</label>
+          <input type="text" value={style.paddingX} onChange={(e) => update("paddingX", e.target.value)} className="w-full h-5 text-[9px] border border-gray-200 rounded bg-white px-1" />
+        </div>
+        <div>
+          <label className="text-[8px] text-gray-400 block">Pad Y</label>
+          <input type="text" value={style.paddingY} onChange={(e) => update("paddingY", e.target.value)} className="w-full h-5 text-[9px] border border-gray-200 rounded bg-white px-1" />
+        </div>
+      </div>
+      <button onClick={onSave} className="w-full h-6 text-[10px] border border-teal text-teal rounded font-semibold hover:bg-teal/10 transition-colors">Save as Style</button>
+    </div>
+  );
+}
+
+interface ButtonFieldData {
+  text?: string;
+  href?: string;
+  styleId?: string;
+  customStyle?: ButtonStyle;
+  marginTop?: string;
+  marginBottom?: string;
+  external?: boolean;
+  variant?: string;
+  type?: string;
+}
+
+function ButtonFieldEditor({
   value,
   onChange,
+  onRemove,
   siteStyles,
   label,
+  showText = true,
+  showExternal = true,
 }: {
-  value: string | undefined;
-  onChange: (styleId: string | undefined) => void;
+  value: ButtonFieldData;
+  onChange: (updated: ButtonFieldData) => void;
+  onRemove?: () => void;
   siteStyles: SiteStyles;
   label?: string;
+  showText?: boolean;
+  showExternal?: boolean;
 }) {
-  const allStyles = [
-    ...siteStyles.button_styles.main.map((s) => ({ ...s, group: "Main" })),
-    ...siteStyles.button_styles.secondary.map((s) => ({ ...s, group: "Secondary" })),
-  ];
+  const [styleTab, setStyleTab] = useState<"primary" | "secondary" | "custom" | null>(null);
+  const [customStyle, setCustomStyle] = useState<ButtonStyle>(defaultCustomBtnStyle());
+  const [savingCustom, setSavingCustom] = useState(false);
+  const [customSaveName, setCustomSaveName] = useState("");
+  const [customSaveType, setCustomSaveType] = useState<"main" | "secondary">("main");
 
-  const selected = allStyles.find((s) => s.id === value);
+  const mainStyles = siteStyles.button_styles.main;
+  const secondaryStyles = siteStyles.button_styles.secondary;
+
+  const update = (key: string, val: unknown) => onChange({ ...value, [key]: val });
+
+  const applyStyle = (styleId: string) => {
+    onChange({ ...value, styleId, customStyle: undefined });
+  };
+
+  const applyCustomStyle = (s: ButtonStyle) => {
+    onChange({ ...value, styleId: "custom", customStyle: s });
+  };
+
+  const handleSaveCustomStyle = async () => {
+    if (!customSaveName.trim()) return;
+    const newStyle: ButtonStyle = { ...customStyle, id: `btn-${Date.now()}`, name: customSaveName.trim() };
+    try {
+      const res = await fetch("/api/global-settings");
+      const { settings } = await res.json();
+      const bs = settings.button_styles || { main: [], secondary: [] };
+      if (customSaveType === "main") bs.main.push(newStyle);
+      else bs.secondary.push(newStyle);
+      await fetch("/api/global-settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ button_styles: bs }),
+      });
+      applyStyle(newStyle.id);
+      setSavingCustom(false);
+      setCustomSaveName("");
+    } catch { /* ignore */ }
+  };
 
   return (
-    <div className="space-y-1.5">
-      <label className="block text-xs font-medium text-gray-500">
-        {label || "Button Style"}
-      </label>
-      <select
-        value={value || ""}
-        onChange={(e) => onChange(e.target.value || undefined)}
-        className="input-sm"
-      >
-        <option value="">Default (no style)</option>
-        {siteStyles.button_styles.main.length > 0 && (
-          <optgroup label="Main Styles">
-            {siteStyles.button_styles.main.map((s) => (
-              <option key={s.id} value={s.id}>{s.name}</option>
-            ))}
-          </optgroup>
-        )}
-        {siteStyles.button_styles.secondary.length > 0 && (
-          <optgroup label="Secondary Styles">
-            {siteStyles.button_styles.secondary.map((s) => (
-              <option key={s.id} value={s.id}>{s.name}</option>
-            ))}
-          </optgroup>
-        )}
-      </select>
-      {selected && (
-        <div className="mt-1">
-          <span
-            style={buttonStyleToCSS(selected)}
-            className="pointer-events-none"
-          >
-            {selected.name}
-          </span>
+    <div className="space-y-2">
+      {label && <label className="block text-xs font-medium text-gray-500">{label}</label>}
+
+      {showText && (
+        <div>
+          <label className="text-[9px] uppercase text-gray-400 font-semibold block mb-0.5">Text</label>
+          <input type="text" value={value.text || ""} onChange={(e) => update("text", e.target.value)} className="w-full h-7 px-2 text-xs border border-gray-300 rounded bg-white" placeholder="Button text" />
         </div>
       )}
-      {allStyles.length === 0 && (
-        <p className="text-[10px] text-gray-400 italic">
-          No styles defined yet. Create them in Styles settings.
-        </p>
+
+      <div>
+        <label className="text-[9px] uppercase text-gray-400 font-semibold block mb-0.5">URL</label>
+        <input type="text" value={value.href || ""} onChange={(e) => update("href", e.target.value)} className="w-full h-7 px-2 text-xs border border-gray-300 rounded bg-white" placeholder="https://..." />
+      </div>
+
+      {showExternal && (
+        <label className="flex items-center gap-2 text-xs text-gray-600">
+          <input type="checkbox" checked={value.external || false} onChange={(e) => update("external", e.target.checked)} />
+          Open in new tab
+        </label>
+      )}
+
+      {/* Margin above / below */}
+      <div className="grid grid-cols-2 gap-1.5">
+        <div>
+          <label className="text-[9px] uppercase text-gray-400 font-semibold block mb-0.5">Margin Above</label>
+          <input type="text" value={value.marginTop || "0px"} onChange={(e) => update("marginTop", e.target.value)} className="w-full h-7 px-2 text-xs border border-gray-300 rounded bg-white" placeholder="0px" />
+        </div>
+        <div>
+          <label className="text-[9px] uppercase text-gray-400 font-semibold block mb-0.5">Margin Below</label>
+          <input type="text" value={value.marginBottom || "0px"} onChange={(e) => update("marginBottom", e.target.value)} className="w-full h-7 px-2 text-xs border border-gray-300 rounded bg-white" placeholder="0px" />
+        </div>
+      </div>
+
+      {/* Style tabs: Primary / Secondary / Custom */}
+      <div>
+        <label className="text-[9px] uppercase text-gray-400 font-semibold block mb-1">Style</label>
+        <div className="grid grid-cols-3 gap-1">
+          <button
+            onClick={() => setStyleTab(styleTab === "primary" ? null : "primary")}
+            className={`text-[10px] px-2 py-1.5 rounded border transition-colors text-center ${
+              styleTab === "primary" || (value.styleId && value.styleId !== "custom" && mainStyles.some(s => s.id === value.styleId))
+                ? "border-teal bg-teal/10 text-teal font-semibold"
+                : "border-gray-200 text-gray-600 hover:border-gray-300"
+            }`}
+          >
+            Primary
+          </button>
+          <button
+            onClick={() => setStyleTab(styleTab === "secondary" ? null : "secondary")}
+            className={`text-[10px] px-2 py-1.5 rounded border transition-colors text-center ${
+              styleTab === "secondary" || (value.styleId && value.styleId !== "custom" && secondaryStyles.some(s => s.id === value.styleId))
+                ? "border-teal bg-teal/10 text-teal font-semibold"
+                : "border-gray-200 text-gray-600 hover:border-gray-300"
+            }`}
+          >
+            Secondary
+          </button>
+          <button
+            onClick={() => {
+              if (styleTab !== "custom") {
+                if (value.styleId === "custom" && value.customStyle) {
+                  setCustomStyle(value.customStyle);
+                } else if (value.styleId) {
+                  const found = findButtonStyle(value.styleId, siteStyles);
+                  if (found) setCustomStyle({ ...found, id: `custom-${Date.now()}`, name: "Custom" });
+                  else setCustomStyle(defaultCustomBtnStyle());
+                } else {
+                  setCustomStyle(defaultCustomBtnStyle());
+                }
+                setStyleTab("custom");
+              } else {
+                setStyleTab(null);
+              }
+            }}
+            className={`text-[10px] px-2 py-1.5 rounded border transition-colors text-center ${
+              styleTab === "custom" || value.styleId === "custom"
+                ? "border-teal bg-teal/10 text-teal font-semibold"
+                : "border-gray-200 text-gray-600 hover:border-gray-300"
+            }`}
+          >
+            Custom
+          </button>
+        </div>
+      </div>
+
+      {/* Primary styles list */}
+      {styleTab === "primary" && (
+        <div className="space-y-1 max-h-[200px] overflow-y-auto">
+          {mainStyles.length === 0 ? (
+            <p className="text-[10px] text-gray-400 italic py-2">No primary styles — create in Styles settings</p>
+          ) : mainStyles.map((s) => (
+            <button key={s.id} onClick={() => applyStyle(s.id)} className={`w-full flex items-center gap-2 p-1.5 rounded border transition-colors ${value.styleId === s.id ? "border-teal bg-teal/5" : "border-gray-100 hover:border-gray-200"}`}>
+              <span className="pointer-events-none text-[11px] truncate" style={buttonStyleToCSS(s)}>{s.name}</span>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Secondary styles list */}
+      {styleTab === "secondary" && (
+        <div className="space-y-1 max-h-[200px] overflow-y-auto">
+          {secondaryStyles.length === 0 ? (
+            <p className="text-[10px] text-gray-400 italic py-2">No secondary styles — create in Styles settings</p>
+          ) : secondaryStyles.map((s) => (
+            <button key={s.id} onClick={() => applyStyle(s.id)} className={`w-full flex items-center gap-2 p-1.5 rounded border transition-colors ${value.styleId === s.id ? "border-teal bg-teal/5" : "border-gray-100 hover:border-gray-200"}`}>
+              <span className="pointer-events-none text-[11px] truncate" style={buttonStyleToCSS(s)}>{s.name}</span>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Custom style editor */}
+      {styleTab === "custom" && (
+        <BtnCustomStyleEditor
+          style={customStyle}
+          onChange={(updated) => { setCustomStyle(updated); applyCustomStyle(updated); }}
+          onSave={() => setSavingCustom(true)}
+        />
+      )}
+
+      {/* Save custom as global */}
+      {savingCustom && (
+        <div className="border-t border-gray-200 pt-2 space-y-1.5">
+          <label className="text-[9px] uppercase text-gray-400 font-semibold block">Save as Style</label>
+          <input type="text" value={customSaveName} onChange={(e) => setCustomSaveName(e.target.value)} placeholder="Style name..." className="w-full h-6 px-2 text-[11px] border border-gray-300 rounded bg-white" autoFocus />
+          <div className="flex gap-1">
+            <label className={`flex-1 text-center text-[10px] px-2 py-1 rounded border cursor-pointer transition-colors ${customSaveType === "main" ? "border-teal bg-teal/10 text-teal font-semibold" : "border-gray-200 text-gray-500"}`}>
+              <input type="radio" name="btnSaveType" value="main" checked={customSaveType === "main"} onChange={() => setCustomSaveType("main")} className="sr-only" />
+              Primary
+            </label>
+            <label className={`flex-1 text-center text-[10px] px-2 py-1 rounded border cursor-pointer transition-colors ${customSaveType === "secondary" ? "border-teal bg-teal/10 text-teal font-semibold" : "border-gray-200 text-gray-500"}`}>
+              <input type="radio" name="btnSaveType" value="secondary" checked={customSaveType === "secondary"} onChange={() => setCustomSaveType("secondary")} className="sr-only" />
+              Secondary
+            </label>
+          </div>
+          <div className="flex gap-1">
+            <button onClick={handleSaveCustomStyle} disabled={!customSaveName.trim()} className="flex-1 h-6 text-[10px] bg-teal text-white rounded font-semibold disabled:opacity-50">Save</button>
+            <button onClick={() => setSavingCustom(false)} className="h-6 px-2 text-[10px] text-gray-400 hover:text-gray-600">Cancel</button>
+          </div>
+        </div>
+      )}
+
+      {onRemove && (
+        <button onClick={onRemove} className="text-[10px] text-red-500 hover:text-red-700 font-semibold">
+          Remove
+        </button>
       )}
     </div>
   );
