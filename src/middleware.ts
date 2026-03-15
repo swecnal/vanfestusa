@@ -8,8 +8,8 @@ export function middleware(request: NextRequest) {
   if (hostname.startsWith("admin.")) {
     const url = request.nextUrl.clone();
 
-    // API routes pass through
-    if (pathname.startsWith("/api/")) {
+    // API routes and preview routes pass through
+    if (pathname.startsWith("/api/") || pathname.startsWith("/preview/")) {
       return NextResponse.next();
     }
 

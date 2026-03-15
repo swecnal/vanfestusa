@@ -815,29 +815,9 @@ export default function PageEditorPage() {
           </div>
         </div>
 
-        {/* Mobile preview: iframe + section selector */}
+        {/* Mobile preview: iframe in phone frame */}
         {previewMode === "mobile" && (
           <div className="bg-gray-100 min-h-full flex flex-col items-center py-4">
-            {/* Section selector bar */}
-            <div className="w-full max-w-[420px] mb-3 px-3">
-              <div className="flex flex-wrap gap-1">
-                {sections.map((s) => (
-                  <button
-                    key={s.id}
-                    onClick={() => handleSelectSection(s.id)}
-                    className={`text-[9px] px-2 py-1 rounded-full font-semibold transition-colors ${
-                      selectedSectionId === s.id
-                        ? "bg-teal text-white"
-                        : s.is_visible
-                          ? "bg-white text-gray-600 hover:bg-teal/10 hover:text-teal border border-gray-200"
-                          : "bg-white/50 text-gray-400 border border-gray-200 line-through"
-                    }`}
-                  >
-                    {SECTION_TYPE_LABELS[s.section_type as SectionType] || s.section_type}
-                  </button>
-                ))}
-              </div>
-            </div>
             {/* Phone frame */}
             <div
               className="bg-gray-900 rounded-[3rem] p-3 shadow-2xl"
