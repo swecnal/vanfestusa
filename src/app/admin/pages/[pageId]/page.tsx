@@ -364,6 +364,7 @@ export default function PageEditorPage() {
   const { registerHandler, unregisterHandler } = usePageEditor();
   const [editPaneMode, setEditPaneMode] = useState<"floating" | "static">("floating");
   const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">("desktop");
+  const [iframeKey, setIframeKey] = useState(0);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -566,6 +567,7 @@ export default function PageEditorPage() {
       const { section } = await res.json();
       setSections((prev) => prev.map((s) => (s.id === section.id ? section : s)));
       setIsDirty(false);
+      setIframeKey((k) => k + 1);
       toast.success("Saved");
     } else {
       toast.error("Failed to save");
@@ -813,12 +815,59 @@ export default function PageEditorPage() {
           </div>
         </div>
 
-        {/* Live sections — with optional mobile frame */}
-        <div className={previewMode === "mobile" ? "bg-gray-100 min-h-full py-4" : ""}>
-        <div
-          className={previewMode === "mobile" ? "mx-auto bg-white rounded-[2rem] shadow-xl border border-gray-300 overflow-hidden" : ""}
-          style={previewMode === "mobile" ? { maxWidth: 393 } : undefined}
-        >
+        {/* Mobile preview: iframe + section selector */}
+        {previewMode === "mobile" && (
+          <div className="bg-gray-100 min-h-full flex flex-col items-center py-4">
+            {/* Section selector bar */}
+            <div className="w-full max-w-[420px] mb-3 px-3">
+              <div className="flex flex-wrap gap-1">
+                {sections.map((s) => (
+                  <button
+                    key={s.id}
+                    onClick={() => handleSelectSection(s.id)}
+                    className={`text-[9px] px-2 py-1 rounded-full font-semibold transition-colors ${
+                      selectedSectionId === s.id
+                        ? "bg-teal text-white"
+                        : s.is_visible
+                          ? "bg-white text-gray-600 hover:bg-teal/10 hover:text-teal border border-gray-200"
+                          : "bg-white/50 text-gray-400 border border-gray-200 line-through"
+                    }`}
+                  >
+                    {SECTION_TYPE_LABELS[s.section_type as SectionType] || s.section_type}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {/* Phone frame */}
+            <div
+              className="bg-gray-900 rounded-[3rem] p-3 shadow-2xl"
+              style={{ width: 419 }}
+            >
+              {/* Notch */}
+              <div className="flex justify-center mb-1">
+                <div className="w-28 h-6 bg-gray-900 rounded-b-2xl" />
+              </div>
+              <div className="rounded-[2.2rem] overflow-hidden bg-white" style={{ width: 393, height: 750 }}>
+                <iframe
+                  key={iframeKey}
+                  src={`/preview/${pageId}`}
+                  className="w-full h-full border-0"
+                  title="Mobile preview"
+                />
+              </div>
+              {/* Home indicator */}
+              <div className="flex justify-center mt-2">
+                <div className="w-32 h-1 bg-gray-600 rounded-full" />
+              </div>
+            </div>
+            <p className="text-[10px] text-gray-400 mt-3">
+              Save changes to update preview
+            </p>
+          </div>
+        )}
+
+        {/* Desktop preview: live editable sections */}
+        {previewMode === "desktop" && (
         <div
           onDragEnter={(e) => {
             if (e.dataTransfer.types.includes("application/section-type")) {
@@ -911,8 +960,7 @@ export default function PageEditorPage() {
             </div>
           )}
         </div>
-        </div>{/* end mobile frame */}
-        </div>{/* end mobile bg */}
+        )}
       </div>
 
       {/* Editor panel — floating (overlay) or static (side column) */}
