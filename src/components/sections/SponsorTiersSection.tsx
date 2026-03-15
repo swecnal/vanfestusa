@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { SponsorTiersData, SectionSettings } from "@/lib/types";
+import { sectionSpacingStyles } from "@/lib/types";
 
 interface Props {
   data: Record<string, unknown>;
@@ -90,7 +91,7 @@ export default function SponsorTiersSection({ data, settings }: Props) {
 
   if (d.wrapInOuterAccordion) {
     return (
-      <section className={`${settings.paddingY || "py-16"} px-4 bg-white ${settings.customClasses || ""}`}>
+      <section style={sectionSpacingStyles(settings)} className={`px-4 bg-white ${settings.customClasses || ""}`}>
         <div className={`mx-auto ${settings.maxWidth || "max-w-4xl"}`}>
           {d.heading && (
             <h2 className="font-display font-black text-3xl text-charcoal mb-8 text-center">{d.heading}</h2>
@@ -116,7 +117,7 @@ export default function SponsorTiersSection({ data, settings }: Props) {
   }
 
   return (
-    <section className={`${settings.paddingY || "py-16"} px-4 bg-white ${settings.customClasses || ""}`}>
+    <section style={sectionSpacingStyles(settings)} className={`px-4 bg-white ${settings.customClasses || ""}`}>
       <div className={`mx-auto ${settings.maxWidth || "max-w-4xl"}`}>
         {d.heading && (
           <h2 className="font-display font-black text-3xl text-charcoal mb-8 text-center">{d.heading}</h2>

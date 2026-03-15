@@ -4,6 +4,7 @@ import Link from "next/link";
 import SectionHeading from "@/components/SectionHeading";
 import BounceCTA from "@/components/BounceCTA";
 import type { EventCardsData, SectionSettings } from "@/lib/types";
+import { sectionSpacingStyles } from "@/lib/types";
 import { textStyleConfigToCSS } from "@/lib/styles";
 
 interface Props {
@@ -25,7 +26,8 @@ export default function EventCardsSection({ data, settings }: Props) {
 
   return (
     <section
-      className={`${settings.paddingY || "py-20"} px-4 ${
+      style={sectionSpacingStyles(settings)}
+      className={`px-4 ${
         settings.bgColor === "sand" ? "bg-sand" : "bg-white"
       } ${settings.customClasses || ""}`}
     >

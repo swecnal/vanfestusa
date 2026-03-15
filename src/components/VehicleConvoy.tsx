@@ -364,6 +364,9 @@ interface VehicleConvoyProps {
   count?: number;
   reverse?: boolean;
   marginTop?: string;
+  speedMultiplier?: number;
+  randomness?: number;
+  vehicleGap?: number;
 }
 
 export default function VehicleConvoy({
@@ -371,6 +374,9 @@ export default function VehicleConvoy({
   count = 5,
   reverse = false,
   marginTop = "20px",
+  speedMultiplier = 1,
+  randomness: _randomness,
+  vehicleGap: gapOverride,
 }: VehicleConvoyProps) {
   const sectionRef = useRef<HTMLDivElement>(null);
   const vehicleRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -386,10 +392,11 @@ export default function VehicleConvoy({
     let x = 0;
     for (let i = 0; i < vehicles.length; i++) {
       o.push(x);
-      x += vehicles[i].def.width + vehicles[i].gap;
+      const gap = gapOverride !== undefined ? gapOverride : vehicles[i].gap;
+      x += vehicles[i].def.width + gap;
     }
     return o;
-  }, [vehicles]);
+  }, [vehicles, gapOverride]);
 
   const totalWidth = useMemo(() => {
     if (vehicles.length === 0) return 0;
@@ -417,11 +424,11 @@ export default function VehicleConvoy({
         if (reverse) {
           // Start right, move left. Fastest vehicle (highest offset) is
           // closest to viewport and enters first, then pulls away.
-          x = (cw + totalWidth + pad) - off - progress * v.speedMul * travelDist;
+          x = (cw + totalWidth + pad) - off - progress * v.speedMul * speedMultiplier * travelDist;
         } else {
           // Start left, move right. Fastest vehicle (highest offset) is
           // closest to viewport and enters first, then pulls away.
-          x = -(totalWidth + pad) + off + progress * v.speedMul * travelDist;
+          x = -(totalWidth + pad) + off + progress * v.speedMul * speedMultiplier * travelDist;
         }
         el.style.transform = `translateX(${x}px)`;
       });
@@ -436,7 +443,7 @@ export default function VehicleConvoy({
       window.removeEventListener("scroll", onScroll);
       cancelAnimationFrame(rafId);
     };
-  }, [vehicles, reverse, totalWidth, offsets]);
+  }, [vehicles, reverse, totalWidth, offsets, speedMultiplier]);
 
   return (
     <section

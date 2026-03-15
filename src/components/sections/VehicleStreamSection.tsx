@@ -1,12 +1,16 @@
 import VehicleStream from "@/components/VehicleStream";
-import type { VehicleStreamData } from "@/lib/types";
+import type { VehicleStreamData, SectionSettings } from "@/lib/types";
+import { sectionSpacingStyles } from "@/lib/types";
 
 interface Props {
   data: Record<string, unknown>;
+  settings: SectionSettings;
 }
 
-export default function VehicleStreamSection({ data }: Props) {
-  // VehicleStream is already in the public layout.
-  // This section type exists if someone wants to add it inline.
-  return <VehicleStream />;
+export default function VehicleStreamSection({ data, settings }: Props) {
+  return (
+    <div style={sectionSpacingStyles(settings)}>
+      <VehicleStream />
+    </div>
+  );
 }

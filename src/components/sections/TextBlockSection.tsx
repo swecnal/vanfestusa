@@ -1,4 +1,5 @@
 import type { TextBlockData, SectionSettings } from "@/lib/types";
+import { sectionSpacingStyles } from "@/lib/types";
 import type { SiteStyles } from "@/lib/styles";
 import { resolveButtonStylesInHtml, EMPTY_SITE_STYLES } from "@/lib/styles";
 
@@ -14,7 +15,8 @@ export default function TextBlockSection({ data, settings, siteStyles = EMPTY_SI
 
   return (
     <section
-      className={`${settings.paddingY || "py-16"} px-4 ${
+      style={sectionSpacingStyles(settings)}
+      className={`px-4 ${
         settings.bgColor === "charcoal"
           ? "bg-charcoal text-white"
           : settings.bgColor === "sand"

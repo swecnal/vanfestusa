@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import type { Section, SectionType } from "@/lib/types";
-import { SECTION_TYPE_LABELS } from "@/lib/types";
+import { SECTION_TYPE_LABELS, SPACING_PRESETS } from "@/lib/types";
 import RichTextEditor from "./RichTextEditor";
 import ImagePicker from "./ImagePicker";
 import TextStyleEditor from "./TextStyleEditor";
@@ -98,19 +98,95 @@ export default function SectionEditorPanel({ section, onSave, saving, onChange, 
               <option value="charcoal">Charcoal</option>
             </select>
           </Field>
-          <Field label="Padding">
-            <select
-              value={(settings.paddingY as string) || ""}
-              onChange={(e) => updateSettings("paddingY", e.target.value || undefined)}
-              className="input-sm"
-            >
-              <option value="">Default</option>
-              <option value="py-8">Small</option>
-              <option value="py-12">Medium</option>
-              <option value="py-16">Large</option>
-              <option value="py-20">Extra Large</option>
-            </select>
-          </Field>
+
+          {/* Padding */}
+          <div>
+            <label className="block text-[11px] font-medium text-gray-600 mb-1">Padding</label>
+            <div className="flex gap-1 mb-1.5">
+              {(["compact", "comfortable", "spacious"] as const).map((preset) => (
+                <button
+                  key={preset}
+                  onClick={() => {
+                    const vals = SPACING_PRESETS.padding[preset];
+                    const next = { ...settings, paddingTop: vals.top, paddingBottom: vals.bottom, paddingLeft: vals.left, paddingRight: vals.right, paddingPreset: preset, paddingY: undefined };
+                    onChange?.(data, next);
+                  }}
+                  className={`flex-1 text-[10px] py-1 rounded border transition-colors capitalize ${
+                    (settings.paddingPreset as string) === preset
+                      ? "bg-teal/15 border-teal text-teal font-semibold"
+                      : "border-gray-200 text-gray-500 hover:border-gray-300"
+                  }`}
+                >
+                  {preset}
+                </button>
+              ))}
+            </div>
+            <div className="grid grid-cols-2 gap-1">
+              {(["Top", "Bottom", "Left", "Right"] as const).map((dir) => {
+                const key = `padding${dir}` as keyof typeof settings;
+                return (
+                  <div key={dir}>
+                    <label className="text-[9px] text-gray-400">{dir}</label>
+                    <input
+                      type="text"
+                      value={(settings[key] as string) || ""}
+                      onChange={(e) => {
+                        const next = { ...settings, [key]: e.target.value || undefined, paddingPreset: null, paddingY: undefined };
+                        onChange?.(data, next);
+                      }}
+                      className="input-sm"
+                      placeholder="0px"
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Margin */}
+          <div>
+            <label className="block text-[11px] font-medium text-gray-600 mb-1">Margin</label>
+            <div className="flex gap-1 mb-1.5">
+              {(["compact", "comfortable", "spacious"] as const).map((preset) => (
+                <button
+                  key={preset}
+                  onClick={() => {
+                    const vals = SPACING_PRESETS.margin[preset];
+                    const next = { ...settings, marginTop: vals.top, marginBottom: vals.bottom, marginLeft: vals.left, marginRight: vals.right, marginPreset: preset };
+                    onChange?.(data, next);
+                  }}
+                  className={`flex-1 text-[10px] py-1 rounded border transition-colors capitalize ${
+                    (settings.marginPreset as string) === preset
+                      ? "bg-teal/15 border-teal text-teal font-semibold"
+                      : "border-gray-200 text-gray-500 hover:border-gray-300"
+                  }`}
+                >
+                  {preset}
+                </button>
+              ))}
+            </div>
+            <div className="grid grid-cols-2 gap-1">
+              {(["Top", "Bottom", "Left", "Right"] as const).map((dir) => {
+                const key = `margin${dir}` as keyof typeof settings;
+                return (
+                  <div key={dir}>
+                    <label className="text-[9px] text-gray-400">{dir}</label>
+                    <input
+                      type="text"
+                      value={(settings[key] as string) || ""}
+                      onChange={(e) => {
+                        const next = { ...settings, [key]: e.target.value || undefined, marginPreset: null };
+                        onChange?.(data, next);
+                      }}
+                      className="input-sm"
+                      placeholder="0px"
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
           <Field label="Section ID (anchor)">
             <input
               type="text"
@@ -509,10 +585,11 @@ function SectionFields({
 
     case "wave_divider": {
       const dividerType = (data.dividerType as string) || "wave";
-      const showShapeColors = ["wave", "zigzag", "curve", "straight"].includes(dividerType);
+      const showShapeColors = ["wave", "zigzag", "curve", "straight", "gradient", "clouds", "bubbles", "paint_spill", "digital_fade"].includes(dividerType);
       const showFrequency = ["wave", "zigzag"].includes(dividerType);
-      const showIntensity = ["wave", "zigzag", "curve"].includes(dividerType);
+      const showIntensity = ["wave", "zigzag", "curve", "clouds", "bubbles", "paint_spill", "digital_fade"].includes(dividerType);
       const showConvoyFields = dividerType === "convoy";
+      const showStreamFields = dividerType === "stream";
       const showFestivalFields = dividerType === "festival";
       const festivalEls = (data.festivalElements as Record<string, boolean>) || {};
       return (
@@ -527,29 +604,71 @@ function SectionFields({
               <option value="zigzag">Zigzag</option>
               <option value="curve">Curve</option>
               <option value="straight">Straight</option>
-              <option value="convoy">Vehicle Convoy</option>
+              <option value="convoy">Scroll Convoy</option>
+              <option value="stream">Auto Stream</option>
               <option value="festival">Festival Scene</option>
+              <option value="gradient">Gradient</option>
+              <option value="clouds">Clouds</option>
+              <option value="bubbles">Bubbles</option>
+              <option value="paint_spill">Paint Spill</option>
+              <option value="digital_fade">Digital Fade</option>
             </select>
           </Field>
 
           {showShapeColors && (
             <>
-              <Field label="From Color">
+              <Field label="Top Color">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={(() => { const c = (data.fromColor as string) || "#ffffff"; return c === "white" ? "#ffffff" : c; })()}
+                    onChange={(e) => updateData("fromColor", e.target.value)}
+                    className="w-8 h-8 rounded cursor-pointer border border-gray-200"
+                  />
+                  <input
+                    type="text"
+                    value={(data.fromColor as string) || "white"}
+                    onChange={(e) => updateData("fromColor", e.target.value)}
+                    className="input-sm flex-1"
+                    placeholder="#hex or name"
+                  />
+                </div>
+              </Field>
+              <Field label={`Top Opacity: ${(data.fromColorOpacity as number) ?? 100}%`}>
                 <input
-                  type="text"
-                  value={(data.fromColor as string) || "white"}
-                  onChange={(e) => updateData("fromColor", e.target.value)}
-                  className="input-sm"
-                  placeholder="white or #hex"
+                  type="range"
+                  min={0}
+                  max={100}
+                  value={(data.fromColorOpacity as number) ?? 100}
+                  onChange={(e) => updateData("fromColorOpacity", Number(e.target.value))}
+                  className="w-full"
                 />
               </Field>
-              <Field label="To Color">
+              <Field label="Bottom Color">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={(data.toColor as string) || "#1a1a1a"}
+                    onChange={(e) => updateData("toColor", e.target.value)}
+                    className="w-8 h-8 rounded cursor-pointer border border-gray-200"
+                  />
+                  <input
+                    type="text"
+                    value={(data.toColor as string) || "#1a1a1a"}
+                    onChange={(e) => updateData("toColor", e.target.value)}
+                    className="input-sm flex-1"
+                    placeholder="#hex or name"
+                  />
+                </div>
+              </Field>
+              <Field label={`Bottom Opacity: ${(data.toColorOpacity as number) ?? 100}%`}>
                 <input
-                  type="text"
-                  value={(data.toColor as string) || "#1a1a1a"}
-                  onChange={(e) => updateData("toColor", e.target.value)}
-                  className="input-sm"
-                  placeholder="#1a1a1a or color name"
+                  type="range"
+                  min={0}
+                  max={100}
+                  value={(data.toColorOpacity as number) ?? 100}
+                  onChange={(e) => updateData("toColorOpacity", Number(e.target.value))}
+                  className="w-full"
                 />
               </Field>
               <Field label={`Height: ${(data.height as number) || 60}px`}>
@@ -562,6 +681,14 @@ function SectionFields({
                   className="w-full"
                 />
               </Field>
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={(data.flip as boolean) || false}
+                  onChange={(e) => updateData("flip", e.target.checked)}
+                />
+                Flip horizontally
+              </label>
             </>
           )}
 
@@ -620,6 +747,97 @@ function SectionFields({
                 />
                 Reverse direction
               </label>
+              <Field label={`Speed: ${((data.convoySpeed as number) || 1).toFixed(1)}x`}>
+                <input
+                  type="range"
+                  min={0.3}
+                  max={3}
+                  step={0.1}
+                  value={(data.convoySpeed as number) || 1}
+                  onChange={(e) => updateData("convoySpeed", Number(e.target.value))}
+                  className="w-full"
+                />
+              </Field>
+              <Field label={`Randomness: ${(data.convoyRandomness as number) || 50}%`}>
+                <input
+                  type="range"
+                  min={0}
+                  max={100}
+                  value={(data.convoyRandomness as number) || 50}
+                  onChange={(e) => updateData("convoyRandomness", Number(e.target.value))}
+                  className="w-full"
+                />
+              </Field>
+              <Field label={`Vehicle Gap: ${(data.vehicleGap as number) || 60}px`}>
+                <input
+                  type="range"
+                  min={20}
+                  max={200}
+                  value={(data.vehicleGap as number) || 60}
+                  onChange={(e) => updateData("vehicleGap", Number(e.target.value))}
+                  className="w-full"
+                />
+              </Field>
+            </>
+          )}
+
+          {showStreamFields && (
+            <>
+              <Field label="Seed">
+                <input
+                  type="number"
+                  value={(data.streamSeed as number) || 777}
+                  onChange={(e) => updateData("streamSeed", Number(e.target.value))}
+                  className="input-sm"
+                />
+              </Field>
+              <Field label="Vehicle Count">
+                <input
+                  type="number"
+                  value={(data.streamCount as number) || 14}
+                  onChange={(e) => updateData("streamCount", Number(e.target.value))}
+                  className="input-sm"
+                  min={1}
+                  max={30}
+                />
+              </Field>
+              <Field label={`Speed: ${((data.streamSpeed as number) || 1).toFixed(1)}x`}>
+                <input
+                  type="range"
+                  min={0.3}
+                  max={3}
+                  step={0.1}
+                  value={(data.streamSpeed as number) || 1}
+                  onChange={(e) => updateData("streamSpeed", Number(e.target.value))}
+                  className="w-full"
+                />
+              </Field>
+              <Field label={`Randomness: ${(data.streamRandomness as number) || 50}%`}>
+                <input
+                  type="range"
+                  min={0}
+                  max={100}
+                  value={(data.streamRandomness as number) || 50}
+                  onChange={(e) => updateData("streamRandomness", Number(e.target.value))}
+                  className="w-full"
+                />
+              </Field>
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={(data.showDrivers as boolean) || false}
+                  onChange={(e) => updateData("showDrivers", e.target.checked)}
+                />
+                Show drivers
+              </label>
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={(data.showPassengers as boolean) || false}
+                  onChange={(e) => updateData("showPassengers", e.target.checked)}
+                />
+                Show passengers
+              </label>
             </>
           )}
 
@@ -651,6 +869,7 @@ function SectionFields({
                 ["campfireWithPeople", "Campfire w/ People"],
                 ["campfireSolo", "Solo Campfire"],
                 ["peopleMeandering", "People Walking"],
+                ["walkingPeople", "Walking Across Scene"],
               ] as const).map(([key, label]) => (
                 <label key={key} className="flex items-center gap-2 text-sm">
                   <input
@@ -671,34 +890,10 @@ function SectionFields({
     }
 
     case "vehicle_convoy":
+    case "vehicle_stream":
       return (
-        <div className="space-y-3">
-          <Field label="Seed">
-            <input
-              type="number"
-              value={(data.seed as number) || 42}
-              onChange={(e) => updateData("seed", Number(e.target.value))}
-              className="input-sm"
-            />
-          </Field>
-          <Field label="Vehicle Count">
-            <input
-              type="number"
-              value={(data.count as number) || 6}
-              onChange={(e) => updateData("count", Number(e.target.value))}
-              className="input-sm"
-              min={1}
-              max={20}
-            />
-          </Field>
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={(data.reverse as boolean) || false}
-              onChange={(e) => updateData("reverse", e.target.checked)}
-            />
-            Reverse direction
-          </label>
+        <div className="p-3 text-sm text-gray-500 italic">
+          This section type has been consolidated into the Divider section. Add a new Divider and select the appropriate type from the dropdown.
         </div>
       );
 

@@ -249,6 +249,21 @@ function renderPeopleMeandering(rng: () => number) {
   );
 }
 
+// ─── Walking figure ───
+function renderWalker(skin: string, shirt: string, facingRight: boolean) {
+  const dir = facingRight ? 1 : -1;
+  return (
+    <svg width={20} height={40} viewBox="0 0 20 40" fill="none" style={{ transform: facingRight ? undefined : "scaleX(-1)" }}>
+      <circle cx={10} cy={6} r={4} fill={skin} stroke="#333" strokeWidth={0.8} />
+      <line x1={10} y1={10} x2={10} y2={26} stroke={shirt} strokeWidth={2} />
+      <line x1={10} y1={14} x2={5} y2={20} stroke={shirt} strokeWidth={1.2} className="fscene-walk-arm" />
+      <line x1={10} y1={14} x2={15} y2={20} stroke={shirt} strokeWidth={1.2} className="fscene-walk-arm-alt" />
+      <line x1={10} y1={26} x2={6} y2={38} stroke="#333" strokeWidth={1.2} className="fscene-walk-leg" />
+      <line x1={10} y1={26} x2={14} y2={38} stroke="#333" strokeWidth={1.2} className="fscene-walk-leg-alt" />
+    </svg>
+  );
+}
+
 // ─── Render dispatcher ───
 function renderElement(type: FestivalElementType, colorSeed: number) {
   const rng = seededRandom(colorSeed);
@@ -272,6 +287,7 @@ export interface FestivalElements {
   campfireSolo?: boolean;
   tents?: boolean;
   peopleMeandering?: boolean;
+  walkingPeople?: boolean;
 }
 
 const ALL_ON: FestivalElements = {
@@ -329,6 +345,20 @@ export default function FestivalScene({
     return placed;
   }, [seed, elements]);
 
+  // Walking people
+  const walkers = useMemo(() => {
+    const rng = seededRandom(seed + 9999);
+    const count = 4;
+    return Array.from({ length: count }, (_, i) => ({
+      skin: pickRandom(SKIN_TONES, rng),
+      shirt: pickRandom(SHIRT_COLORS, rng),
+      reverse: i % 2 === 1,
+      duration: 18 + rng() * 14, // 18-32s
+      delay: -(rng() * 20), // Staggered start via negative delay
+      bottomPx: 8 + Math.floor(rng() * 20), // Vary vertical position
+    }));
+  }, [seed]);
+
   return (
     <section
       className="relative overflow-hidden"
@@ -375,6 +405,51 @@ export default function FestivalScene({
           0%, 100% { transform: translateY(0); }
           50% { transform: translateY(-2px); }
         }
+        /* Walking people animations */
+        @keyframes fscene-walk-across {
+          0% { transform: translateX(-30px); }
+          20% { transform: translateX(20vw); }
+          22% { transform: translateX(20vw); }
+          45% { transform: translateX(50vw); }
+          47% { transform: translateX(50vw); }
+          70% { transform: translateX(75vw); }
+          72% { transform: translateX(75vw); }
+          100% { transform: translateX(calc(100vw + 30px)); }
+        }
+        @keyframes fscene-walk-across-rev {
+          0% { transform: translateX(calc(100vw + 30px)); }
+          25% { transform: translateX(70vw); }
+          27% { transform: translateX(70vw); }
+          50% { transform: translateX(40vw); }
+          52% { transform: translateX(40vw); }
+          75% { transform: translateX(15vw); }
+          77% { transform: translateX(15vw); }
+          100% { transform: translateX(-30px); }
+        }
+        .fscene-walk-arm {
+          animation: fscene-arm-swing 0.6s ease-in-out infinite;
+          transform-origin: 10px 14px;
+        }
+        .fscene-walk-arm-alt {
+          animation: fscene-arm-swing 0.6s ease-in-out infinite reverse;
+          transform-origin: 10px 14px;
+        }
+        .fscene-walk-leg {
+          animation: fscene-leg-swing 0.6s ease-in-out infinite;
+          transform-origin: 10px 26px;
+        }
+        .fscene-walk-leg-alt {
+          animation: fscene-leg-swing 0.6s ease-in-out infinite reverse;
+          transform-origin: 10px 26px;
+        }
+        @keyframes fscene-arm-swing {
+          0%, 100% { transform: rotate(-15deg); }
+          50% { transform: rotate(15deg); }
+        }
+        @keyframes fscene-leg-swing {
+          0%, 100% { transform: rotate(-10deg); }
+          50% { transform: rotate(10deg); }
+        }
       `}</style>
 
       {/* Ground line */}
@@ -392,6 +467,21 @@ export default function FestivalScene({
           style={{ left: `${item.leftPct}%`, transform: "translateX(-50%)" }}
         >
           {renderElement(item.type, item.colorSeed)}
+        </div>
+      ))}
+
+      {/* Walking people */}
+      {(elements.walkingPeople ?? true) && walkers.map((w, i) => (
+        <div
+          key={`walker-${i}`}
+          className="absolute z-[8]"
+          style={{
+            bottom: `${w.bottomPx}px`,
+            animation: `${w.reverse ? "fscene-walk-across-rev" : "fscene-walk-across"} ${w.duration}s linear infinite`,
+            animationDelay: `${w.delay}s`,
+          }}
+        >
+          {renderWalker(w.skin, w.shirt, !w.reverse)}
         </div>
       ))}
     </section>

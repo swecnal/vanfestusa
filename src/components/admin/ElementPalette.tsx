@@ -66,9 +66,7 @@ const ELEMENT_CATEGORIES: ElementCategory[] = [
   {
     label: "Decorative",
     items: [
-      { type: "wave_divider", label: "Wave Divider" },
-      { type: "vehicle_convoy", label: "Vehicle Convoy" },
-      { type: "vehicle_stream", label: "Vehicle Stream" },
+      { type: "wave_divider", label: "Divider" },
     ],
   },
 ];

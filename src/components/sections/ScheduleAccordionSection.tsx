@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import type { ScheduleAccordionData, SectionSettings } from "@/lib/types";
+import { sectionSpacingStyles } from "@/lib/types";
 
 interface Props {
   data: Record<string, unknown>;
@@ -38,7 +39,7 @@ export default function ScheduleAccordionSection({ data, settings }: Props) {
 
   if (!d.days || d.days.length === 0) {
     return (
-      <section className={`${settings.paddingY || "py-16"} px-4 bg-white`}>
+      <section style={sectionSpacingStyles(settings)} className="px-4 bg-white">
         <div className="mx-auto max-w-4xl text-center">
           <h2 className="font-display font-black text-2xl text-charcoal/40">
             Schedule Coming Soon
@@ -50,7 +51,8 @@ export default function ScheduleAccordionSection({ data, settings }: Props) {
 
   return (
     <section
-      className={`${settings.paddingY || "py-16"} px-4 ${
+      style={sectionSpacingStyles(settings)}
+      className={`px-4 ${
         settings.bgColor === "sand" ? "bg-sand" : "bg-white"
       } ${settings.customClasses || ""}`}
     >

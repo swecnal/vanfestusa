@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import type { FaqAccordionData, SectionSettings } from "@/lib/types";
+import { sectionSpacingStyles } from "@/lib/types";
 import type { SiteStyles } from "@/lib/styles";
 import { resolveButtonStylesInHtml, EMPTY_SITE_STYLES } from "@/lib/styles";
 
@@ -41,7 +42,8 @@ export default function FaqAccordionSection({ data, settings, siteStyles = EMPTY
 
   return (
     <section
-      className={`${settings.paddingY || "py-16"} px-4 ${
+      style={sectionSpacingStyles(settings)}
+      className={`px-4 ${
         settings.bgColor === "sand" ? "bg-sand" : "bg-white"
       } ${settings.customClasses || ""}`}
       id={settings.sectionId}

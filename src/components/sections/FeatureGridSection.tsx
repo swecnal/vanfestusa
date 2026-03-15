@@ -1,5 +1,6 @@
 import SectionHeading from "@/components/SectionHeading";
 import type { FeatureGridData, SectionSettings } from "@/lib/types";
+import { sectionSpacingStyles } from "@/lib/types";
 import { type SiteStyles, EMPTY_SITE_STYLES, findButtonStyle, buttonStyleToCSS, textStyleConfigToCSS } from "@/lib/styles";
 
 interface Props {
@@ -21,7 +22,8 @@ export default function FeatureGridSection({ data, settings, siteStyles = EMPTY_
 
   return (
     <section
-      className={`${settings.paddingY || "py-20"} px-4 ${
+      style={sectionSpacingStyles(settings)}
+      className={`px-4 ${
         isLight ? "bg-charcoal" : "bg-white"
       } ${settings.customClasses || ""}`}
     >

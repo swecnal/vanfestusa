@@ -69,11 +69,11 @@ export default function SectionRenderer({ section, siteStyles = EMPTY_SITE_STYLE
       case "image_gallery":
         return <ImageGallerySection data={data} settings={settings} />;
       case "wave_divider":
-        return <WaveDividerSection data={data} />;
+        return <WaveDividerSection data={data} settings={settings} />;
       case "vehicle_convoy":
-        return <VehicleConvoySection data={data} />;
+        return <VehicleConvoySection data={data} settings={settings} />;
       case "vehicle_stream":
-        return <VehicleStreamSection data={data} />;
+        return <VehicleStreamSection data={data} settings={settings} />;
       case "accordion_parent":
         return <AccordionParentSection data={data} settings={settings} siteStyles={siteStyles} />;
       case "contact_form":

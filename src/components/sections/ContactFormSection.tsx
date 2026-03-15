@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { ContactFormData, SectionSettings } from "@/lib/types";
+import { sectionSpacingStyles } from "@/lib/types";
 
 interface Props {
   data: Record<string, unknown>;
@@ -21,7 +22,7 @@ export default function ContactFormSection({ data, settings }: Props) {
   };
 
   return (
-    <section className={`${settings.paddingY || "py-16"} px-4 bg-white ${settings.customClasses || ""}`}>
+    <section style={sectionSpacingStyles(settings)} className={`px-4 bg-white ${settings.customClasses || ""}`}>
       <div className={`mx-auto ${settings.maxWidth || "max-w-4xl"}`}>
         {d.contactCards && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-12">

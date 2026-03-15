@@ -1,6 +1,7 @@
 import Link from "next/link";
 import SectionHeading from "@/components/SectionHeading";
 import type { CtaCardsData, SectionSettings } from "@/lib/types";
+import { sectionSpacingStyles } from "@/lib/types";
 
 interface Props {
   data: Record<string, unknown>;
@@ -13,7 +14,8 @@ export default function CtaCardsSection({ data, settings }: Props) {
 
   return (
     <section
-      className={`${settings.paddingY || "py-20"} px-4 ${
+      style={sectionSpacingStyles(settings)}
+      className={`px-4 ${
         settings.bgColor === "charcoal" ? "bg-charcoal" : "bg-white"
       } ${settings.customClasses || ""}`}
     >

@@ -1,3 +1,5 @@
+import type React from "react";
+
 // ─── Database Row Types ───
 
 export interface CmsUser {
@@ -96,12 +98,57 @@ export interface SectionSettings {
   bgColor?: string;
   bgImage?: string;
   bgImageOpacity?: number;
+  // Granular spacing (CSS values like "16px")
+  paddingTop?: string;
+  paddingBottom?: string;
+  paddingLeft?: string;
+  paddingRight?: string;
+  marginTop?: string;
+  marginBottom?: string;
+  marginLeft?: string;
+  marginRight?: string;
+  paddingPreset?: "compact" | "comfortable" | "spacious" | null;
+  marginPreset?: "compact" | "comfortable" | "spacious" | null;
+  // Legacy (backward compat)
   paddingY?: string;
   paddingX?: string;
   maxWidth?: string;
   sectionId?: string;
   scrollMarginTop?: string;
   customClasses?: string;
+}
+
+export type SpacingPreset = "compact" | "comfortable" | "spacious";
+
+export const SPACING_PRESETS = {
+  padding: {
+    compact: { top: "8px", bottom: "8px", left: "8px", right: "8px" },
+    comfortable: { top: "32px", bottom: "32px", left: "16px", right: "16px" },
+    spacious: { top: "64px", bottom: "64px", left: "32px", right: "32px" },
+  },
+  margin: {
+    compact: { top: "0px", bottom: "0px", left: "0px", right: "0px" },
+    comfortable: { top: "16px", bottom: "16px", left: "0px", right: "0px" },
+    spacious: { top: "32px", bottom: "32px", left: "0px", right: "0px" },
+  },
+} as const;
+
+const LEGACY_PADDING_MAP: Record<string, string> = {
+  "py-8": "32px", "py-12": "48px", "py-16": "64px", "py-20": "80px",
+};
+
+export function sectionSpacingStyles(settings: SectionSettings): React.CSSProperties {
+  const legacyPY = settings.paddingY ? LEGACY_PADDING_MAP[settings.paddingY] || "64px" : undefined;
+  return {
+    paddingTop: settings.paddingTop || legacyPY || undefined,
+    paddingBottom: settings.paddingBottom || legacyPY || undefined,
+    paddingLeft: settings.paddingLeft || undefined,
+    paddingRight: settings.paddingRight || undefined,
+    marginTop: settings.marginTop || undefined,
+    marginBottom: settings.marginBottom || undefined,
+    marginLeft: settings.marginLeft || undefined,
+    marginRight: settings.marginRight || undefined,
+  };
 }
 
 // ─── Section Data Shapes ───
@@ -327,7 +374,7 @@ export interface ImageGalleryData {
 }
 
 export interface WaveDividerData {
-  dividerType?: "wave" | "zigzag" | "curve" | "straight" | "convoy" | "festival";
+  dividerType?: "wave" | "zigzag" | "curve" | "straight" | "convoy" | "festival" | "stream" | "gradient" | "clouds" | "bubbles" | "paint_spill" | "digital_fade";
   fromColor: string;
   toColor: string;
   height?: number;
@@ -351,6 +398,22 @@ export interface WaveDividerData {
   };
   festivalSeed?: number;
   festivalBgColor?: string;
+  // Common
+  flip?: boolean;
+  fromColorOpacity?: number;
+  toColorOpacity?: number;
+  // Stream (when dividerType === "stream")
+  streamSeed?: number;
+  streamCount?: number;
+  streamSigns?: string[];
+  streamSpeed?: number;
+  streamRandomness?: number;
+  showDrivers?: boolean;
+  showPassengers?: boolean;
+  // Convoy enhancements
+  convoyRandomness?: number;
+  convoySpeed?: number;
+  vehicleGap?: number;
 }
 
 export interface VehicleConvoyData {

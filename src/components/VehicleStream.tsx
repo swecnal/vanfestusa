@@ -404,7 +404,15 @@ function estimateSignHeight(scale: number): number {
   return 12 + Math.round(20 * scale) + Math.round(16 * scale) + Math.round(34 * scale) + 4;
 }
 
-export default function VehicleStream({ config }: { config?: VehicleStreamConfig | null }) {
+interface VehicleStreamProps {
+  config?: VehicleStreamConfig | null;
+  speedMultiplier?: number;
+  randomness?: number;
+  showDrivers?: boolean;
+  showPassengers?: boolean;
+}
+
+export default function VehicleStream({ config, speedMultiplier = 1, randomness: _randomness, showDrivers, showPassengers }: VehicleStreamProps) {
   const enabled = config?.enabled ?? true;
   const seed = config?.seed ?? 777;
   const count = config?.count ?? 14;
@@ -436,19 +444,52 @@ export default function VehicleStream({ config }: { config?: VehicleStreamConfig
 
   if (!enabled) return null;
 
+  const renderDriverPassenger = (v: StreamVehicle) => {
+    if (!showDrivers && !showPassengers) return null;
+    const vRng = seededRandom(v.rngSeed + 5000);
+    const elements: React.ReactNode[] = [];
+    // Driver silhouette in windshield area
+    if (showDrivers && v.type !== "motorcycle") {
+      elements.push(
+        <g key="driver" opacity={0.6}>
+          <circle cx={v.width * 0.78} cy={12} r={3} fill="#374151" />
+          <line x1={v.width * 0.78} y1={15} x2={v.width * 0.78} y2={22} stroke="#374151" strokeWidth={1.5} />
+        </g>
+      );
+    }
+    // Random passengers
+    if (showPassengers && !["motorcycle", "car"].includes(v.type)) {
+      const passengerCount = Math.floor(vRng() * 3);
+      for (let p = 0; p < passengerCount; p++) {
+        const px = v.width * (0.35 + p * 0.15);
+        elements.push(
+          <g key={`pass-${p}`} opacity={0.4}>
+            <circle cx={px} cy={14} r={2.5} fill="#6B7280" />
+          </g>
+        );
+      }
+    }
+    if (elements.length === 0) return null;
+    return <svg className="absolute top-0 left-0" width={v.width} height={30} style={{ pointerEvents: "none" }}>{elements}</svg>;
+  };
+
   const renderVehicleLayer = (vList: typeof vehicles) =>
     vList.map((v, i) => {
       const vRng = seededRandom(v.rngSeed);
+      const adjustedDuration = v.duration / speedMultiplier;
       return (
         <div
           key={i}
           className="absolute bottom-4"
           style={{
-            animation: `vehicle-stream ${v.duration}s linear -${v.delay}s infinite`,
+            animation: `vehicle-stream ${adjustedDuration}s linear -${v.delay}s infinite`,
             willChange: "transform",
           }}
         >
-          {renderVehicle(v.type, v.color, vRng)}
+          <div className="relative">
+            {renderVehicle(v.type, v.color, vRng)}
+            {renderDriverPassenger(v)}
+          </div>
         </div>
       );
     });

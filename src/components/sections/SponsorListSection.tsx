@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { SectionSettings } from "@/lib/types";
+import { sectionSpacingStyles } from "@/lib/types";
 
 interface SponsorItem {
   name: string;
@@ -67,7 +68,7 @@ export default function SponsorListSection({ data, settings }: Props) {
   const collapseAll = () => setExpandedTiers(new Set());
 
   return (
-    <section className={`${settings.paddingY || "py-16"} px-4 ${settings.customClasses || ""}`}>
+    <section style={sectionSpacingStyles(settings)} className={`px-4 ${settings.customClasses || ""}`}>
       <div className={`mx-auto ${settings.maxWidth || "max-w-5xl"}`}>
         {d.heading && (
           <div className="text-center mb-10">

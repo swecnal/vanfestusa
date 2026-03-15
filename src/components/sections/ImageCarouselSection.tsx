@@ -2,6 +2,7 @@ import SectionHeading from "@/components/SectionHeading";
 import BuildsCarousel from "@/components/BuildsCarousel";
 import Link from "next/link";
 import type { SectionSettings } from "@/lib/types";
+import { sectionSpacingStyles } from "@/lib/types";
 
 interface Props {
   data: Record<string, unknown>;
@@ -24,7 +25,8 @@ export default function ImageCarouselSection({ data, settings }: Props) {
 
   return (
     <section
-      className={`relative ${settings.paddingY || "py-20"} px-4 ${
+      style={sectionSpacingStyles(settings)}
+      className={`relative px-4 ${
         isLight ? "bg-charcoal" : "bg-white"
       } overflow-hidden ${settings.customClasses || ""}`}
     >
