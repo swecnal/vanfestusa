@@ -48,7 +48,7 @@ export default function EventCardsSection({ data, settings }: Props) {
               >
                 <Link
                   href={ev.href}
-                  className={`relative bg-gradient-to-r ${ev.gradient} ${isFeatureCard ? "p-14" : "p-10"} text-white overflow-hidden block`}
+                  className={`relative bg-gradient-to-r ${ev.gradient} ${isFeatureCard ? "p-14" : "p-10"} text-white overflow-hidden block ${isFeatureCard ? "" : "min-h-[220px]"} flex flex-col justify-end`}
                 >
                   {ev.image && (
                     <img
