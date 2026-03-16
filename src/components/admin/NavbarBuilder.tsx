@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { toast } from "sonner";
 import {
   DndContext,
@@ -142,284 +142,167 @@ function IconNestOut() {
   );
 }
 
-// ── Grandchild row (level 3) ──────────────────────────────────────────────────
+// ── Flat tree helpers ─────────────────────────────────────────────────────────
 
-function GrandchildRow({
-  gc,
-  onUpdate,
-  onRemove,
-  onUnnest,
-}: {
-  gc: NavbarLinkV2;
-  onUpdate: (key: string, value: string) => void;
-  onRemove: () => void;
-  onUnnest: () => void;
-}) {
-  return (
-    <div className="flex items-center gap-1.5 ml-12">
-      <span className="text-gray-300 text-[10px]">↳</span>
-      <input
-        type="text"
-        value={gc.label}
-        onChange={(e) => onUpdate("label", e.target.value)}
-        className="flex-1 min-w-0 px-2 py-0.5 border border-gray-200 rounded text-[10px]"
-        placeholder="Sub-sub Label"
-      />
-      <input
-        type="text"
-        value={gc.href}
-        onChange={(e) => onUpdate("href", e.target.value)}
-        className="flex-1 min-w-0 px-2 py-0.5 border border-gray-200 rounded text-[10px]"
-        placeholder="/path"
-      />
-      <button
-        onClick={onUnnest}
-        className="text-gray-400 hover:text-teal p-0.5 shrink-0"
-        title="Move up to level 2"
-      >
-        <IconNestOut />
-      </button>
-      <button onClick={onRemove} className="text-gray-300 hover:text-red-500 p-0.5 shrink-0">
-        <IconX size="3" />
-      </button>
-    </div>
-  );
+interface FlatItem {
+  id: string;
+  depth: number;
+  label: string;
+  href: string;
+  external?: boolean;
 }
 
-// ── Child row (level 2) with optional grandchildren (level 3) ─────────────────
-
-function ChildRow({
-  child,
-  childIndex,
-  parentIndex,
-  canNestIntoSibling,
-  onUpdate,
-  onRemove,
-  onUnnest,
-  onNestIntoSibling,
-  onAddGrandchild,
-  onUpdateGrandchild,
-  onRemoveGrandchild,
-  onUnnestGrandchild,
-}: {
-  child: NavbarLinkV2;
-  childIndex: number;
-  parentIndex: number;
-  canNestIntoSibling: boolean;
-  onUpdate: (key: string, value: string) => void;
-  onRemove: () => void;
-  onUnnest: () => void;
-  onNestIntoSibling: () => void;
-  onAddGrandchild: () => void;
-  onUpdateGrandchild: (gci: number, key: string, value: string) => void;
-  onRemoveGrandchild: (gci: number) => void;
-  onUnnestGrandchild: (gci: number) => void;
-}) {
-  const grandchildren = child.children || [];
-
-  return (
-    <div className="space-y-0.5">
-      {/* Level-2 row */}
-      <div className="flex items-center gap-1.5 ml-6">
-        <span className="text-gray-300 text-xs">↳</span>
-        <input
-          type="text"
-          value={child.label}
-          onChange={(e) => onUpdate("label", e.target.value)}
-          className="flex-1 min-w-0 px-2 py-1 border border-gray-200 rounded text-[11px]"
-          placeholder="Sub Label"
-        />
-        <input
-          type="text"
-          value={child.href}
-          onChange={(e) => onUpdate("href", e.target.value)}
-          className="flex-1 min-w-0 px-2 py-1 border border-gray-200 rounded text-[11px]"
-          placeholder="/path"
-        />
-        <div className="flex gap-0.5 shrink-0">
-          {canNestIntoSibling && (
-            <button
-              onClick={onNestIntoSibling}
-              className="text-gray-400 hover:text-teal p-0.5"
-              title="Nest into child above (level 3)"
-            >
-              <IconNestIn />
-            </button>
-          )}
-          <button
-            onClick={onUnnest}
-            className="text-gray-400 hover:text-teal p-0.5"
-            title="Promote to top-level link"
-          >
-            <IconNestOut />
-          </button>
-          <button onClick={onRemove} className="text-gray-300 hover:text-red-500 p-0.5">
-            <IconX size="3" />
-          </button>
-        </div>
-      </div>
-
-      {/* Level-3 rows */}
-      {grandchildren.map((gc, gci) => (
-        <GrandchildRow
-          key={gc.id}
-          gc={gc}
-          onUpdate={(key, value) => onUpdateGrandchild(gci, key, value)}
-          onRemove={() => onRemoveGrandchild(gci)}
-          onUnnest={() => onUnnestGrandchild(gci)}
-        />
-      ))}
-
-      {/* Add grandchild */}
-      <button
-        onClick={onAddGrandchild}
-        className="ml-12 text-teal/60 hover:text-teal text-[10px] font-semibold"
-      >
-        + Add Sub Link
-      </button>
-    </div>
-  );
+function flattenTree(links: NavbarLinkV2[]): FlatItem[] {
+  const items: FlatItem[] = [];
+  for (const link of links) {
+    items.push({ id: link.id, depth: 0, label: link.label, href: link.href, external: link.external });
+    for (const child of link.children || []) {
+      items.push({ id: child.id, depth: 1, label: child.label, href: child.href, external: child.external });
+      for (const gc of child.children || []) {
+        items.push({ id: gc.id, depth: 2, label: gc.label, href: gc.href, external: gc.external });
+      }
+    }
+  }
+  return items;
 }
 
-// ── Top-level sortable card (level 1) ─────────────────────────────────────────
+function buildTree(flatItems: FlatItem[]): NavbarLinkV2[] {
+  const result: NavbarLinkV2[] = [];
+  const stack: { depth: number; node: NavbarLinkV2 }[] = [];
 
-function SortableLinkCard({
-  link,
-  index,
-  selected,
-  onSelect,
-  onRemove,
+  for (const item of flatItems) {
+    const node: NavbarLinkV2 = {
+      id: item.id,
+      label: item.label,
+      href: item.href,
+      external: item.external,
+    };
+
+    // Clamp depth: can't exceed 2, and can't be more than prevDepth + 1
+    const maxAllowed = stack.length > 0 ? Math.min(stack[stack.length - 1].depth + 1, 2) : 0;
+    const effectiveDepth = Math.min(item.depth, maxAllowed);
+
+    // Pop stack down to parent level
+    while (stack.length > 0 && stack[stack.length - 1].depth >= effectiveDepth) {
+      stack.pop();
+    }
+
+    if (stack.length === 0) {
+      result.push(node);
+    } else {
+      const parent = stack[stack.length - 1].node;
+      if (!parent.children) parent.children = [];
+      parent.children.push(node);
+    }
+
+    stack.push({ depth: effectiveDepth, node });
+  }
+
+  return result;
+}
+
+/** Returns [startIndex, endIndex) of an item and all its descendants in the flat list */
+function getItemSpan(flatItems: FlatItem[], itemId: string): [number, number] {
+  const idx = flatItems.findIndex((i) => i.id === itemId);
+  if (idx === -1) return [-1, -1];
+  const itemDepth = flatItems[idx].depth;
+  let end = idx + 1;
+  while (end < flatItems.length && flatItems[end].depth > itemDepth) {
+    end++;
+  }
+  return [idx, end];
+}
+
+// ── Flat sortable row (all depths) ────────────────────────────────────────────
+
+function FlatSortableRow({
+  item,
+  canIndent,
+  canOutdent,
+  canAddChild,
   onUpdate,
+  onRemove,
+  onIndent,
+  onOutdent,
   onAddChild,
-  onUpdateChild,
-  onRemoveChild,
-  onNest,
-  onUnnest,
-  onNestChildIntoSibling,
-  onAddGrandchild,
-  onUpdateGrandchild,
-  onRemoveGrandchild,
-  onUnnestGrandchild,
-  canNest,
 }: {
-  link: NavbarLinkV2;
-  index: number;
-  selected: boolean;
-  onSelect: () => void;
+  item: FlatItem;
+  canIndent: boolean;
+  canOutdent: boolean;
+  canAddChild: boolean;
+  onUpdate: (key: string, value: string | boolean) => void;
   onRemove: () => void;
-  onUpdate: (key: string, value: unknown) => void;
+  onIndent: () => void;
+  onOutdent: () => void;
   onAddChild: () => void;
-  onUpdateChild: (ci: number, key: string, value: string) => void;
-  onRemoveChild: (ci: number) => void;
-  onNest: () => void;
-  onUnnest: (ci: number) => void;
-  onNestChildIntoSibling: (ci: number) => void;
-  onAddGrandchild: (ci: number) => void;
-  onUpdateGrandchild: (ci: number, gci: number, key: string, value: string) => void;
-  onRemoveGrandchild: (ci: number, gci: number) => void;
-  onUnnestGrandchild: (ci: number, gci: number) => void;
-  canNest: boolean;
 }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: link.id });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
 
-  const style = {
+  const rowStyle = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.5 : 1,
+    opacity: isDragging ? 0.4 : 1,
+    paddingLeft: `${item.depth * 20 + 8}px`,
   };
-
-  const children = link.children || [];
 
   return (
     <div
       ref={setNodeRef}
-      style={style}
-      className={`border rounded-lg bg-white transition-colors ${
-        selected ? "border-teal ring-1 ring-teal/20" : "border-gray-200 hover:border-gray-300"
+      style={rowStyle}
+      className={`flex items-center gap-1.5 bg-white border rounded-lg pr-2 py-1.5 transition-colors ${
+        isDragging ? "border-teal shadow-md z-50" : "border-gray-200 hover:border-gray-300"
       }`}
     >
-      {/* Level-1 row */}
-      <div className="flex items-center gap-1.5 p-2" onClick={onSelect}>
-        <button
-          {...attributes}
-          {...listeners}
-          className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 touch-none p-0.5 shrink-0"
-        >
-          <IconGrip />
-        </button>
+      {item.depth > 0 && <span className="text-gray-300 text-xs shrink-0">↳</span>}
+      <button
+        {...attributes}
+        {...listeners}
+        className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 touch-none p-0.5 shrink-0"
+      >
+        <IconGrip />
+      </button>
+      <input
+        type="text"
+        value={item.label}
+        onChange={(e) => onUpdate("label", e.target.value)}
+        className={`flex-1 min-w-0 px-2 py-1 border border-gray-200 rounded ${item.depth === 0 ? "text-xs font-semibold" : "text-[11px]"}`}
+        placeholder="Label"
+      />
+      <input
+        type="text"
+        value={item.href}
+        onChange={(e) => onUpdate("href", e.target.value)}
+        className={`flex-1 min-w-0 px-2 py-1 border border-gray-200 rounded ${item.depth === 0 ? "text-xs" : "text-[11px]"}`}
+        placeholder="/path"
+      />
+      <label className="flex items-center gap-1 text-[10px] text-gray-500 whitespace-nowrap shrink-0">
         <input
-          type="text"
-          value={link.label}
-          onChange={(e) => onUpdate("label", e.target.value)}
-          className="flex-1 min-w-0 px-2 py-1 border border-gray-200 rounded text-xs"
-          placeholder="Label"
-          onClick={(e) => e.stopPropagation()}
+          type="checkbox"
+          checked={item.external || false}
+          onChange={(e) => onUpdate("external", e.target.checked)}
         />
-        <input
-          type="text"
-          value={link.href}
-          onChange={(e) => onUpdate("href", e.target.value)}
-          className="flex-1 min-w-0 px-2 py-1 border border-gray-200 rounded text-xs"
-          placeholder="/path"
-          onClick={(e) => e.stopPropagation()}
-        />
-        <label className="flex items-center gap-1 text-[10px] text-gray-500 whitespace-nowrap shrink-0" onClick={(e) => e.stopPropagation()}>
-          <input
-            type="checkbox"
-            checked={link.external || false}
-            onChange={(e) => onUpdate("external", e.target.checked)}
-          />
-          Ext
-        </label>
-        <div className="flex gap-0.5 shrink-0">
-          {canNest && (
-            <button
-              onClick={(e) => { e.stopPropagation(); onNest(); }}
-              className="text-gray-400 hover:text-teal p-0.5"
-              title="Nest under previous link (level 2)"
-            >
-              <IconNestIn />
-            </button>
-          )}
-          <button
-            onClick={(e) => { e.stopPropagation(); onRemove(); }}
-            className="text-gray-300 hover:text-red-500 p-0.5"
-          >
-            <IconX />
+        Ext
+      </label>
+      <div className="flex gap-0.5 shrink-0">
+        {canIndent && (
+          <button onClick={onIndent} className="text-gray-400 hover:text-teal p-0.5" title="Nest into item above">
+            <IconNestIn />
           </button>
-        </div>
-      </div>
-
-      {/* Children (level 2) + grandchildren (level 3) */}
-      {children.length > 0 && (
-        <div className="px-2 pb-2 space-y-1.5 border-t border-gray-50 pt-1.5">
-          {children.map((child, ci) => (
-            <ChildRow
-              key={child.id}
-              child={child}
-              childIndex={ci}
-              parentIndex={index}
-              canNestIntoSibling={ci > 0}
-              onUpdate={(key, value) => onUpdateChild(ci, key, value)}
-              onRemove={() => onRemoveChild(ci)}
-              onUnnest={() => onUnnest(ci)}
-              onNestIntoSibling={() => onNestChildIntoSibling(ci)}
-              onAddGrandchild={() => onAddGrandchild(ci)}
-              onUpdateGrandchild={(gci, key, value) => onUpdateGrandchild(ci, gci, key, value)}
-              onRemoveGrandchild={(gci) => onRemoveGrandchild(ci, gci)}
-              onUnnestGrandchild={(gci) => onUnnestGrandchild(ci, gci)}
-            />
-          ))}
-        </div>
-      )}
-
-      {/* Add child button */}
-      <div className={`px-2 pb-2 ${children.length > 0 ? "" : "border-t border-gray-50 pt-1"}`}>
-        <button
-          onClick={onAddChild}
-          className="ml-6 text-teal/60 hover:text-teal text-[10px] font-semibold"
-        >
-          + Add Sub Link
+        )}
+        {canOutdent && (
+          <button onClick={onOutdent} className="text-gray-400 hover:text-teal p-0.5" title="Promote up a level">
+            <IconNestOut />
+          </button>
+        )}
+        {canAddChild && (
+          <button onClick={onAddChild} className="text-gray-400 hover:text-teal p-0.5" title="Add sub-link">
+            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+          </button>
+        )}
+        <button onClick={onRemove} className="text-gray-300 hover:text-red-500 p-0.5" title="Remove">
+          <IconX size="3" />
         </button>
       </div>
     </div>
@@ -443,7 +326,6 @@ export default function NavbarBuilder({ onSave, onDirtyChange, saveRef, onConfig
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
-  const [selectedLinkId, setSelectedLinkId] = useState<string | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -521,195 +403,129 @@ export default function NavbarBuilder({ onSave, onDirtyChange, saveRef, onConfig
     });
   }, [onConfigChange]);
 
-  // ── Top-level link management ─────────────────────────────────────────────
+  // ── Flat tree items (derived from config.links) ──────────────────────────
+
+  const flatItems = useMemo(() => flattenTree(config.links), [config.links]);
+
+  // ── Flat tree operations ────────────────────────────────────────────────
 
   const addLink = () => {
-    const link: NavbarLinkV2 = { id: genId(), label: "New Link", href: "/" };
-    updateConfig(prev => ({ ...prev, links: [...prev.links, link] }));
-    setSelectedLinkId(link.id);
-  };
-
-  const updateLink = (index: number, key: string, value: unknown) => {
     updateConfig(prev => {
-      const links = [...prev.links];
-      links[index] = { ...links[index], [key]: value };
-      return { ...prev, links };
+      const flat = flattenTree(prev.links);
+      flat.push({ id: genId(), depth: 0, label: "New Link", href: "/" });
+      return { ...prev, links: buildTree(flat) };
     });
   };
 
-  const removeLink = (index: number) => {
-    const id = config.links[index]?.id;
-    updateConfig(prev => ({ ...prev, links: prev.links.filter((_, i) => i !== index) }));
-    if (selectedLinkId === id) setSelectedLinkId(null);
-  };
-
-  // Nest top-level link into previous link as a level-2 child
-  const nestLink = (index: number) => {
-    if (index <= 0) return;
+  const updateFlatItem = (id: string, key: string, value: string | boolean) => {
     updateConfig(prev => {
-      const links = [...prev.links];
-      const linkToNest = links[index];
-      const parentLink = links[index - 1];
-      // When nesting, carry the link's own children (as grandchildren) — max depth respected by UI
-      const newChild: NavbarLinkV2 = {
-        id: linkToNest.id,
-        label: linkToNest.label,
-        href: linkToNest.href,
-        external: linkToNest.external,
-        children: linkToNest.children,
-      };
-      const children = [...(parentLink.children || []), newChild];
-      links[index - 1] = { ...parentLink, children };
-      links.splice(index, 1);
-      return { ...prev, links };
+      const flat = flattenTree(prev.links);
+      const idx = flat.findIndex(i => i.id === id);
+      if (idx === -1) return prev;
+      flat[idx] = { ...flat[idx], [key]: value };
+      return { ...prev, links: buildTree(flat) };
     });
   };
 
-  // Unnest a level-2 child to top-level (after parent)
-  const unnestChild = (linkIndex: number, childIndex: number) => {
+  const removeFlatItem = (id: string) => {
     updateConfig(prev => {
-      const links = [...prev.links];
-      const parent = links[linkIndex];
-      const children = [...(parent.children || [])];
-      const child = children[childIndex];
-      children.splice(childIndex, 1);
-      links[linkIndex] = { ...parent, children: children.length ? children : undefined };
-      const newLink: NavbarLinkV2 = {
-        id: child.id,
-        label: child.label,
-        href: child.href,
-        external: child.external,
-        children: child.children,
-      };
-      links.splice(linkIndex + 1, 0, newLink);
-      return { ...prev, links };
+      const flat = flattenTree(prev.links);
+      const [start, end] = getItemSpan(flat, id);
+      if (start === -1) return prev;
+      const newFlat = [...flat.slice(0, start), ...flat.slice(end)];
+      return { ...prev, links: buildTree(newFlat) };
     });
   };
 
-  // ── Level-2 child management ──────────────────────────────────────────────
-
-  const addChild = (linkIndex: number) => {
+  const indentItem = (id: string) => {
     updateConfig(prev => {
-      const links = [...prev.links];
-      const children = [...(links[linkIndex].children || [])];
-      children.push({ id: genId(), label: "Sub Link", href: "/" });
-      links[linkIndex] = { ...links[linkIndex], children };
-      return { ...prev, links };
+      const flat = flattenTree(prev.links);
+      const idx = flat.findIndex(i => i.id === id);
+      if (idx <= 0 || flat[idx].depth >= 2) return prev;
+      // Can only indent if the item above is at same depth or deeper
+      if (flat[idx - 1].depth < flat[idx].depth) return prev;
+      const [start, end] = getItemSpan(flat, id);
+      const newFlat = flat.map((fi, i) => {
+        if (i >= start && i < end) {
+          return { ...fi, depth: Math.min(2, fi.depth + 1) };
+        }
+        return fi;
+      });
+      return { ...prev, links: buildTree(newFlat) };
     });
   };
 
-  const updateChild = (linkIndex: number, childIndex: number, key: string, value: string) => {
+  const outdentItem = (id: string) => {
     updateConfig(prev => {
-      const links = [...prev.links];
-      const children = [...(links[linkIndex].children || [])];
-      children[childIndex] = { ...children[childIndex], [key]: value };
-      links[linkIndex] = { ...links[linkIndex], children };
-      return { ...prev, links };
+      const flat = flattenTree(prev.links);
+      const idx = flat.findIndex(i => i.id === id);
+      if (idx === -1 || flat[idx].depth <= 0) return prev;
+      const [start, end] = getItemSpan(flat, id);
+      const newFlat = flat.map((fi, i) => {
+        if (i >= start && i < end) {
+          return { ...fi, depth: Math.max(0, fi.depth - 1) };
+        }
+        return fi;
+      });
+      return { ...prev, links: buildTree(newFlat) };
     });
   };
 
-  const removeChild = (linkIndex: number, childIndex: number) => {
+  const addChildToItem = (id: string) => {
     updateConfig(prev => {
-      const links = [...prev.links];
-      const children = (links[linkIndex].children || []).filter((_, i) => i !== childIndex);
-      links[linkIndex] = { ...links[linkIndex], children: children.length ? children : undefined };
-      return { ...prev, links };
+      const flat = flattenTree(prev.links);
+      const idx = flat.findIndex(i => i.id === id);
+      if (idx === -1 || flat[idx].depth >= 2) return prev;
+      const [, end] = getItemSpan(flat, id);
+      const newItem: FlatItem = { id: genId(), depth: flat[idx].depth + 1, label: "New Link", href: "/" };
+      const newFlat = [...flat.slice(0, end), newItem, ...flat.slice(end)];
+      return { ...prev, links: buildTree(newFlat) };
     });
   };
 
-  // Nest a level-2 child into the previous sibling child (making it level-3)
-  const nestChildIntoSibling = (linkIndex: number, childIndex: number) => {
-    if (childIndex <= 0) return;
-    updateConfig(prev => {
-      const links = [...prev.links];
-      const children = [...(links[linkIndex].children || [])];
-      const childToNest = children[childIndex];
-      const targetChild = children[childIndex - 1];
-      // Add as grandchild of targetChild (drop childToNest's own children to avoid depth-4)
-      const grandchildren = [...(targetChild.children || []), {
-        id: childToNest.id,
-        label: childToNest.label,
-        href: childToNest.href,
-        external: childToNest.external,
-      }];
-      children[childIndex - 1] = { ...targetChild, children: grandchildren };
-      children.splice(childIndex, 1);
-      links[linkIndex] = { ...links[linkIndex], children };
-      return { ...prev, links };
-    });
-  };
-
-  // ── Level-3 grandchild management ─────────────────────────────────────────
-
-  const addGrandchild = (linkIndex: number, childIndex: number) => {
-    updateConfig(prev => {
-      const links = [...prev.links];
-      const children = [...(links[linkIndex].children || [])];
-      const grandchildren = [...(children[childIndex].children || [])];
-      grandchildren.push({ id: genId(), label: "Sub Link", href: "/" });
-      children[childIndex] = { ...children[childIndex], children: grandchildren };
-      links[linkIndex] = { ...links[linkIndex], children };
-      return { ...prev, links };
-    });
-  };
-
-  const updateGrandchild = (linkIndex: number, childIndex: number, gcIndex: number, key: string, value: string) => {
-    updateConfig(prev => {
-      const links = [...prev.links];
-      const children = [...(links[linkIndex].children || [])];
-      const grandchildren = [...(children[childIndex].children || [])];
-      grandchildren[gcIndex] = { ...grandchildren[gcIndex], [key]: value };
-      children[childIndex] = { ...children[childIndex], children: grandchildren };
-      links[linkIndex] = { ...links[linkIndex], children };
-      return { ...prev, links };
-    });
-  };
-
-  const removeGrandchild = (linkIndex: number, childIndex: number, gcIndex: number) => {
-    updateConfig(prev => {
-      const links = [...prev.links];
-      const children = [...(links[linkIndex].children || [])];
-      const grandchildren = (children[childIndex].children || []).filter((_, i) => i !== gcIndex);
-      children[childIndex] = { ...children[childIndex], children: grandchildren.length ? grandchildren : undefined };
-      links[linkIndex] = { ...links[linkIndex], children };
-      return { ...prev, links };
-    });
-  };
-
-  // Unnest a grandchild (level-3) back up to level-2 child of the parent link
-  const unnestGrandchild = (linkIndex: number, childIndex: number, gcIndex: number) => {
-    updateConfig(prev => {
-      const links = [...prev.links];
-      const children = [...(links[linkIndex].children || [])];
-      const grandchildren = [...(children[childIndex].children || [])];
-      const gc = grandchildren[gcIndex];
-      grandchildren.splice(gcIndex, 1);
-      children[childIndex] = {
-        ...children[childIndex],
-        children: grandchildren.length ? grandchildren : undefined,
-      };
-      // Insert as new child after the current child
-      const newChild: NavbarLinkV2 = { id: gc.id, label: gc.label, href: gc.href, external: gc.external };
-      children.splice(childIndex + 1, 0, newChild);
-      links[linkIndex] = { ...links[linkIndex], children };
-      return { ...prev, links };
-    });
-  };
-
-  // ── DnD (top-level reorder only) ─────────────────────────────────────────
+  // ── DnD (flat tree — all levels) ───────────────────────────────────────
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
     updateConfig(prev => {
-      const links = [...prev.links];
-      const oldIndex = links.findIndex(l => l.id === active.id);
-      const newIndex = links.findIndex(l => l.id === over.id);
-      if (oldIndex !== -1 && newIndex !== -1) {
-        return { ...prev, links: arrayMove(links, oldIndex, newIndex) };
-      }
-      return prev;
+      const flat = flattenTree(prev.links);
+      const activeIdx = flat.findIndex(i => i.id === active.id);
+      const overIdx = flat.findIndex(i => i.id === over.id);
+      if (activeIdx === -1 || overIdx === -1) return prev;
+
+      // Can't drop on own descendant
+      const [spanStart, spanEnd] = getItemSpan(flat, active.id as string);
+      if (overIdx >= spanStart && overIdx < spanEnd) return prev;
+
+      // Extract items to move (item + descendants)
+      const itemsToMove = flat.slice(spanStart, spanEnd);
+      const moveIds = new Set(itemsToMove.map(i => i.id));
+      const remaining = flat.filter(i => !moveIds.has(i.id));
+
+      // Find insert position
+      const overIdxInRemaining = remaining.findIndex(i => i.id === over.id);
+      const insertAt = spanStart < overIdx
+        ? overIdxInRemaining + 1  // moving DOWN → insert after over
+        : overIdxInRemaining;     // moving UP → insert before over
+
+      // Adjust depth: match the over item's depth
+      const overDepth = flat[overIdx].depth;
+      const targetDepth = Math.min(overDepth, 2);
+      const depthDelta = targetDepth - itemsToMove[0].depth;
+      const adjustedItems = itemsToMove.map(item => ({
+        ...item,
+        depth: Math.max(0, Math.min(2, item.depth + depthDelta)),
+      }));
+
+      const newFlat = [
+        ...remaining.slice(0, insertAt),
+        ...adjustedItems,
+        ...remaining.slice(insertAt),
+      ];
+
+      return { ...prev, links: buildTree(newFlat) };
     });
   };
 
@@ -841,35 +657,32 @@ export default function NavbarBuilder({ onSave, onDirtyChange, saveRef, onConfig
             </button>
           </div>
           <p className="text-[10px] text-gray-400">
-            Drag to reorder. Use the indent (right arrow) button to nest a link, or the dedent (left arrow) button to promote it.
-            Up to 3 levels supported.
+            Drag any item to reorder. Use <span className="font-bold">&raquo;</span> to nest deeper or <span className="font-bold">&laquo;</span> to promote.
+            <span className="font-bold">+</span> adds a sub-link. Up to 3 levels.
           </p>
 
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <SortableContext items={config.links.map(l => l.id)} strategy={verticalListSortingStrategy}>
-              <div className="space-y-1.5">
-                {config.links.map((link, i) => (
-                  <SortableLinkCard
-                    key={link.id}
-                    link={link}
-                    index={i}
-                    selected={selectedLinkId === link.id}
-                    onSelect={() => setSelectedLinkId(selectedLinkId === link.id ? null : link.id)}
-                    onRemove={() => removeLink(i)}
-                    onUpdate={(key, value) => updateLink(i, key, value)}
-                    onAddChild={() => addChild(i)}
-                    onUpdateChild={(ci, key, value) => updateChild(i, ci, key, value)}
-                    onRemoveChild={(ci) => removeChild(i, ci)}
-                    onNest={() => nestLink(i)}
-                    onUnnest={(ci) => unnestChild(i, ci)}
-                    onNestChildIntoSibling={(ci) => nestChildIntoSibling(i, ci)}
-                    onAddGrandchild={(ci) => addGrandchild(i, ci)}
-                    onUpdateGrandchild={(ci, gci, key, value) => updateGrandchild(i, ci, gci, key, value)}
-                    onRemoveGrandchild={(ci, gci) => removeGrandchild(i, ci, gci)}
-                    onUnnestGrandchild={(ci, gci) => unnestGrandchild(i, ci, gci)}
-                    canNest={i > 0}
-                  />
-                ))}
+            <SortableContext items={flatItems.map(i => i.id)} strategy={verticalListSortingStrategy}>
+              <div className="space-y-1">
+                {flatItems.map((item, idx) => {
+                  const canIndent = idx > 0 && item.depth < 2 && flatItems[idx - 1].depth >= item.depth;
+                  const canOutdent = item.depth > 0;
+                  const canAddChild = item.depth < 2;
+                  return (
+                    <FlatSortableRow
+                      key={item.id}
+                      item={item}
+                      canIndent={canIndent}
+                      canOutdent={canOutdent}
+                      canAddChild={canAddChild}
+                      onUpdate={(key, value) => updateFlatItem(item.id, key, value)}
+                      onRemove={() => removeFlatItem(item.id)}
+                      onIndent={() => indentItem(item.id)}
+                      onOutdent={() => outdentItem(item.id)}
+                      onAddChild={() => addChildToItem(item.id)}
+                    />
+                  );
+                })}
               </div>
             </SortableContext>
           </DndContext>
