@@ -150,7 +150,7 @@ export default function SettingsPage() {
         {/* Editor Preferences */}
         <SettingsCard title="Editor">
           <SettingsField label="Edit Pane Mode">
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-3">
               {(["floating", "static"] as const).map((mode) => (
                 <label
                   key={mode}
@@ -225,7 +225,7 @@ function SettingsCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-6">
+    <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6">
       <h3 className="font-display font-semibold text-charcoal mb-4">
         {title}
       </h3>

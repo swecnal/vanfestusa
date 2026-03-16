@@ -10,6 +10,7 @@ import {
   rectIntersection,
   KeyboardSensor,
   PointerSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   useDroppable,
@@ -136,11 +137,11 @@ function SortableLiveSection({
       </div>
 
       {/* Floating action bar */}
-      <div className={`absolute top-2 right-2 z-30 flex items-center gap-1 transition-opacity ${
+      <div className={`absolute top-1.5 right-1.5 md:top-2 md:right-2 z-30 flex items-center gap-1.5 md:gap-1 transition-opacity ${
         isSelected ? "opacity-100" : "opacity-0 group-hover/section:opacity-100"
       }`}>
         <button
-          className="bg-charcoal text-white rounded-full p-1.5 shadow-lg cursor-grab active:cursor-grabbing"
+          className="bg-charcoal text-white rounded-full p-2 md:p-1.5 shadow-lg cursor-grab active:cursor-grabbing"
           title="Drag to reorder"
           {...attributes}
           {...listeners}
@@ -152,7 +153,7 @@ function SortableLiveSection({
         </button>
         <button
           onClick={(e) => { e.stopPropagation(); onToggleVisibility(); }}
-          className={`rounded-full p-1.5 shadow-lg ${
+          className={`rounded-full p-2 md:p-1.5 shadow-lg ${
             section.is_visible ? "bg-charcoal text-white" : "bg-yellow-500 text-white"
           }`}
           title={section.is_visible ? "Hide section" : "Show section"}
@@ -167,7 +168,7 @@ function SortableLiveSection({
         </button>
         <button
           onClick={(e) => { e.stopPropagation(); onDuplicate(); }}
-          className="bg-charcoal text-white rounded-full p-1.5 shadow-lg"
+          className="bg-charcoal text-white rounded-full p-2 md:p-1.5 shadow-lg"
           title="Duplicate section"
         >
           <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -179,7 +180,7 @@ function SortableLiveSection({
           <div className="relative">
             <button
               onClick={(e) => { e.stopPropagation(); setShowAccordionMenu(!showAccordionMenu); }}
-              className="bg-charcoal text-white rounded-full p-1.5 shadow-lg"
+              className="bg-charcoal text-white rounded-full p-2 md:p-1.5 shadow-lg"
               title="Move into Accordion Group"
             >
               <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -208,7 +209,7 @@ function SortableLiveSection({
         )}
         <button
           onClick={(e) => { e.stopPropagation(); onDelete(); }}
-          className="bg-red-500 text-white rounded-full p-1.5 shadow-lg"
+          className="bg-red-500 text-white rounded-full p-2 md:p-1.5 shadow-lg"
           title="Delete section"
         >
           <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -378,6 +379,7 @@ export default function PageEditorPage() {
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
@@ -794,25 +796,25 @@ export default function PageEditorPage() {
   const isStatic = editPaneMode === "static" && selectedSection;
 
   return (
-    <div className="flex gap-0 -m-6 h-[calc(100vh-57px)]">
+    <div className="flex gap-0 -m-3 md:-m-6 h-[calc(100vh-57px)]">
       {/* Center: Live preview */}
       <div className={`overflow-auto bg-white transition-all ${isStatic ? "flex-1 min-w-0" : "flex-1"}`}>
         {/* Page header bar */}
-        <div className="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-gray-200 px-4 py-2 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <h3 className="font-display font-bold text-sm text-charcoal">
+        <div className="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-gray-200 px-2 md:px-4 py-2 flex items-center justify-between">
+          <div className="flex items-center gap-2 md:gap-3 min-w-0">
+            <h3 className="font-display font-bold text-sm text-charcoal truncate">
               {page.title}
             </h3>
-            <span className="text-xs text-gray-400">{page.slug}</span>
-            <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+            <span className="hidden sm:inline text-xs text-gray-400">{page.slug}</span>
+            <span className={`hidden sm:inline px-2 py-0.5 rounded-full text-[10px] font-semibold ${
               page.is_published ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
             }`}>
               {page.is_published ? "Published" : "Draft"}
             </span>
           </div>
           <div className="flex items-center gap-2">
-            {/* Desktop / Mobile preview toggle */}
-            <div className="flex rounded-lg border border-gray-200 overflow-hidden">
+            {/* Desktop / Mobile preview toggle (hidden on phones) */}
+            <div className="hidden md:flex rounded-lg border border-gray-200 overflow-hidden">
               <button
                 onClick={() => updatePreviewMode("desktop")}
                 className={`flex items-center gap-1 px-2.5 py-1 text-[10px] font-semibold transition-colors ${
@@ -952,9 +954,9 @@ export default function PageEditorPage() {
         </div>
         )}
 
-        {/* Mobile preview — real iframe at 393px viewport + section list */}
+        {/* Mobile preview — real iframe at 393px viewport + section list (desktop only) */}
         {previewMode === "mobile" && (
-          <div className="flex-1 flex bg-gray-100 overflow-hidden">
+          <div className="flex-1 hidden md:flex bg-gray-100 overflow-hidden">
             {/* Phone frame */}
             <div className="flex-1 flex items-start justify-center py-6 overflow-y-auto">
               <div className="flex flex-col items-center">
@@ -1003,13 +1005,13 @@ export default function PageEditorPage() {
         )}
       </div>
 
-      {/* Editor panel — floating (overlay) or static (side column) */}
+      {/* Editor panel — desktop: floating or static side column */}
       {selectedSection && (
-        <div className={
+        <div className={`hidden md:flex ${
           editPaneMode === "static"
-            ? "w-96 flex-shrink-0 bg-white border-l border-gray-200 flex flex-col h-full"
-            : "fixed top-[57px] right-0 bottom-0 w-96 z-40 bg-white border-l border-gray-200 shadow-2xl flex flex-col"
-        }>
+            ? "w-96 flex-shrink-0 bg-white border-l border-gray-200 flex-col h-full"
+            : "fixed top-[57px] right-0 bottom-0 w-96 z-40 bg-white border-l border-gray-200 shadow-2xl flex-col"
+        }`}>
           <div className="flex-shrink-0 bg-white p-4 border-b border-gray-100 flex items-center justify-between z-10">
             <h3 className="font-display font-semibold text-sm text-charcoal">
               {SECTION_TYPE_LABELS[selectedSection.section_type as SectionType]}
@@ -1024,6 +1026,36 @@ export default function PageEditorPage() {
             </button>
           </div>
           <div className="flex-1 overflow-y-auto admin-scrollbar">
+            <SectionEditorPanel
+              section={selectedSection}
+              onSave={(data, settings) => handleSaveSection(selectedSection.id, data, settings)}
+              saving={saving}
+              onChange={handleEditorChange}
+              stickyButtons
+              onUngroupChild={handleUngroupChild}
+              previewMode={previewMode}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Editor panel — mobile: full-screen overlay */}
+      {selectedSection && (
+        <div className="md:hidden fixed inset-0 z-50 bg-white flex flex-col">
+          <div className="flex-shrink-0 bg-white px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+            <h3 className="font-display font-semibold text-sm text-charcoal">
+              {SECTION_TYPE_LABELS[selectedSection.section_type as SectionType]}
+            </h3>
+            <button
+              onClick={() => handleSelectSection(null)}
+              className="text-gray-400 hover:text-gray-600 p-1"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto admin-scrollbar" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
             <SectionEditorPanel
               section={selectedSection}
               onSave={(data, settings) => handleSaveSection(selectedSection.id, data, settings)}

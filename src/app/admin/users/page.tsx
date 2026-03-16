@@ -175,13 +175,13 @@ export default function UsersPage() {
           {users.map((user) => (
             <div
               key={user.id}
-              className="flex items-center justify-between px-6 py-4"
+              className="flex flex-col sm:flex-row sm:items-center justify-between px-3 sm:px-6 py-4 gap-2"
             >
               <div>
                 <p className="font-medium text-charcoal">{user.display_name}</p>
                 <p className="text-xs text-gray-400">{user.email}</p>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
                 <span
                   className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
                     user.role === "owner"

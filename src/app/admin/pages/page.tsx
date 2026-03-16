@@ -60,7 +60,7 @@ export default function PagesListPage() {
           {pages.map((page) => (
             <div
               key={page.id}
-              className="flex items-center justify-between px-6 py-4 hover:bg-gray-50 transition-colors"
+              className="flex items-center justify-between px-3 sm:px-6 py-4 hover:bg-gray-50 transition-colors"
             >
               <Link
                 href={`/admin/pages/${page.id}`}
@@ -69,7 +69,7 @@ export default function PagesListPage() {
                 <p className="font-medium text-charcoal">{page.title}</p>
                 <p className="text-xs text-gray-400 mt-0.5">{page.slug}</p>
               </Link>
-              <div className="flex items-center gap-4 flex-shrink-0">
+              <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
                 <span className="text-xs text-gray-400">
                   {page.section_count} sections
                 </span>

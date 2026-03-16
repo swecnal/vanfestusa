@@ -411,7 +411,7 @@ export default function SectionEditorPanel({ section, onSave, saving, onChange, 
       />
 
       {/* Save button */}
-      <div className={stickyButtons ? "sticky bottom-0 bg-white pt-2 pb-1 border-t border-gray-100 -mx-4 px-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]" : ""}>
+      <div className={stickyButtons ? "sticky bottom-0 bg-white pt-2 border-t border-gray-100 -mx-4 px-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]" : ""} style={stickyButtons ? { paddingBottom: "max(4px, env(safe-area-inset-bottom))" } : undefined}>
         <button
           onClick={handleSave}
           disabled={saving}

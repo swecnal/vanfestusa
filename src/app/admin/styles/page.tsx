@@ -149,7 +149,7 @@ export default function StylesPage() {
       </div>
 
       {/* Sticky save button */}
-      <div className="fixed bottom-6 right-6 z-50">
+      <div className="fixed bottom-4 right-4 md:bottom-6 md:right-6 z-50">
         <button
           onClick={save}
           disabled={saving}
@@ -371,7 +371,7 @@ function ButtonStyleEditor({
   };
 
   return (
-    <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
       <StyleField label="Style Name" span={2}>
         <input
           type="text"
@@ -694,7 +694,7 @@ function LinkStyleEditor({
   };
 
   return (
-    <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
       <StyleField label="Style Name" span={2}>
         <input
           type="text"
@@ -885,7 +885,7 @@ function HeadingStyleEditor({
 
       {open && (
         <div className="px-5 py-4 bg-gray-50/50 border-t border-gray-100">
-          <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3">
             <StyleField label="Font Family">
               <select
                 value={style.fontFamily}

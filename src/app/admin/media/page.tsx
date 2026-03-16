@@ -108,7 +108,7 @@ export default function MediaLibraryPage() {
 
       {/* Drop zone */}
       <div
-        className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center mb-6 hover:border-teal transition-colors"
+        className="border-2 border-dashed border-gray-300 rounded-xl p-4 sm:p-8 text-center mb-6 hover:border-teal transition-colors"
         onDragOver={(e) => {
           e.preventDefault();
           e.currentTarget.classList.add("border-teal", "bg-teal/5");

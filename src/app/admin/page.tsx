@@ -66,7 +66,7 @@ export default function AdminDashboard() {
             key={tile.key}
             className="bg-white rounded-xl p-5 border border-gray-200 hover:shadow-sm transition-shadow"
           >
-            <p className="text-3xl font-display font-bold text-teal tabular-nums">
+            <p className="text-2xl sm:text-3xl font-display font-bold text-teal tabular-nums">
               {loading ? (
                 <span className="inline-block w-10 h-8 bg-gray-100 rounded animate-pulse" />
               ) : (
@@ -102,7 +102,7 @@ export default function AdminDashboard() {
 
       {/* Recent pages */}
       <div className="bg-white rounded-xl border border-gray-200">
-        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+        <div className="px-3 sm:px-6 py-4 border-b border-gray-100 flex items-center justify-between">
           <h3 className="font-display font-semibold text-charcoal">
             Recent Pages
           </h3>
@@ -121,7 +121,7 @@ export default function AdminDashboard() {
               <Link
                 key={page.id}
                 href={`/admin/pages/${page.id}`}
-                className="flex items-center justify-between px-6 py-3 hover:bg-gray-50 transition-colors"
+                className="flex items-center justify-between px-3 sm:px-6 py-3 hover:bg-gray-50 transition-colors"
               >
                 <div>
                   <p className="font-medium text-sm text-charcoal">

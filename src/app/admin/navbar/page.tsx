@@ -136,7 +136,7 @@ export default function NavbarEditorPage() {
       {/* CTA Button */}
       <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-3">
         <h3 className="text-sm font-semibold text-gray-700">CTA Button</h3>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className="block text-xs text-gray-500 mb-1">Button Text</label>
             <input
@@ -184,7 +184,7 @@ export default function NavbarEditorPage() {
         <div className="space-y-2">
           {config.links.map((link, i) => (
             <div key={link.id} className="border border-gray-200 rounded-lg">
-              <div className="flex items-center gap-2 p-3">
+              <div className="flex flex-wrap items-center gap-2 p-3">
                 {/* Reorder */}
                 <div className="flex flex-col gap-0.5">
                   <button onClick={() => moveLink(i, i - 1)} disabled={i === 0} className="text-gray-400 hover:text-gray-600 disabled:opacity-20 p-0.5">
