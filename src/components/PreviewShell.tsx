@@ -5,7 +5,7 @@ import SectionRenderer from "@/components/sections/SectionRenderer";
 import Navbar from "@/components/Navbar";
 import FooterDivider from "@/components/FooterDivider";
 import Footer from "@/components/Footer";
-import type { Section, SectionSettings, FooterBuilderConfig } from "@/lib/types";
+import type { Section, SectionSettings, FooterBuilderConfig, NavbarBuilderConfig } from "@/lib/types";
 import type { SiteStyles } from "@/lib/styles";
 import type { VehicleStreamConfig } from "@/components/VehicleStream";
 
@@ -13,6 +13,7 @@ interface Props {
   initialSections: Section[];
   siteStyles: SiteStyles;
   navbarConfig?: unknown;
+  navbarBuilderConfig?: unknown;
   footerConfig?: unknown;
   footerBuilderConfig?: unknown;
   vehicleStreamConfig?: unknown;
@@ -23,6 +24,7 @@ export default function PreviewShell({
   initialSections,
   siteStyles,
   navbarConfig,
+  navbarBuilderConfig,
   footerConfig,
   footerBuilderConfig,
   vehicleStreamConfig,
@@ -167,7 +169,7 @@ export default function PreviewShell({
       {/* Navbar */}
       <div id="preview-navbar" className="relative cursor-pointer">
         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-        <Navbar config={navbarConfig as any} />
+        <Navbar config={navbarConfig as any} builderConfig={navbarBuilderConfig as NavbarBuilderConfig | null} />
         {hoveredGlobal === "navbar" && globalSelected !== "navbar" && (
           <div className="absolute inset-0 z-[60] pointer-events-none ring-1 ring-gray-400 ring-inset">
             <span className="absolute bottom-1 left-1 text-[8px] uppercase tracking-wider font-semibold px-1.5 py-0.5 rounded bg-charcoal/70 text-white">

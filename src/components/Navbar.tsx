@@ -3,6 +3,9 @@
 import { useState, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import type { NavbarBuilderConfig, NavbarLinkV2, NavbarCtaConfig, NavbarZone } from "@/lib/types";
+
+/* ─── V1 Types + Defaults ─── */
 
 interface NavChild {
   label: string;
@@ -91,7 +94,342 @@ const liftoffNavLinks: NavLink[] = [
   { label: "Contact", href: "/contact" },
 ];
 
-interface NavbarProps {
+/* ─── V2 Navbar Renderer ─── */
+
+function NavbarV2({ config }: { config: NavbarBuilderConfig }) {
+  const pathname = usePathname();
+  const [scrolled, setScrolled] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
+  const ctaRefs = useRef<(HTMLAnchorElement | null)[]>([]);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 50);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    setMobileOpen(false);
+    setOpenDropdown(null);
+    setMobileExpanded(null);
+  }, [pathname]);
+
+  // Bounce animation for CTA buttons
+  useEffect(() => {
+    ctaRefs.current.forEach((ref) => {
+      if (!ref) return;
+      ref.style.animationDuration = `${2 + Math.random() * 3}s`;
+      ref.style.animationDelay = `${Math.random() * 3}s`;
+    });
+  }, []);
+
+  // Detect event mode
+  const isEventPage = pathname === "/events/escape" || pathname === "/events/liftoff";
+  const eventMode = pathname === "/events/escape" ? "escape" : pathname === "/events/liftoff" ? "liftoff" : null;
+
+  // Resolve links and CTAs (event overrides)
+  const eventOverride = config.eventOverrides?.[pathname];
+  const navLinks: NavbarLinkV2[] = eventOverride?.links || config.links;
+  const ctaButtons: NavbarCtaConfig[] = eventOverride?.ctaButtons || config.ctaButtons;
+
+  const style = config.style || { bgColor: "#1a1a1a", bgOpacity: 95, textColor: "#ffffff", hoverColor: "#2dd4bf" };
+  const bgOpacity = Math.round((style.bgOpacity / 100) * 255).toString(16).padStart(2, "0");
+
+  const eventAccent = eventMode === "liftoff"
+    ? "from-purple-600 to-pink-500"
+    : "from-blue-600 to-teal";
+
+  // Build zone content
+  const renderLogo = () => (
+    <div className="flex items-center gap-3">
+      {isEventPage && (
+        <Link
+          href="/"
+          className="hidden lg:flex items-center text-xs font-semibold transition-colors mr-1"
+          style={{ color: `${style.textColor}80` }}
+        >
+          <svg className="w-3.5 h-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          VanFest
+        </Link>
+      )}
+      <Link href="/" className="flex items-center gap-3 group">
+        <img
+          src={config.logo.src}
+          alt={config.logo.text || "VanFest"}
+          className="transition-all duration-300"
+          style={{
+            height: scrolled ? config.logo.heightScrolled : config.logo.height,
+            marginTop: "0%",
+            marginBottom: scrolled ? "-30%" : "-40%",
+          }}
+        />
+        {config.logo.showText && (
+          <span className="font-display font-bold text-xl" style={{ color: style.textColor }}>{config.logo.text}</span>
+        )}
+      </Link>
+      {isEventPage && (
+        <span
+          className={`hidden lg:inline-block bg-gradient-to-r ${eventAccent} text-white font-display font-bold px-4 py-1.5 rounded-xl text-sm ml-2`}
+        >
+          {eventMode === "liftoff" ? "LIFTOFF!" : (eventOverride?.badgeText || "Escape to the Cape")}
+        </span>
+      )}
+    </div>
+  );
+
+  const renderLinks = () => (
+    <div className="hidden lg:flex items-center gap-1">
+      {navLinks.map((link) => (
+        <div
+          key={link.id}
+          className="relative"
+          onMouseEnter={() => link.children && setOpenDropdown(link.id)}
+          onMouseLeave={() => setOpenDropdown(null)}
+        >
+          {link.external ? (
+            <a
+              href={link.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`px-3.5 py-2.5 rounded-lg font-semibold transition-colors ${scrolled ? "text-sm" : "text-base"}`}
+              style={{ color: `${style.textColor}e6` }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = style.textColor; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = `${style.textColor}e6`; }}
+            >
+              {link.label}
+            </a>
+          ) : link.children ? (
+            <span
+              className={`px-3.5 py-2.5 rounded-lg font-semibold transition-colors cursor-default select-none ${scrolled ? "text-sm" : "text-base"}`}
+              style={{ color: `${style.textColor}e6` }}
+            >
+              {link.label}
+              <svg className="inline ml-1 w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </span>
+          ) : (
+            <Link
+              href={link.href}
+              className={`px-3.5 py-2.5 rounded-lg font-semibold transition-colors ${scrolled ? "text-sm" : "text-base"}`}
+              style={{ color: `${style.textColor}e6` }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = style.textColor; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = `${style.textColor}e6`; }}
+            >
+              {link.label}
+            </Link>
+          )}
+          {link.children && openDropdown === link.id && (
+            <div
+              className="absolute top-full left-0 mt-1 w-56 backdrop-blur-md rounded-lg shadow-xl border py-2"
+              style={{ backgroundColor: `${style.bgColor}f2`, borderColor: `${style.textColor}1a` }}
+            >
+              {link.children.map((child) => (
+                <Link
+                  key={child.id}
+                  href={child.href}
+                  className="block px-4 py-2 text-sm font-medium transition-colors"
+                  style={{ color: `${style.textColor}cc` }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = style.textColor; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = `${style.textColor}cc`; }}
+                >
+                  {child.label}
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+
+  const getCtaClasses = (cta: NavbarCtaConfig) => {
+    const base = `font-bold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl ${scrolled ? "px-5 py-2 text-sm" : "px-7 py-2.5 text-base"}`;
+    if (cta.bounce) return `${base} animate-bounce-attention`;
+    return base;
+  };
+
+  const getCtaStyle = (cta: NavbarCtaConfig) => {
+    const bg = cta.bgColor || style.hoverColor;
+    const text = cta.textColor || "#ffffff";
+    if (cta.variant === "outline") {
+      return { backgroundColor: "transparent", color: bg, border: `2px solid ${bg}` };
+    }
+    if (cta.variant === "secondary") {
+      return { backgroundColor: `${bg}33`, color: bg };
+    }
+    return { backgroundColor: bg, color: text };
+  };
+
+  const renderCtaButtons = () => (
+    <div className="flex items-center gap-3">
+      {ctaButtons.map((cta, i) => (
+        <a
+          key={i}
+          ref={(el) => { ctaRefs.current[i] = el; }}
+          href={cta.href}
+          target={cta.external !== false ? "_blank" : undefined}
+          rel={cta.external !== false ? "noopener noreferrer" : undefined}
+          className={getCtaClasses(cta)}
+          style={getCtaStyle(cta)}
+        >
+          {cta.text}
+        </a>
+      ))}
+      {/* Mobile hamburger */}
+      <button
+        className="lg:hidden p-2"
+        style={{ color: style.textColor }}
+        onClick={() => setMobileOpen(!mobileOpen)}
+        aria-label="Toggle menu"
+      >
+        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          {mobileOpen ? (
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          ) : (
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          )}
+        </svg>
+      </button>
+    </div>
+  );
+
+  // Build zone map
+  const zoneContent: Record<NavbarZone, React.ReactNode[]> = { left: [], center: [], right: [] };
+  zoneContent[config.layout.logo].push(<div key="logo">{renderLogo()}</div>);
+  zoneContent[config.layout.links].push(<div key="links">{renderLinks()}</div>);
+  zoneContent[config.layout.cta].push(<div key="cta">{renderCtaButtons()}</div>);
+
+  const zoneAlign: Record<NavbarZone, string> = {
+    left: "justify-start",
+    center: "justify-center",
+    right: "justify-end",
+  };
+
+  return (
+    <nav
+      className="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
+      style={{
+        backgroundColor: scrolled ? `${style.bgColor}${bgOpacity}` : "transparent",
+        backdropFilter: scrolled ? "blur(12px)" : undefined,
+        paddingTop: scrolled ? "0.75rem" : "1.25rem",
+        paddingBottom: scrolled ? "0.75rem" : "1.25rem",
+        boxShadow: scrolled ? "0 10px 15px -3px rgb(0 0 0 / 0.1)" : undefined,
+      }}
+    >
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex items-center">
+        {/* Three zones */}
+        <div className={`flex items-center gap-2 flex-1 ${zoneAlign.left}`}>
+          {zoneContent.left}
+        </div>
+        <div className={`flex items-center gap-2 flex-1 ${zoneAlign.center}`}>
+          {zoneContent.center}
+        </div>
+        <div className={`flex items-center gap-2 flex-1 ${zoneAlign.right}`}>
+          {zoneContent.right}
+        </div>
+      </div>
+
+      {/* Mobile menu */}
+      {mobileOpen && (
+        <div
+          className="lg:hidden backdrop-blur-md border-t mt-2"
+          style={{ backgroundColor: `${style.bgColor}f2`, borderColor: `${style.textColor}1a` }}
+        >
+          <div className="px-4 py-4 space-y-1">
+            {isEventPage && (
+              <div className="mb-3 pb-3" style={{ borderBottomWidth: 1, borderBottomColor: `${style.textColor}1a` }}>
+                <Link
+                  href="/"
+                  className="flex items-center gap-2 px-3 py-2.5 rounded-lg font-semibold transition-colors"
+                  style={{ color: style.textColor }}
+                  onClick={() => setMobileOpen(false)}
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                  Back to VanFest Home
+                </Link>
+                <span
+                  className={`inline-block bg-gradient-to-r ${eventAccent} text-white font-display font-bold px-4 py-1.5 rounded-xl text-sm mt-2`}
+                >
+                  {eventMode === "liftoff" ? "LIFTOFF!" : "Escape to the Cape"}
+                </span>
+              </div>
+            )}
+            {navLinks.map((link) => (
+              <div key={link.id}>
+                {link.external ? (
+                  <a
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block px-3 py-2.5 rounded-lg font-semibold"
+                    style={{ color: `${style.textColor}e6` }}
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    {link.label}
+                  </a>
+                ) : link.children ? (
+                  <>
+                    <button
+                      onClick={() => setMobileExpanded(mobileExpanded === link.id ? null : link.id)}
+                      className="flex items-center justify-between w-full px-3 py-2.5 rounded-lg font-semibold transition-colors"
+                      style={{ color: `${style.textColor}e6` }}
+                    >
+                      {link.label}
+                      <svg
+                        className={`w-4 h-4 transition-transform duration-200 ${mobileExpanded === link.id ? "rotate-180" : ""}`}
+                        style={{ color: `${style.textColor}80` }}
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    {mobileExpanded === link.id && (
+                      <div className="ml-4 space-y-1 mt-1">
+                        {link.children.map((child) => (
+                          <Link
+                            key={child.id}
+                            href={child.href}
+                            className="block px-3 py-2 text-sm font-medium rounded-lg"
+                            style={{ color: `${style.textColor}99` }}
+                            onClick={() => setMobileOpen(false)}
+                          >
+                            {child.label}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <Link
+                    href={link.href}
+                    className="block px-3 py-2.5 rounded-lg font-semibold"
+                    style={{ color: `${style.textColor}e6` }}
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    {link.label}
+                  </Link>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </nav>
+  );
+}
+
+/* ─── V1 Navbar Renderer (existing) ─── */
+
+interface NavbarV1Props {
   config?: {
     links: NavLink[];
     ctaButton: { text: string; href: string; external?: boolean };
@@ -104,9 +442,7 @@ interface NavbarProps {
   };
 }
 
-type EventMode = "escape" | "liftoff" | null;
-
-export default function Navbar({ config }: NavbarProps) {
+function NavbarV1({ config }: NavbarV1Props) {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -120,31 +456,21 @@ export default function Navbar({ config }: NavbarProps) {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Close menus on navigation
   useEffect(() => {
     setMobileOpen(false);
     setOpenDropdown(null);
     setMobileExpanded(null);
   }, [pathname]);
 
-  // Randomize CTA bounce timing
   useEffect(() => {
     if (!ctaRef.current) return;
     ctaRef.current.style.animationDuration = `${2 + Math.random() * 3}s`;
     ctaRef.current.style.animationDelay = `${Math.random() * 3}s`;
   }, []);
 
-  // Detect event mode based on pathname
-  const eventMode: EventMode =
-    pathname === "/events/escape"
-      ? "escape"
-      : pathname === "/events/liftoff"
-        ? "liftoff"
-        : null;
-
+  const eventMode = pathname === "/events/escape" ? "escape" : pathname === "/events/liftoff" ? "liftoff" : null;
   const isEventPage = eventMode !== null;
 
-  // Resolve nav links: config overrides > event-specific > hardcoded defaults
   const eventOverride = config?.eventOverrides?.[pathname];
   const navLinks = eventOverride?.links
     ? eventOverride.links
@@ -156,7 +482,6 @@ export default function Navbar({ config }: NavbarProps) {
           ? eventMode === "liftoff" ? liftoffNavLinks : escapeNavLinks
           : defaultNavLinks);
 
-  // Resolve CTA
   const ctaButton = eventOverride?.ctaButton || config?.ctaButton || {
     text: "Get Tickets",
     href: eventMode === "escape" ? "https://vanfest.ticketspice.com/escape2026" : "https://tickets.vanfestusa.com",
@@ -176,9 +501,7 @@ export default function Navbar({ config }: NavbarProps) {
       }`}
     >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-        {/* Left side: Return link (event pages) + Logo + Event badge */}
         <div className="flex items-center gap-3">
-          {/* Return to VanFest link (visible only on event pages) */}
           {isEventPage && (
             <Link
               href="/"
@@ -190,20 +513,14 @@ export default function Navbar({ config }: NavbarProps) {
               VanFest
             </Link>
           )}
-
-          {/* Logo */}
           <Link href="/" className="flex items-center gap-3 group">
             <img
               src="/images/vanfest-logo.png"
               alt="VanFest"
-              className={`transition-all duration-300 ${
-                scrolled ? "h-14" : "h-20"
-              }`}
+              className={`transition-all duration-300 ${scrolled ? "h-14" : "h-20"}`}
               style={{ marginTop: "0%", marginBottom: scrolled ? "-30%" : "-40%" }}
             />
           </Link>
-
-          {/* Event title badge (visible only on event pages, between logo and nav) */}
           {isEventPage && (
             <span
               className={`hidden lg:inline-block bg-gradient-to-r ${eventAccent} text-white font-display font-bold px-4 py-1.5 rounded-xl text-sm ml-2`}
@@ -213,15 +530,12 @@ export default function Navbar({ config }: NavbarProps) {
           )}
         </div>
 
-        {/* Desktop nav */}
         <div className="hidden lg:flex items-center gap-1">
           {navLinks.map((link) => (
             <div
               key={link.label}
               className="relative"
-              onMouseEnter={() =>
-                link.children && setOpenDropdown(link.label)
-              }
+              onMouseEnter={() => link.children && setOpenDropdown(link.label)}
               onMouseLeave={() => setOpenDropdown(null)}
             >
               {link.external ? (
@@ -229,39 +543,23 @@ export default function Navbar({ config }: NavbarProps) {
                   href={link.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={`px-3.5 py-2.5 rounded-lg font-semibold text-white/90 hover:text-white hover:bg-white/10 transition-colors ${
-                    scrolled ? "text-sm" : "text-base"
-                  }`}
+                  className={`px-3.5 py-2.5 rounded-lg font-semibold text-white/90 hover:text-white hover:bg-white/10 transition-colors ${scrolled ? "text-sm" : "text-base"}`}
                 >
                   {link.label}
                 </a>
               ) : link.children ? (
                 <span
-                  className={`px-3.5 py-2.5 rounded-lg font-semibold text-white/90 hover:text-white hover:bg-white/10 transition-colors cursor-default select-none ${
-                    scrolled ? "text-sm" : "text-base"
-                  }`}
+                  className={`px-3.5 py-2.5 rounded-lg font-semibold text-white/90 hover:text-white hover:bg-white/10 transition-colors cursor-default select-none ${scrolled ? "text-sm" : "text-base"}`}
                 >
                   {link.label}
-                  <svg
-                    className="inline ml-1 w-3 h-3"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 9l-7 7-7-7"
-                    />
+                  <svg className="inline ml-1 w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </span>
               ) : (
                 <Link
                   href={link.href}
-                  className={`px-3.5 py-2.5 rounded-lg font-semibold text-white/90 hover:text-white hover:bg-white/10 transition-colors ${
-                    scrolled ? "text-sm" : "text-base"
-                  }`}
+                  className={`px-3.5 py-2.5 rounded-lg font-semibold text-white/90 hover:text-white hover:bg-white/10 transition-colors ${scrolled ? "text-sm" : "text-base"}`}
                 >
                   {link.label}
                 </Link>
@@ -283,7 +581,6 @@ export default function Navbar({ config }: NavbarProps) {
           ))}
         </div>
 
-        {/* CTA + Mobile Toggle */}
         <div className="flex items-center gap-3">
           <a
             ref={ctaRef}
@@ -291,47 +588,27 @@ export default function Navbar({ config }: NavbarProps) {
             target={ctaButton.external !== false ? "_blank" : undefined}
             rel={ctaButton.external !== false ? "noopener noreferrer" : undefined}
             className={`bg-teal hover:bg-teal-dark text-white font-bold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl animate-bounce-attention ${
-              scrolled
-                ? "px-5 py-2 text-sm"
-                : "px-7 py-2.5 text-base"
+              scrolled ? "px-5 py-2 text-sm" : "px-7 py-2.5 text-base"
             }`}
           >
             {ctaButton.text}
           </a>
-
-          {/* Mobile hamburger */}
           <button
             className="lg:hidden text-white p-2"
             onClick={() => setMobileOpen(!mobileOpen)}
             aria-label="Toggle menu"
           >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               {mobileOpen ? (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               ) : (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               )}
             </svg>
           </button>
         </div>
       </div>
 
-      {/* Mobile menu */}
       {mobileOpen && (
         <div className="lg:hidden bg-charcoal/95 backdrop-blur-md border-t border-white/10 mt-2">
           <div className="px-4 py-4 space-y-1">
@@ -369,18 +646,12 @@ export default function Navbar({ config }: NavbarProps) {
                 ) : link.children ? (
                   <>
                     <button
-                      onClick={() =>
-                        setMobileExpanded(
-                          mobileExpanded === link.label ? null : link.label,
-                        )
-                      }
+                      onClick={() => setMobileExpanded(mobileExpanded === link.label ? null : link.label)}
                       className="flex items-center justify-between w-full px-3 py-2.5 text-white/90 hover:text-white hover:bg-white/10 rounded-lg font-semibold transition-colors"
                     >
                       {link.label}
                       <svg
-                        className={`w-4 h-4 text-white/50 transition-transform duration-200 ${
-                          mobileExpanded === link.label ? "rotate-180" : ""
-                        }`}
+                        className={`w-4 h-4 text-white/50 transition-transform duration-200 ${mobileExpanded === link.label ? "rotate-180" : ""}`}
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -419,4 +690,18 @@ export default function Navbar({ config }: NavbarProps) {
       )}
     </nav>
   );
+}
+
+/* ─── Main Navbar Component (detects v1 vs v2) ─── */
+
+interface NavbarProps {
+  config?: NavbarV1Props["config"];
+  builderConfig?: NavbarBuilderConfig | null;
+}
+
+export default function Navbar({ config, builderConfig }: NavbarProps) {
+  if (builderConfig?.version === 2) {
+    return <NavbarV2 config={builderConfig} />;
+  }
+  return <NavbarV1 config={config} />;
 }

@@ -1,0 +1,691 @@
+"use client";
+
+import { useState, useEffect, useCallback } from "react";
+import { toast } from "sonner";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import type {
+  NavbarBuilderConfig,
+  NavbarLinkV2,
+  NavbarCtaConfig,
+  NavbarZone,
+} from "@/lib/types";
+
+function genId() {
+  return `nb-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+}
+
+const DEFAULT_LINKS: NavbarLinkV2[] = [
+  { id: "def-1", label: "Events", href: "/events", children: [
+    { id: "def-1a", label: "Escape to the Cape — MA 2026", href: "/events/escape" },
+    { id: "def-1b", label: "LIFTOFF!", href: "/events/liftoff" },
+  ]},
+  { id: "def-2", label: "About", href: "/about", children: [
+    { id: "def-2a", label: "About VanFest", href: "/about" },
+    { id: "def-2b", label: "Found a Magnet?", href: "/magnet" },
+    { id: "def-2c", label: "Terms & Conduct", href: "/terms" },
+  ]},
+  { id: "def-3", label: "FAQ", href: "/faq" },
+  { id: "def-4", label: "Get Involved", href: "/get-involved", children: [
+    { id: "def-4a", label: "Sponsors & Vendors", href: "/sponsors-vendors" },
+    { id: "def-4b", label: "Exhibit Your Rig", href: "/exhibit-your-rig" },
+    { id: "def-4c", label: "Jobs @ VanFest", href: "/jobs" },
+  ]},
+  { id: "def-5", label: "Media", href: "/media", children: [
+    { id: "def-5a", label: "Gallery", href: "/media#gallery" },
+    { id: "def-5b", label: "Community Media", href: "/media#community" },
+  ]},
+  { id: "def-6", label: "Sponsors", href: "/sponsors" },
+  { id: "def-7", label: "Merch", href: "https://merch.vanfestusa.com/", external: true },
+  { id: "def-8", label: "Contact", href: "/contact" },
+];
+
+const EMPTY_CONFIG: NavbarBuilderConfig = {
+  version: 2,
+  layout: { logo: "left", links: "center", cta: "right" },
+  logo: {
+    src: "/images/vanfest-logo.png",
+    height: 80,
+    heightScrolled: 56,
+    showText: false,
+    text: "VanFest",
+  },
+  links: DEFAULT_LINKS,
+  ctaButtons: [
+    { text: "Get Tickets", href: "https://tickets.vanfestusa.com", external: true, variant: "primary", bounce: true },
+  ],
+  style: {
+    bgColor: "#1a1a1a",
+    bgOpacity: 95,
+    textColor: "#ffffff",
+    hoverColor: "#2dd4bf",
+  },
+};
+
+const ZONE_LABELS: Record<NavbarZone, string> = { left: "Left", center: "Center", right: "Right" };
+const VARIANT_LABELS: Record<string, string> = { primary: "Primary (filled)", secondary: "Secondary (filled)", outline: "Outline" };
+
+// Convert legacy v1 config into v2
+function convertLegacyToV2(legacy: Record<string, unknown>): NavbarBuilderConfig {
+  const links = (legacy.links || []) as Array<{ id?: string; label: string; href: string; external?: boolean; children?: Array<{ id?: string; label: string; href: string }> }>;
+  const ctaButton = (legacy.ctaButton || { text: "Get Tickets", href: "https://tickets.vanfestusa.com", external: true }) as { text: string; href: string; external?: boolean };
+  const eventOverrides = (legacy.eventOverrides || undefined) as NavbarBuilderConfig["eventOverrides"];
+
+  const v2Links: NavbarLinkV2[] = links.map(l => ({
+    id: l.id || genId(),
+    label: l.label,
+    href: l.href,
+    external: l.external,
+    children: l.children?.map(c => ({ id: c.id || genId(), label: c.label, href: c.href })),
+  }));
+
+  return {
+    ...EMPTY_CONFIG,
+    links: v2Links.length > 0 ? v2Links : DEFAULT_LINKS,
+    ctaButtons: [{ text: ctaButton.text, href: ctaButton.href, external: ctaButton.external, variant: "primary", bounce: true }],
+    eventOverrides: eventOverrides ? Object.fromEntries(
+      Object.entries(eventOverrides).map(([key, val]) => [key, {
+        ...val,
+        links: val.links?.map((l: NavbarLinkV2) => ({ ...l, id: l.id || genId() })),
+      }])
+    ) : undefined,
+  };
+}
+
+// Sortable link card
+function SortableLinkCard({
+  link,
+  selected,
+  onSelect,
+  onRemove,
+  onUpdate,
+  onAddChild,
+  onUpdateChild,
+  onRemoveChild,
+  onNest,
+  onUnnest,
+  canNest,
+}: {
+  link: NavbarLinkV2;
+  selected: boolean;
+  onSelect: () => void;
+  onRemove: () => void;
+  onUpdate: (key: string, value: unknown) => void;
+  onAddChild: () => void;
+  onUpdateChild: (ci: number, key: string, value: string) => void;
+  onRemoveChild: (ci: number) => void;
+  onNest: () => void;
+  onUnnest: () => void;
+  canNest: boolean;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: link.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={`border rounded-lg bg-white transition-colors ${
+        selected ? "border-teal ring-1 ring-teal/20" : "border-gray-200 hover:border-gray-300"
+      }`}
+    >
+      <div className="flex items-center gap-1.5 p-2" onClick={onSelect}>
+        <button {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 touch-none p-0.5">
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 8h16M4 16h16" />
+          </svg>
+        </button>
+        <input
+          type="text"
+          value={link.label}
+          onChange={(e) => onUpdate("label", e.target.value)}
+          className="flex-1 min-w-0 px-2 py-1 border border-gray-200 rounded text-xs"
+          placeholder="Label"
+          onClick={(e) => e.stopPropagation()}
+        />
+        <input
+          type="text"
+          value={link.href}
+          onChange={(e) => onUpdate("href", e.target.value)}
+          className="flex-1 min-w-0 px-2 py-1 border border-gray-200 rounded text-xs"
+          placeholder="/path"
+          onClick={(e) => e.stopPropagation()}
+        />
+        <label className="flex items-center gap-1 text-[10px] text-gray-500 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+          <input
+            type="checkbox"
+            checked={link.external || false}
+            onChange={(e) => onUpdate("external", e.target.checked)}
+          />
+          Ext
+        </label>
+        <div className="flex gap-0.5">
+          {canNest && (
+            <button onClick={(e) => { e.stopPropagation(); onNest(); }} className="text-gray-400 hover:text-teal p-0.5" title="Nest under previous">
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13 5l7 7-7 7M5 5l7 7-7 7" /></svg>
+            </button>
+          )}
+          <button onClick={(e) => { e.stopPropagation(); onRemove(); }} className="text-gray-300 hover:text-red-500 p-0.5">
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
+        </div>
+      </div>
+
+      {/* Children / submenu */}
+      {(link.children && link.children.length > 0) && (
+        <div className="px-2 pb-2 space-y-1">
+          {link.children.map((child, ci) => (
+            <div key={child.id} className="flex items-center gap-1.5 ml-6">
+              <span className="text-gray-300 text-xs">↳</span>
+              <input
+                type="text"
+                value={child.label}
+                onChange={(e) => onUpdateChild(ci, "label", e.target.value)}
+                className="flex-1 min-w-0 px-2 py-1 border border-gray-200 rounded text-[11px]"
+                placeholder="Sub Label"
+              />
+              <input
+                type="text"
+                value={child.href}
+                onChange={(e) => onUpdateChild(ci, "href", e.target.value)}
+                className="flex-1 min-w-0 px-2 py-1 border border-gray-200 rounded text-[11px]"
+                placeholder="/path"
+              />
+              <button onClick={() => { onUnnest(); }} className="text-gray-400 hover:text-teal p-0.5" title="Un-nest to top level">
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M11 19l-7-7 7-7M19 19l-7-7 7-7" /></svg>
+              </button>
+              <button onClick={() => onRemoveChild(ci)} className="text-gray-300 hover:text-red-500 p-0.5">
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+          ))}
+          <button
+            onClick={onAddChild}
+            className="ml-6 text-teal/60 hover:text-teal text-[10px] font-semibold"
+          >
+            + Add Sub Link
+          </button>
+        </div>
+      )}
+      {(!link.children || link.children.length === 0) && (
+        <div className="px-2 pb-2">
+          <button
+            onClick={onAddChild}
+            className="ml-6 text-teal/60 hover:text-teal text-[10px] font-semibold"
+          >
+            + Add Sub Link
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+interface Props {
+  onSave?: () => void;
+}
+
+export default function NavbarBuilder({ onSave }: Props) {
+  const [config, setConfig] = useState<NavbarBuilderConfig>(EMPTY_CONFIG);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [selectedLinkId, setSelectedLinkId] = useState<string | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } })
+  );
+
+  useEffect(() => {
+    fetch("/api/global-settings")
+      .then((r) => r.json())
+      .then((res) => {
+        const s = res.settings || {};
+        if (s.navbar_builder_config) {
+          setConfig(s.navbar_builder_config as NavbarBuilderConfig);
+        } else if (s.navbar_config) {
+          // Convert legacy config
+          const converted = convertLegacyToV2(s.navbar_config as Record<string, unknown>);
+          setConfig(converted);
+        }
+        // else use EMPTY_CONFIG which has defaults
+      })
+      .catch(() => toast.error("Failed to load navbar config"))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const save = useCallback(async () => {
+    setSaving(true);
+    try {
+      const res = await fetch("/api/global-settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ navbar_builder_config: config }),
+      });
+      if (!res.ok) throw new Error();
+      toast.success("Navbar saved");
+      onSave?.();
+    } catch {
+      toast.error("Failed to save");
+    } finally {
+      setSaving(false);
+    }
+  }, [config, onSave]);
+
+  // Link management
+  const addLink = () => {
+    const link: NavbarLinkV2 = { id: genId(), label: "New Link", href: "/" };
+    setConfig(prev => ({ ...prev, links: [...prev.links, link] }));
+    setSelectedLinkId(link.id);
+  };
+
+  const updateLink = (index: number, key: string, value: unknown) => {
+    setConfig(prev => {
+      const links = [...prev.links];
+      links[index] = { ...links[index], [key]: value };
+      return { ...prev, links };
+    });
+  };
+
+  const removeLink = (index: number) => {
+    const id = config.links[index]?.id;
+    setConfig(prev => ({ ...prev, links: prev.links.filter((_, i) => i !== index) }));
+    if (selectedLinkId === id) setSelectedLinkId(null);
+  };
+
+  const addChild = (linkIndex: number) => {
+    setConfig(prev => {
+      const links = [...prev.links];
+      const children = [...(links[linkIndex].children || [])];
+      children.push({ id: genId(), label: "Sub Link", href: "/" });
+      links[linkIndex] = { ...links[linkIndex], children };
+      return { ...prev, links };
+    });
+  };
+
+  const updateChild = (linkIndex: number, childIndex: number, key: string, value: string) => {
+    setConfig(prev => {
+      const links = [...prev.links];
+      const children = [...(links[linkIndex].children || [])];
+      children[childIndex] = { ...children[childIndex], [key]: value };
+      links[linkIndex] = { ...links[linkIndex], children };
+      return { ...prev, links };
+    });
+  };
+
+  const removeChild = (linkIndex: number, childIndex: number) => {
+    setConfig(prev => {
+      const links = [...prev.links];
+      const children = (links[linkIndex].children || []).filter((_, i) => i !== childIndex);
+      links[linkIndex] = { ...links[linkIndex], children: children.length ? children : undefined };
+      return { ...prev, links };
+    });
+  };
+
+  // Nest: turn this link into a child of the previous link
+  const nestLink = (index: number) => {
+    if (index <= 0) return;
+    setConfig(prev => {
+      const links = [...prev.links];
+      const linkToNest = links[index];
+      const parentLink = links[index - 1];
+      const children = [...(parentLink.children || []), { id: linkToNest.id, label: linkToNest.label, href: linkToNest.href }];
+      links[index - 1] = { ...parentLink, children };
+      links.splice(index, 1);
+      return { ...prev, links };
+    });
+  };
+
+  // Unnest: move a child out to a top-level link (after the parent)
+  const unnestChild = (linkIndex: number, childIndex: number) => {
+    setConfig(prev => {
+      const links = [...prev.links];
+      const parent = links[linkIndex];
+      const children = [...(parent.children || [])];
+      const child = children[childIndex];
+      children.splice(childIndex, 1);
+      links[linkIndex] = { ...parent, children: children.length ? children : undefined };
+      const newLink: NavbarLinkV2 = { id: child.id, label: child.label, href: child.href };
+      links.splice(linkIndex + 1, 0, newLink);
+      return { ...prev, links };
+    });
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    setConfig(prev => {
+      const links = [...prev.links];
+      const oldIndex = links.findIndex(l => l.id === active.id);
+      const newIndex = links.findIndex(l => l.id === over.id);
+      if (oldIndex !== -1 && newIndex !== -1) {
+        return { ...prev, links: arrayMove(links, oldIndex, newIndex) };
+      }
+      return prev;
+    });
+  };
+
+  // CTA management
+  const addCta = () => {
+    if (config.ctaButtons.length >= 2) return;
+    setConfig(prev => ({
+      ...prev,
+      ctaButtons: [...prev.ctaButtons, { text: "Button", href: "/", variant: "outline", bounce: false }],
+    }));
+  };
+
+  const updateCta = (index: number, updates: Partial<NavbarCtaConfig>) => {
+    setConfig(prev => {
+      const ctaButtons = [...prev.ctaButtons];
+      ctaButtons[index] = { ...ctaButtons[index], ...updates };
+      return { ...prev, ctaButtons };
+    });
+  };
+
+  const removeCta = (index: number) => {
+    if (config.ctaButtons.length <= 1) return;
+    setConfig(prev => ({ ...prev, ctaButtons: prev.ctaButtons.filter((_, i) => i !== index) }));
+  };
+
+  if (loading) {
+    return (
+      <div className="p-4">
+        <div className="animate-pulse space-y-3">
+          <div className="h-6 bg-gray-200 rounded w-32" />
+          <div className="h-24 bg-gray-200 rounded" />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-4 space-y-4">
+      {/* Layout Zones */}
+      <div className="bg-gray-50 rounded-lg p-3 space-y-2">
+        <h4 className="text-xs font-semibold text-gray-700">Layout Zones</h4>
+        <p className="text-[10px] text-gray-400">Position each element in the navbar</p>
+        <div className="grid grid-cols-3 gap-2">
+          {(["logo", "links", "cta"] as const).map((item) => (
+            <div key={item}>
+              <label className="block text-[10px] text-gray-500 mb-0.5 capitalize">{item === "cta" ? "CTA Buttons" : item}</label>
+              <select
+                value={config.layout[item]}
+                onChange={(e) => setConfig(prev => ({
+                  ...prev,
+                  layout: { ...prev.layout, [item]: e.target.value as NavbarZone },
+                }))}
+                className="w-full px-2 py-1.5 border border-gray-200 rounded text-xs"
+              >
+                {(["left", "center", "right"] as NavbarZone[]).map(zone => (
+                  <option key={zone} value={zone}>{ZONE_LABELS[zone]}</option>
+                ))}
+              </select>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Logo */}
+      <div className="bg-gray-50 rounded-lg p-3 space-y-2">
+        <h4 className="text-xs font-semibold text-gray-700">Logo</h4>
+        <div>
+          <label className="block text-[10px] text-gray-500 mb-0.5">Image URL</label>
+          <input
+            type="text"
+            value={config.logo.src}
+            onChange={(e) => setConfig(prev => ({ ...prev, logo: { ...prev.logo, src: e.target.value } }))}
+            className="w-full px-2 py-1.5 border border-gray-200 rounded text-xs"
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <label className="block text-[10px] text-gray-500 mb-0.5">Height (px)</label>
+            <input
+              type="number"
+              value={config.logo.height}
+              onChange={(e) => setConfig(prev => ({ ...prev, logo: { ...prev.logo, height: Number(e.target.value) } }))}
+              className="w-full px-2 py-1.5 border border-gray-200 rounded text-xs"
+            />
+          </div>
+          <div>
+            <label className="block text-[10px] text-gray-500 mb-0.5">Height Scrolled (px)</label>
+            <input
+              type="number"
+              value={config.logo.heightScrolled}
+              onChange={(e) => setConfig(prev => ({ ...prev, logo: { ...prev.logo, heightScrolled: Number(e.target.value) } }))}
+              className="w-full px-2 py-1.5 border border-gray-200 rounded text-xs"
+            />
+          </div>
+        </div>
+        <label className="flex items-center gap-2 text-xs text-gray-600">
+          <input
+            type="checkbox"
+            checked={config.logo.showText}
+            onChange={(e) => setConfig(prev => ({ ...prev, logo: { ...prev.logo, showText: e.target.checked } }))}
+          />
+          Show text next to logo
+        </label>
+        {config.logo.showText && (
+          <input
+            type="text"
+            value={config.logo.text}
+            onChange={(e) => setConfig(prev => ({ ...prev, logo: { ...prev.logo, text: e.target.value } }))}
+            className="w-full px-2 py-1.5 border border-gray-200 rounded text-xs"
+            placeholder="Brand text"
+          />
+        )}
+      </div>
+
+      {/* Navigation Links */}
+      <div className="bg-gray-50 rounded-lg p-3 space-y-2">
+        <div className="flex items-center justify-between">
+          <h4 className="text-xs font-semibold text-gray-700">Navigation Links</h4>
+          <button onClick={addLink} className="text-teal hover:text-teal-dark text-[10px] font-semibold">+ Add Link</button>
+        </div>
+        <p className="text-[10px] text-gray-400">Drag to reorder. Use arrow buttons to nest/unnest links.</p>
+
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <SortableContext items={config.links.map(l => l.id)} strategy={verticalListSortingStrategy}>
+            <div className="space-y-1.5">
+              {config.links.map((link, i) => (
+                <SortableLinkCard
+                  key={link.id}
+                  link={link}
+                  selected={selectedLinkId === link.id}
+                  onSelect={() => setSelectedLinkId(selectedLinkId === link.id ? null : link.id)}
+                  onRemove={() => removeLink(i)}
+                  onUpdate={(key, value) => updateLink(i, key, value)}
+                  onAddChild={() => addChild(i)}
+                  onUpdateChild={(ci, key, value) => updateChild(i, ci, key, value)}
+                  onRemoveChild={(ci) => removeChild(i, ci)}
+                  onNest={() => nestLink(i)}
+                  onUnnest={() => {
+                    // Unnest the last child to make it a sibling
+                    const children = link.children;
+                    if (children && children.length > 0) {
+                      unnestChild(i, children.length - 1);
+                    }
+                  }}
+                  canNest={i > 0}
+                />
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
+      </div>
+
+      {/* CTA Buttons */}
+      <div className="bg-gray-50 rounded-lg p-3 space-y-2">
+        <div className="flex items-center justify-between">
+          <h4 className="text-xs font-semibold text-gray-700">CTA Buttons</h4>
+          {config.ctaButtons.length < 2 && (
+            <button onClick={addCta} className="text-teal hover:text-teal-dark text-[10px] font-semibold">+ Add CTA</button>
+          )}
+        </div>
+
+        {config.ctaButtons.map((cta, i) => (
+          <div key={i} className="border border-gray-200 rounded-lg bg-white p-2 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-semibold text-gray-500">CTA {i + 1}</span>
+              {config.ctaButtons.length > 1 && (
+                <button onClick={() => removeCta(i)} className="text-gray-300 hover:text-red-500 p-0.5">
+                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              )}
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="block text-[10px] text-gray-500 mb-0.5">Text</label>
+                <input
+                  type="text"
+                  value={cta.text}
+                  onChange={(e) => updateCta(i, { text: e.target.value })}
+                  className="w-full px-2 py-1 border border-gray-200 rounded text-xs"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] text-gray-500 mb-0.5">URL</label>
+                <input
+                  type="text"
+                  value={cta.href}
+                  onChange={(e) => updateCta(i, { href: e.target.value })}
+                  className="w-full px-2 py-1 border border-gray-200 rounded text-xs"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="block text-[10px] text-gray-500 mb-0.5">Variant</label>
+                <select
+                  value={cta.variant}
+                  onChange={(e) => updateCta(i, { variant: e.target.value as NavbarCtaConfig["variant"] })}
+                  className="w-full px-2 py-1 border border-gray-200 rounded text-xs"
+                >
+                  {Object.entries(VARIANT_LABELS).map(([val, label]) => (
+                    <option key={val} value={val}>{label}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex flex-col gap-1 pt-3">
+                <label className="flex items-center gap-1 text-[10px] text-gray-500">
+                  <input type="checkbox" checked={cta.external ?? true} onChange={(e) => updateCta(i, { external: e.target.checked })} /> New tab
+                </label>
+                <label className="flex items-center gap-1 text-[10px] text-gray-500">
+                  <input type="checkbox" checked={cta.bounce ?? false} onChange={(e) => updateCta(i, { bounce: e.target.checked })} /> Bounce
+                </label>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="block text-[10px] text-gray-500 mb-0.5">BG Color</label>
+                <div className="flex gap-1">
+                  <input type="color" value={cta.bgColor || "#2dd4bf"} onChange={(e) => updateCta(i, { bgColor: e.target.value })} className="w-7 h-7 rounded border border-gray-200 cursor-pointer p-0.5" />
+                  <input type="text" value={cta.bgColor || ""} onChange={(e) => updateCta(i, { bgColor: e.target.value })} className="flex-1 px-2 py-1 border border-gray-200 rounded text-[10px]" placeholder="default" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-[10px] text-gray-500 mb-0.5">Text Color</label>
+                <div className="flex gap-1">
+                  <input type="color" value={cta.textColor || "#ffffff"} onChange={(e) => updateCta(i, { textColor: e.target.value })} className="w-7 h-7 rounded border border-gray-200 cursor-pointer p-0.5" />
+                  <input type="text" value={cta.textColor || ""} onChange={(e) => updateCta(i, { textColor: e.target.value })} className="flex-1 px-2 py-1 border border-gray-200 rounded text-[10px]" placeholder="default" />
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Style */}
+      <div className="bg-gray-50 rounded-lg p-3 space-y-2">
+        <h4 className="text-xs font-semibold text-gray-700">Navbar Style</h4>
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <label className="block text-[10px] text-gray-500 mb-0.5">Background</label>
+            <div className="flex gap-1">
+              <input type="color" value={config.style?.bgColor || "#1a1a1a"} onChange={(e) => setConfig(prev => ({ ...prev, style: { ...prev.style!, bgColor: e.target.value } }))} className="w-7 h-7 rounded border border-gray-200 cursor-pointer p-0.5" />
+              <input type="text" value={config.style?.bgColor || "#1a1a1a"} onChange={(e) => setConfig(prev => ({ ...prev, style: { ...prev.style!, bgColor: e.target.value } }))} className="flex-1 px-2 py-1 border border-gray-200 rounded text-[10px]" />
+            </div>
+          </div>
+          <div>
+            <label className="block text-[10px] text-gray-500 mb-0.5">BG Opacity (%)</label>
+            <input
+              type="number"
+              min={0}
+              max={100}
+              value={config.style?.bgOpacity ?? 95}
+              onChange={(e) => setConfig(prev => ({ ...prev, style: { ...prev.style!, bgOpacity: Number(e.target.value) } }))}
+              className="w-full px-2 py-1.5 border border-gray-200 rounded text-xs"
+            />
+          </div>
+          <div>
+            <label className="block text-[10px] text-gray-500 mb-0.5">Text Color</label>
+            <div className="flex gap-1">
+              <input type="color" value={config.style?.textColor || "#ffffff"} onChange={(e) => setConfig(prev => ({ ...prev, style: { ...prev.style!, textColor: e.target.value } }))} className="w-7 h-7 rounded border border-gray-200 cursor-pointer p-0.5" />
+              <input type="text" value={config.style?.textColor || "#ffffff"} onChange={(e) => setConfig(prev => ({ ...prev, style: { ...prev.style!, textColor: e.target.value } }))} className="flex-1 px-2 py-1 border border-gray-200 rounded text-[10px]" />
+            </div>
+          </div>
+          <div>
+            <label className="block text-[10px] text-gray-500 mb-0.5">Hover Color</label>
+            <div className="flex gap-1">
+              <input type="color" value={config.style?.hoverColor || "#2dd4bf"} onChange={(e) => setConfig(prev => ({ ...prev, style: { ...prev.style!, hoverColor: e.target.value } }))} className="w-7 h-7 rounded border border-gray-200 cursor-pointer p-0.5" />
+              <input type="text" value={config.style?.hoverColor || "#2dd4bf"} onChange={(e) => setConfig(prev => ({ ...prev, style: { ...prev.style!, hoverColor: e.target.value } }))} className="flex-1 px-2 py-1 border border-gray-200 rounded text-[10px]" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Event overrides */}
+      <details className="bg-gray-50 rounded-lg">
+        <summary className="px-3 py-2 text-xs font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 rounded-lg">
+          Event Page Overrides
+        </summary>
+        <div className="px-3 pb-3 border-t border-gray-100 pt-2">
+          <p className="text-[10px] text-gray-400 mb-2">
+            Configure different nav links for specific event pages. Edit via JSON.
+          </p>
+          <textarea
+            value={JSON.stringify(config.eventOverrides || {}, null, 2)}
+            onChange={(e) => {
+              try {
+                const parsed = JSON.parse(e.target.value);
+                setConfig(prev => ({ ...prev, eventOverrides: parsed }));
+              } catch { /* invalid JSON */ }
+            }}
+            className="w-full p-2 border border-gray-200 rounded-lg font-mono text-[10px]"
+            rows={8}
+            placeholder="{}"
+          />
+        </div>
+      </details>
+
+      {/* Save */}
+      <button
+        onClick={save}
+        disabled={saving}
+        className="w-full bg-teal hover:bg-teal-dark text-white font-semibold py-2 rounded-lg transition-colors disabled:opacity-50 text-sm"
+      >
+        {saving ? "Saving..." : "Save Navbar"}
+      </button>
+    </div>
+  );
+}

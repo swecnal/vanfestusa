@@ -32,7 +32,7 @@ import { SECTION_DEFAULTS } from "@/lib/section-defaults";
 import { type SiteStyles, EMPTY_SITE_STYLES } from "@/lib/styles";
 import SectionRenderer from "@/components/sections/SectionRenderer";
 import SectionEditorPanel from "@/components/admin/SectionEditorPanel";
-import NavbarEditorInline from "@/components/admin/NavbarEditorInline";
+import NavbarBuilder from "@/components/admin/NavbarBuilder";
 import FooterBuilder from "@/components/admin/FooterBuilder";
 import ConfirmModal from "@/components/admin/ConfirmModal";
 
@@ -1092,7 +1092,7 @@ export default function PageEditorPage() {
         }`}>
           <div className="flex-shrink-0 bg-white p-4 border-b border-gray-100 flex items-center justify-between z-10">
             <h3 className="font-display font-semibold text-sm text-charcoal">
-              {globalEditTarget === "navbar" ? "Navbar" : "Footer Builder"}
+              {globalEditTarget === "navbar" ? "Navbar Builder" : "Footer Builder"}
             </h3>
             <button
               onClick={() => setGlobalEditTarget(null)}
@@ -1105,7 +1105,7 @@ export default function PageEditorPage() {
           </div>
           <div className="flex-1 overflow-y-auto admin-scrollbar">
             {globalEditTarget === "navbar" ? (
-              <NavbarEditorInline onSave={() => {
+              <NavbarBuilder onSave={() => {
                 const iframe = mobileIframeRef.current;
                 if (iframe) iframe.src = iframe.src;
               }} />
@@ -1124,7 +1124,7 @@ export default function PageEditorPage() {
         <div className="md:hidden fixed inset-0 z-50 bg-white flex flex-col">
           <div className="flex-shrink-0 bg-white px-4 py-3 border-b border-gray-100 flex items-center justify-between">
             <h3 className="font-display font-semibold text-sm text-charcoal">
-              {globalEditTarget === "navbar" ? "Navbar" : "Footer Builder"}
+              {globalEditTarget === "navbar" ? "Navbar Builder" : "Footer Builder"}
             </h3>
             <button
               onClick={() => setGlobalEditTarget(null)}
@@ -1137,7 +1137,7 @@ export default function PageEditorPage() {
           </div>
           <div className="flex-1 overflow-y-auto admin-scrollbar" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
             {globalEditTarget === "navbar" ? (
-              <NavbarEditorInline onSave={() => {
+              <NavbarBuilder onSave={() => {
                 const iframe = mobileIframeRef.current;
                 if (iframe) iframe.src = iframe.src;
               }} />

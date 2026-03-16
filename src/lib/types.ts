@@ -745,6 +745,57 @@ export interface FooterBuilderConfig {
   };
 }
 
+// ─── Navbar Builder (v2) ───
+
+export type NavbarZone = "left" | "center" | "right";
+
+export interface NavbarLinkV2 {
+  id: string;
+  label: string;
+  href: string;
+  external?: boolean;
+  children?: NavbarLinkV2[];
+}
+
+export interface NavbarCtaConfig {
+  text: string;
+  href: string;
+  external?: boolean;
+  variant: "primary" | "secondary" | "outline";
+  bgColor?: string;
+  textColor?: string;
+  bounce?: boolean;
+}
+
+export interface NavbarBuilderConfig {
+  version: 2;
+  layout: {
+    logo: NavbarZone;
+    links: NavbarZone;
+    cta: NavbarZone;
+  };
+  logo: {
+    src: string;
+    height: number;
+    heightScrolled: number;
+    showText: boolean;
+    text: string;
+  };
+  links: NavbarLinkV2[];
+  ctaButtons: NavbarCtaConfig[];
+  eventOverrides?: Record<string, {
+    links?: NavbarLinkV2[];
+    ctaButtons?: NavbarCtaConfig[];
+    badgeText?: string;
+  }>;
+  style?: {
+    bgColor: string;
+    bgOpacity: number;
+    textColor: string;
+    hoverColor: string;
+  };
+}
+
 // ─── Page with Sections (joined) ───
 
 export interface PageWithSections extends Page {

@@ -16,9 +16,9 @@ async function getGlobalSettings() {
     const { data: rows } = await supabase
       .from("global_settings")
       .select("key, value")
-      .in("key", ["button_styles", "link_styles", "heading_styles", "navbar_config", "footer_config", "vehicle_stream_config", "footer_builder_config"]);
+      .in("key", ["button_styles", "link_styles", "heading_styles", "navbar_config", "footer_config", "vehicle_stream_config", "footer_builder_config", "navbar_builder_config"]);
 
-    if (!rows) return { siteStyles: EMPTY_SITE_STYLES, navbarConfig: null, footerConfig: null, vehicleStreamConfig: null, footerBuilderConfig: null };
+    if (!rows) return { siteStyles: EMPTY_SITE_STYLES, navbarConfig: null, footerConfig: null, vehicleStreamConfig: null, footerBuilderConfig: null, navbarBuilderConfig: null };
 
     const map: Record<string, unknown> = {};
     for (const row of rows) {
@@ -35,9 +35,10 @@ async function getGlobalSettings() {
       footerConfig: map.footer_config || null,
       vehicleStreamConfig: map.vehicle_stream_config || null,
       footerBuilderConfig: map.footer_builder_config || null,
+      navbarBuilderConfig: map.navbar_builder_config || null,
     };
   } catch {
-    return { siteStyles: EMPTY_SITE_STYLES, navbarConfig: null, footerConfig: null, vehicleStreamConfig: null, footerBuilderConfig: null };
+    return { siteStyles: EMPTY_SITE_STYLES, navbarConfig: null, footerConfig: null, vehicleStreamConfig: null, footerBuilderConfig: null, navbarBuilderConfig: null };
   }
 }
 
@@ -60,7 +61,7 @@ export default async function PreviewPage({ params }: PageProps) {
     .order("sort_order", { ascending: true });
 
   const visibleSections = ((sections || []) as Section[]).filter((s) => s.is_visible);
-  const { siteStyles, navbarConfig, footerConfig, vehicleStreamConfig, footerBuilderConfig } = await getGlobalSettings();
+  const { siteStyles, navbarConfig, footerConfig, vehicleStreamConfig, footerBuilderConfig, navbarBuilderConfig } = await getGlobalSettings();
 
   return (
     <main>
@@ -68,6 +69,7 @@ export default async function PreviewPage({ params }: PageProps) {
         initialSections={visibleSections}
         siteStyles={siteStyles}
         navbarConfig={navbarConfig}
+        navbarBuilderConfig={navbarBuilderConfig}
         footerConfig={footerConfig}
         footerBuilderConfig={footerBuilderConfig}
         vehicleStreamConfig={vehicleStreamConfig}
