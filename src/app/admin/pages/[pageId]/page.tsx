@@ -1044,6 +1044,7 @@ export default function PageEditorPage() {
               section={selectedSection}
               onSave={(data, settings) => handleSaveSection(selectedSection.id, data, settings)}
               saving={saving}
+              isDirty={isDirty}
               onChange={handleEditorChange}
               stickyButtons
               onUngroupChild={handleUngroupChild}
@@ -1074,6 +1075,7 @@ export default function PageEditorPage() {
               section={selectedSection}
               onSave={(data, settings) => handleSaveSection(selectedSection.id, data, settings)}
               saving={saving}
+              isDirty={isDirty}
               onChange={handleEditorChange}
               stickyButtons
               onUngroupChild={handleUngroupChild}

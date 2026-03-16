@@ -20,13 +20,14 @@ interface Props {
   section: Section;
   onSave: (data: Record<string, unknown>, settings?: Record<string, unknown>) => void;
   saving: boolean;
+  isDirty?: boolean;
   onChange?: (data: Record<string, unknown>, settings: Record<string, unknown>) => void;
   stickyButtons?: boolean;
   onUngroupChild?: (accordionId: string, childIndex: number) => void;
   previewMode?: "desktop" | "mobile";
 }
 
-export default function SectionEditorPanel({ section, onSave, saving, onChange, stickyButtons, onUngroupChild, previewMode }: Props) {
+export default function SectionEditorPanel({ section, onSave, saving, isDirty, onChange, stickyButtons, onUngroupChild, previewMode }: Props) {
   const [data, setData] = useState<Record<string, unknown>>(section.data);
   const [settings, setSettings] = useState<Record<string, unknown>>(section.settings as unknown as Record<string, unknown>);
   const [siteStyles, setSiteStyles] = useState<SiteStyles>(EMPTY_SITE_STYLES);
@@ -414,8 +415,8 @@ export default function SectionEditorPanel({ section, onSave, saving, onChange, 
       <div className={stickyButtons ? "sticky bottom-0 bg-white pt-2 border-t border-gray-100 -mx-4 px-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]" : ""} style={stickyButtons ? { paddingBottom: "max(4px, env(safe-area-inset-bottom))" } : undefined}>
         <button
           onClick={handleSave}
-          disabled={saving}
-          className="w-full bg-teal hover:bg-teal-dark text-white font-semibold py-2.5 rounded-lg transition-colors disabled:opacity-50 text-sm"
+          disabled={saving || isDirty === false}
+          className="w-full bg-teal hover:bg-teal-dark text-white font-semibold py-2.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
         >
           {saving ? "Saving..." : "Save Changes"}
         </button>
@@ -494,6 +495,24 @@ function SectionFields({
             />
             Light text (dark background)
           </label>
+          <Field label="Parallax">
+            <div className="flex gap-1">
+              {(["none", "light", "medium", "strong"] as const).map((level) => (
+                <button
+                  key={level}
+                  type="button"
+                  onClick={() => updateData("parallax", level)}
+                  className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+                    ((data.parallax as string) || "none") === level
+                      ? "bg-teal text-white"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
+                >
+                  {level.charAt(0).toUpperCase() + level.slice(1)}
+                </button>
+              ))}
+            </div>
+          </Field>
         </div>
       );
 
@@ -723,7 +742,7 @@ function SectionFields({
       const showConvoyFields = dividerType === "convoy";
       const showStreamFields = dividerType === "stream";
       const showFestivalFields = dividerType === "festival";
-      const festivalEls = (data.festivalElements as Record<string, boolean>) || {};
+      const festivalEls = (data.festivalElements as Record<string, unknown>) || {};
       return (
         <div className="space-y-3">
           <Field label="Divider Type">
@@ -910,6 +929,16 @@ function SectionFields({
                   className="w-full"
                 />
               </Field>
+              <Field label={`Opacity: ${(data.fromColorOpacity as number) ?? 100}%`}>
+                <input
+                  type="range"
+                  min={0}
+                  max={100}
+                  value={(data.fromColorOpacity as number) ?? 100}
+                  onChange={(e) => updateData("fromColorOpacity", Number(e.target.value))}
+                  className="w-full"
+                />
+              </Field>
             </>
           )}
 
@@ -970,54 +999,126 @@ function SectionFields({
                 />
                 Show passengers
               </label>
+              <Field label={`Opacity: ${(data.fromColorOpacity as number) ?? 100}%`}>
+                <input
+                  type="range"
+                  min={0}
+                  max={100}
+                  value={(data.fromColorOpacity as number) ?? 100}
+                  onChange={(e) => updateData("fromColorOpacity", Number(e.target.value))}
+                  className="w-full"
+                />
+              </Field>
             </>
           )}
 
-          {showFestivalFields && (
-            <>
-              <Field label="Seed">
-                <input
-                  type="number"
-                  value={(data.festivalSeed as number) || 42}
-                  onChange={(e) => updateData("festivalSeed", Number(e.target.value))}
-                  className="input-sm"
-                />
-              </Field>
-              <Field label="Background Color">
-                <input
-                  type="text"
-                  value={(data.festivalBgColor as string) || "#F5F0E8"}
-                  onChange={(e) => updateData("festivalBgColor", e.target.value)}
-                  className="input-sm"
-                  placeholder="#F5F0E8"
-                />
-              </Field>
-              <p className="text-xs text-gray-500 font-semibold mt-1">Scene Elements</p>
-              {([
-                ["tents", "Camping Tents"],
-                ["vendorBooths", "Vendor Booths"],
-                ["stage", "Stage & Band"],
-                ["dancing", "Dancing People"],
-                ["campfireWithPeople", "Campfire w/ People"],
-                ["campfireSolo", "Solo Campfire"],
-                ["convertedVans", "Converted Vans & Buses"],
-                ["peopleMeandering", "People Walking"],
-                ["walkingPeople", "Walking Across Scene"],
-              ] as const).map(([key, label]) => (
-                <label key={key} className="flex items-center gap-2 text-sm">
+          {showFestivalFields && (() => {
+            const freqVal = (key: string, defaultOn: boolean): string => {
+              const v = festivalEls[key];
+              if (v === undefined) return defaultOn ? "medium" : "none";
+              if (typeof v === "boolean") return v ? "medium" : "none";
+              return v as string;
+            };
+            const FREQ_OPTIONS = ["none", "light", "medium", "heavy"] as const;
+            const FREQ_LABELS: Record<string, string> = { none: "None", light: "Light", medium: "Medium", heavy: "Heavy" };
+            return (
+              <>
+                <Field label="Seed">
                   <input
-                    type="checkbox"
-                    checked={festivalEls[key] ?? (key !== "campfireSolo")}
-                    onChange={(e) => {
-                      const els = { ...festivalEls, [key]: e.target.checked };
-                      updateData("festivalElements", els);
-                    }}
+                    type="number"
+                    value={(data.festivalSeed as number) || 42}
+                    onChange={(e) => updateData("festivalSeed", Number(e.target.value))}
+                    className="input-sm"
                   />
-                  {label}
-                </label>
-              ))}
-            </>
-          )}
+                </Field>
+                <Field label="Background Color">
+                  <input
+                    type="text"
+                    value={(data.festivalBgColor as string) || "#F5F0E8"}
+                    onChange={(e) => updateData("festivalBgColor", e.target.value)}
+                    className="input-sm"
+                    placeholder="#F5F0E8"
+                  />
+                </Field>
+                <p className="text-xs text-gray-500 font-semibold mt-1">Scene Elements</p>
+                {([
+                  ["tents", "Camping Tents", true],
+                  ["vendorBooths", "Vendor Booths", true],
+                  ["dancing", "Dancing People", true],
+                  ["campfireWithPeople", "Campfire w/ People", true],
+                  ["campfireSolo", "Solo Campfire", false],
+                  ["convertedVans", "Converted Vans & Buses", true],
+                  ["peopleMeandering", "People Walking", true],
+                  ["walkingPeople", "Walking Across Scene", true],
+                ] as [string, string, boolean][]).map(([key, label, defaultOn]) => (
+                  <div key={key}>
+                    <p className="text-xs text-gray-600 mb-1">{label}</p>
+                    <div className="flex gap-1">
+                      {FREQ_OPTIONS.map((f) => (
+                        <button
+                          key={f}
+                          type="button"
+                          onClick={() => {
+                            const els = { ...festivalEls, [key]: f };
+                            updateData("festivalElements", els);
+                          }}
+                          className={`px-2 py-0.5 rounded text-xs font-medium transition-colors ${
+                            freqVal(key, defaultOn) === f
+                              ? "bg-teal text-white"
+                              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                          }`}
+                        >
+                          {FREQ_LABELS[f]}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+                {/* Stage toggle */}
+                <div>
+                  <label className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={festivalEls.stage !== false}
+                      onChange={(e) => {
+                        const els = { ...festivalEls, stage: e.target.checked };
+                        updateData("festivalElements", els);
+                      }}
+                    />
+                    Stage & Band
+                  </label>
+                </div>
+                {/* Banner text */}
+                {festivalEls.stage !== false && (
+                  <Field label="Stage Banner Text">
+                    <input
+                      type="text"
+                      value={(festivalEls.bannerText as string) || ""}
+                      onChange={(e) => {
+                        const text = e.target.value.slice(0, 20);
+                        const els = { ...festivalEls, bannerText: text };
+                        updateData("festivalElements", els);
+                      }}
+                      className="input-sm"
+                      placeholder="e.g. VANFEST 2026"
+                      maxLength={20}
+                    />
+                    <p className="text-[10px] text-gray-400 mt-0.5">{((festivalEls.bannerText as string) || "").length}/20 characters</p>
+                  </Field>
+                )}
+                <Field label={`Opacity: ${(data.fromColorOpacity as number) ?? 100}%`}>
+                  <input
+                    type="range"
+                    min={0}
+                    max={100}
+                    value={(data.fromColorOpacity as number) ?? 100}
+                    onChange={(e) => updateData("fromColorOpacity", Number(e.target.value))}
+                    className="w-full"
+                  />
+                </Field>
+              </>
+            );
+          })()}
         </div>
       );
     }
@@ -1739,6 +1840,26 @@ function HeroCarouselEditor({
           />
         </div>
       </details>
+
+      {/* Parallax */}
+      <Field label="Parallax">
+        <div className="flex gap-1">
+          {(["none", "light", "medium", "strong"] as const).map((level) => (
+            <button
+              key={level}
+              type="button"
+              onClick={() => updateData("parallax", level)}
+              className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+                ((data.parallax as string) || "none") === level
+                  ? "bg-teal text-white"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              }`}
+            >
+              {level.charAt(0).toUpperCase() + level.slice(1)}
+            </button>
+          ))}
+        </div>
+      </Field>
 
       {/* Overlay */}
       <details open className="border border-gray-200 rounded-lg">

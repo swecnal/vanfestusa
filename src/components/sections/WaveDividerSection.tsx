@@ -13,9 +13,21 @@ interface Props {
 
 function hexToRgba(color: string, opacity: number): string {
   // Handle named colors
-  const named: Record<string, string> = { white: "#ffffff", black: "#000000", transparent: "transparent" };
+  const named: Record<string, string> = {
+    white: "#ffffff", black: "#000000", transparent: "transparent",
+    red: "#ff0000", blue: "#0000ff", green: "#008000", gray: "#808080", grey: "#808080",
+    navy: "#000080", teal: "#008080", orange: "#ffa500", yellow: "#ffff00", purple: "#800080",
+  };
   const hex = named[color.toLowerCase()] || color;
   if (hex === "transparent") return "transparent";
+  // Handle 3-digit hex (#fff → #ffffff)
+  const short = hex.match(/^#?([a-f\d])([a-f\d])([a-f\d])$/i);
+  if (short) {
+    const r = parseInt(short[1] + short[1], 16);
+    const g = parseInt(short[2] + short[2], 16);
+    const b = parseInt(short[3] + short[3], 16);
+    return `rgba(${r},${g},${b},${opacity / 100})`;
+  }
   const match = hex.match(/^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i);
   if (!match) return color;
   const r = parseInt(match[1], 16);
@@ -166,8 +178,9 @@ export default function WaveDividerSection({ data, settings }: Props) {
 
   // ─── Convoy ───
   if (dividerType === "convoy") {
+    const bgOpacity = (d.fromColorOpacity ?? 100) / 100;
     return (
-      <div style={spacingStyle}>
+      <div style={{ ...spacingStyle, opacity: bgOpacity < 1 ? bgOpacity : undefined }}>
         <VehicleConvoy
           seed={d.seed || 42}
           count={d.count || 6}
@@ -182,8 +195,9 @@ export default function WaveDividerSection({ data, settings }: Props) {
 
   // ─── Stream ───
   if (dividerType === "stream") {
+    const bgOpacity = (d.fromColorOpacity ?? 100) / 100;
     return (
-      <div style={spacingStyle}>
+      <div style={{ ...spacingStyle, opacity: bgOpacity < 1 ? bgOpacity : undefined }}>
         <VehicleStream
           config={{
             enabled: true,
@@ -202,8 +216,9 @@ export default function WaveDividerSection({ data, settings }: Props) {
 
   // ─── Festival ───
   if (dividerType === "festival") {
+    const bgOpacity = (d.fromColorOpacity ?? 100) / 100;
     return (
-      <div style={spacingStyle}>
+      <div style={{ ...spacingStyle, opacity: bgOpacity < 1 ? bgOpacity : undefined }}>
         <FestivalScene
           seed={d.festivalSeed || 42}
           elements={d.festivalElements}

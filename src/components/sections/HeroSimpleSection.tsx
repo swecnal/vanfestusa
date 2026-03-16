@@ -1,4 +1,6 @@
 import SectionHeading from "@/components/SectionHeading";
+import ParallaxImage from "@/components/ParallaxImage";
+import type { ParallaxIntensity } from "@/components/ParallaxImage";
 import type { HeroSimpleData, SectionSettings } from "@/lib/types";
 import { textStyleConfigToCSS, type TextStyleConfig } from "@/lib/styles";
 
@@ -11,17 +13,19 @@ export default function HeroSimpleSection({ data, settings }: Props) {
   const d = data as unknown as HeroSimpleData;
   const titleStyle = (data as Record<string, unknown>).titleStyle as TextStyleConfig | undefined;
   const subtitleStyle = (data as Record<string, unknown>).subtitleStyle as TextStyleConfig | undefined;
+  const parallax = ((data as Record<string, unknown>).parallax as ParallaxIntensity) || "none";
 
   return (
     <section
-      className={`relative pt-32 pb-20 px-4 ${
+      className={`relative pt-32 pb-20 px-4 overflow-hidden ${
         d.light ? "bg-charcoal" : "bg-white"
       } ${settings.customClasses || ""}`}
     >
       {d.bgImage && (
-        <img
+        <ParallaxImage
           src={d.bgImage}
           alt=""
+          intensity={parallax}
           className="absolute inset-0 w-full h-full object-cover opacity-15"
         />
       )}

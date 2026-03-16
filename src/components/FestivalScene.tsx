@@ -86,44 +86,60 @@ function renderVendorBooth(rng: () => number) {
   );
 }
 
-function renderStage(rng: () => number) {
+function renderStage(rng: () => number, bannerText?: string) {
   const skin = pickRandom(SKIN_TONES, rng);
   const shirt = pickRandom(SHIRT_COLORS, rng);
   const skin2 = pickRandom(SKIN_TONES, rng);
   const shirt2 = pickRandom(SHIRT_COLORS, rng);
+  const hasBanner = bannerText && bannerText.trim().length > 0;
   return (
-    <svg width={90} height={60} viewBox="0 0 90 60" fill="none">
-      {/* Platform */}
-      <rect x={5} y={42} width={80} height={12} rx={2} fill="#5B4634" stroke="#3D2E20" strokeWidth={1.5} />
-      <line x1={5} y1={47} x2={85} y2={47} stroke="#3D2E20" strokeWidth={0.8} strokeOpacity={0.5} />
-      {/* Speaker left */}
-      <rect x={8} y={24} width={12} height={18} rx={1} fill="#333" stroke="#222" strokeWidth={1} />
-      <circle cx={14} cy={30} r={3} fill="#444" stroke="#222" strokeWidth={0.5} />
-      <circle cx={14} cy={37} r={4} fill="#444" stroke="#222" strokeWidth={0.5} />
-      {/* Speaker right */}
-      <rect x={70} y={24} width={12} height={18} rx={1} fill="#333" stroke="#222" strokeWidth={1} />
-      <circle cx={76} cy={30} r={3} fill="#444" stroke="#222" strokeWidth={0.5} />
-      <circle cx={76} cy={37} r={4} fill="#444" stroke="#222" strokeWidth={0.5} />
-      {/* Performer 1 - singer */}
-      <circle cx={40} cy={18} r={4} fill={skin} stroke="#333" strokeWidth={1} />
-      <line x1={40} y1={22} x2={40} y2={36} stroke={shirt} strokeWidth={2.5} />
-      <line x1={40} y1={26} x2={33} y2={32} stroke={shirt} strokeWidth={1.5} />
-      <line x1={40} y1={26} x2={48} y2={30} stroke={shirt} strokeWidth={1.5} />
-      <line x1={40} y1={36} x2={36} y2={42} stroke="#333" strokeWidth={1.5} />
-      <line x1={40} y1={36} x2={44} y2={42} stroke="#333" strokeWidth={1.5} />
-      {/* Mic stand */}
-      <line x1={48} y1={30} x2={50} y2={18} stroke="#888" strokeWidth={1} />
-      <circle cx={50} cy={17} r={2} fill="#555" />
-      {/* Performer 2 - guitarist */}
-      <circle cx={58} cy={20} r={3.5} fill={skin2} stroke="#333" strokeWidth={1} />
-      <line x1={58} y1={23.5} x2={58} y2={36} stroke={shirt2} strokeWidth={2.5} />
-      <line x1={58} y1={27} x2={52} y2={33} stroke={shirt2} strokeWidth={1.5} />
-      <line x1={58} y1={27} x2={64} y2={31} stroke={shirt2} strokeWidth={1.5} />
-      <line x1={58} y1={36} x2={55} y2={42} stroke="#333" strokeWidth={1.5} />
-      <line x1={58} y1={36} x2={61} y2={42} stroke="#333" strokeWidth={1.5} />
-      {/* Guitar shape */}
-      <ellipse cx={53} cy={32} rx={4} ry={3} fill="#8B4513" stroke="#5B3210" strokeWidth={0.8} />
-      <line x1={53} y1={29} x2={58} y2={23.5} stroke="#5B3210" strokeWidth={1} />
+    <svg width={90} height={hasBanner ? 75 : 60} viewBox={`0 0 90 ${hasBanner ? 75 : 60}`} fill="none">
+      {/* Banner above stage */}
+      {hasBanner && (
+        <>
+          {/* Banner poles */}
+          <line x1={15} y1={0} x2={15} y2={15} stroke="#5B4634" strokeWidth={1.5} />
+          <line x1={75} y1={0} x2={75} y2={15} stroke="#5B4634" strokeWidth={1.5} />
+          {/* Banner cloth */}
+          <rect x={15} y={2} width={60} height={13} rx={1} fill="#DC2626" fillOpacity={0.9} />
+          <text x={45} y={12} textAnchor="middle" fill="white" fontSize={7} fontWeight="bold" fontFamily="sans-serif">
+            {bannerText.trim().slice(0, 20)}
+          </text>
+        </>
+      )}
+      <g transform={hasBanner ? "translate(0,15)" : undefined}>
+        {/* Platform */}
+        <rect x={5} y={42} width={80} height={12} rx={2} fill="#5B4634" stroke="#3D2E20" strokeWidth={1.5} />
+        <line x1={5} y1={47} x2={85} y2={47} stroke="#3D2E20" strokeWidth={0.8} strokeOpacity={0.5} />
+        {/* Speaker left */}
+        <rect x={8} y={24} width={12} height={18} rx={1} fill="#333" stroke="#222" strokeWidth={1} />
+        <circle cx={14} cy={30} r={3} fill="#444" stroke="#222" strokeWidth={0.5} />
+        <circle cx={14} cy={37} r={4} fill="#444" stroke="#222" strokeWidth={0.5} />
+        {/* Speaker right */}
+        <rect x={70} y={24} width={12} height={18} rx={1} fill="#333" stroke="#222" strokeWidth={1} />
+        <circle cx={76} cy={30} r={3} fill="#444" stroke="#222" strokeWidth={0.5} />
+        <circle cx={76} cy={37} r={4} fill="#444" stroke="#222" strokeWidth={0.5} />
+        {/* Performer 1 - singer */}
+        <circle cx={40} cy={18} r={4} fill={skin} stroke="#333" strokeWidth={1} />
+        <line x1={40} y1={22} x2={40} y2={36} stroke={shirt} strokeWidth={2.5} />
+        <line x1={40} y1={26} x2={33} y2={32} stroke={shirt} strokeWidth={1.5} />
+        <line x1={40} y1={26} x2={48} y2={30} stroke={shirt} strokeWidth={1.5} />
+        <line x1={40} y1={36} x2={36} y2={42} stroke="#333" strokeWidth={1.5} />
+        <line x1={40} y1={36} x2={44} y2={42} stroke="#333" strokeWidth={1.5} />
+        {/* Mic stand */}
+        <line x1={48} y1={30} x2={50} y2={18} stroke="#888" strokeWidth={1} />
+        <circle cx={50} cy={17} r={2} fill="#555" />
+        {/* Performer 2 - guitarist */}
+        <circle cx={58} cy={20} r={3.5} fill={skin2} stroke="#333" strokeWidth={1} />
+        <line x1={58} y1={23.5} x2={58} y2={36} stroke={shirt2} strokeWidth={2.5} />
+        <line x1={58} y1={27} x2={52} y2={33} stroke={shirt2} strokeWidth={1.5} />
+        <line x1={58} y1={27} x2={64} y2={31} stroke={shirt2} strokeWidth={1.5} />
+        <line x1={58} y1={36} x2={55} y2={42} stroke="#333" strokeWidth={1.5} />
+        <line x1={58} y1={36} x2={61} y2={42} stroke="#333" strokeWidth={1.5} />
+        {/* Guitar shape */}
+        <ellipse cx={53} cy={32} rx={4} ry={3} fill="#8B4513" stroke="#5B3210" strokeWidth={0.8} />
+        <line x1={53} y1={29} x2={58} y2={23.5} stroke="#5B3210" strokeWidth={1} />
+      </g>
     </svg>
   );
 }
@@ -316,12 +332,12 @@ function renderWalker(skin: string, shirt: string, facingRight: boolean) {
 }
 
 // ─── Render dispatcher ───
-function renderElement(type: FestivalElementType, colorSeed: number) {
+function renderElement(type: FestivalElementType, colorSeed: number, bannerText?: string) {
   const rng = seededRandom(colorSeed);
   switch (type) {
     case "tent": return renderTent(rng);
     case "vendorBooth": return renderVendorBooth(rng);
-    case "stage": return renderStage(rng);
+    case "stage": return renderStage(rng, bannerText);
     case "dancing": return renderDancing(rng);
     case "campfireWithPeople": return renderCampfireWithPeople(rng);
     case "campfireSolo": return renderCampfireSolo(rng);
@@ -331,27 +347,53 @@ function renderElement(type: FestivalElementType, colorSeed: number) {
 }
 
 // ─── Main Component ───
+export type FestivalFrequency = "none" | "light" | "medium" | "heavy";
+
 export interface FestivalElements {
-  vendorBooths?: boolean;
+  vendorBooths?: boolean | FestivalFrequency;
   stage?: boolean;
-  dancing?: boolean;
-  campfireWithPeople?: boolean;
-  campfireSolo?: boolean;
-  tents?: boolean;
-  peopleMeandering?: boolean;
-  walkingPeople?: boolean;
-  convertedVans?: boolean;
+  dancing?: boolean | FestivalFrequency;
+  campfireWithPeople?: boolean | FestivalFrequency;
+  campfireSolo?: boolean | FestivalFrequency;
+  tents?: boolean | FestivalFrequency;
+  peopleMeandering?: boolean | FestivalFrequency;
+  walkingPeople?: boolean | FestivalFrequency;
+  convertedVans?: boolean | FestivalFrequency;
+  bannerText?: string;
+}
+
+/** Convert boolean or frequency to instance count */
+function freqCount(val: boolean | FestivalFrequency | undefined, defaultOn: boolean): number {
+  if (val === undefined) return defaultOn ? 2 : 0;
+  if (typeof val === "boolean") return val ? 2 : 0;
+  switch (val) {
+    case "none": return 0;
+    case "light": return 1;
+    case "medium": return 2;
+    case "heavy": return 4;
+  }
+}
+
+function walkerCount(val: boolean | FestivalFrequency | undefined): number {
+  if (val === undefined || val === true) return 4;
+  if (val === false) return 0;
+  switch (val) {
+    case "none": return 0;
+    case "light": return 2;
+    case "medium": return 4;
+    case "heavy": return 6;
+  }
 }
 
 const ALL_ON: FestivalElements = {
-  vendorBooths: true,
+  vendorBooths: "medium",
   stage: true,
-  dancing: true,
-  campfireWithPeople: true,
-  campfireSolo: false,
-  convertedVans: true,
-  tents: true,
-  peopleMeandering: true,
+  dancing: "medium",
+  campfireWithPeople: "medium",
+  campfireSolo: "none",
+  convertedVans: "medium",
+  tents: "medium",
+  peopleMeandering: "medium",
 };
 
 interface FestivalSceneProps {
@@ -368,16 +410,17 @@ export default function FestivalScene({
   const scene = useMemo(() => {
     const rng = seededRandom(seed);
 
-    // Collect enabled element types (some get duplicated for variety)
+    // Collect element types based on frequency
     const types: FestivalElementType[] = [];
-    if (elements.tents) { types.push("tent"); types.push("tent"); }
-    if (elements.vendorBooths) { types.push("vendorBooth"); types.push("vendorBooth"); }
+    const pushN = (type: FestivalElementType, n: number) => { for (let i = 0; i < n; i++) types.push(type); };
+    pushN("tent", freqCount(elements.tents, true));
+    pushN("vendorBooth", freqCount(elements.vendorBooths, true));
     if (elements.stage) types.push("stage");
-    if (elements.dancing) types.push("dancing");
-    if (elements.campfireWithPeople) types.push("campfireWithPeople");
-    if (elements.campfireSolo) types.push("campfireSolo");
-    if (elements.peopleMeandering) { types.push("peopleMeandering"); types.push("peopleMeandering"); }
-    if (elements.convertedVans) { types.push("convertedVans"); types.push("convertedVans"); }
+    pushN("dancing", freqCount(elements.dancing, true));
+    pushN("campfireWithPeople", freqCount(elements.campfireWithPeople, true));
+    pushN("campfireSolo", freqCount(elements.campfireSolo, false));
+    pushN("peopleMeandering", freqCount(elements.peopleMeandering, true));
+    pushN("convertedVans", freqCount(elements.convertedVans, true));
 
     if (types.length === 0) return [];
 
@@ -403,7 +446,7 @@ export default function FestivalScene({
   // Walking people
   const walkers = useMemo(() => {
     const rng = seededRandom(seed + 9999);
-    const count = 4;
+    const count = walkerCount(elements.walkingPeople);
     return Array.from({ length: count }, (_, i) => ({
       skin: pickRandom(SKIN_TONES, rng),
       shirt: pickRandom(SHIRT_COLORS, rng),
@@ -412,7 +455,7 @@ export default function FestivalScene({
       delay: -(rng() * 20), // Staggered start via negative delay
       bottomPx: 8 + Math.floor(rng() * 20), // Vary vertical position
     }));
-  }, [seed]);
+  }, [seed, elements.walkingPeople]);
 
   return (
     <section
@@ -521,12 +564,12 @@ export default function FestivalScene({
           className="absolute bottom-4"
           style={{ left: `${item.leftPct}%`, transform: "translateX(-50%)" }}
         >
-          {renderElement(item.type, item.colorSeed)}
+          {renderElement(item.type, item.colorSeed, elements.bannerText)}
         </div>
       ))}
 
       {/* Walking people */}
-      {(elements.walkingPeople ?? true) && walkers.map((w, i) => (
+      {walkers.length > 0 && walkers.map((w, i) => (
         <div
           key={`walker-${i}`}
           className="absolute z-[8]"

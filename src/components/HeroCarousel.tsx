@@ -2,6 +2,14 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { type SiteStyles, type TextStyleConfig, EMPTY_SITE_STYLES, findButtonStyle, buttonStyleToCSS, textStyleConfigToCSS } from "@/lib/styles";
+import type { ParallaxIntensity } from "@/components/ParallaxImage";
+
+const PARALLAX_SPEED: Record<ParallaxIntensity, number> = {
+  none: 0,
+  light: 0.1,
+  medium: 0.25,
+  strong: 0.45,
+};
 
 interface HeroSlide {
   image: string;
@@ -29,14 +37,34 @@ interface HeroCarouselProps {
   overlay: EventOverlay;
   autoplayInterval?: number;
   siteStyles?: SiteStyles;
+  parallax?: ParallaxIntensity;
 }
 
 const textShadow = "0 2px 12px rgba(0,0,0,0.9), 0 0 40px rgba(0,0,0,0.6), 0 4px 20px rgba(0,0,0,0.5)";
 
-export default function HeroCarousel({ slides, overlay, autoplayInterval = 5000, siteStyles = EMPTY_SITE_STYLES }: HeroCarouselProps) {
+export default function HeroCarousel({ slides, overlay, autoplayInterval = 5000, siteStyles = EMPTY_SITE_STYLES, parallax = "none" }: HeroCarouselProps) {
   const [current, setCurrent] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const heroCTARef = useRef<HTMLAnchorElement>(null);
+  const [scrollOffset, setScrollOffset] = useState(0);
+  const pSpeed = PARALLAX_SPEED[parallax] || 0;
+
+  // Parallax scroll handler
+  useEffect(() => {
+    if (pSpeed === 0) return;
+    let ticking = false;
+    const handleScroll = () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          setScrollOffset(window.scrollY * pSpeed);
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [pSpeed]);
 
   // Randomize bounce timing
   useEffect(() => {
@@ -79,6 +107,11 @@ export default function HeroCarousel({ slides, overlay, autoplayInterval = 5000,
             src={slide.image}
             alt={slide.alt}
             className="w-full h-full object-cover"
+            style={pSpeed > 0 ? {
+              transform: `translateY(${scrollOffset}px)`,
+              willChange: "transform",
+              height: `${100 + pSpeed * 100}%`,
+            } : undefined}
           />
         </div>
       ))}
