@@ -363,7 +363,17 @@ export default function PageEditorPage() {
 
   const { registerHandler, unregisterHandler } = usePageEditor();
   const [editPaneMode, setEditPaneMode] = useState<"floating" | "static">("floating");
-  const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">("desktop");
+  const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">(() => {
+    if (typeof window !== "undefined") {
+      return (sessionStorage.getItem("vf_previewMode") as "desktop" | "mobile") || "desktop";
+    }
+    return "desktop";
+  });
+  const updatePreviewMode = (mode: "desktop" | "mobile") => {
+    setPreviewMode(mode);
+    sessionStorage.setItem("vf_previewMode", mode);
+  };
+  const [mobileIframeKey, setMobileIframeKey] = useState(0);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -566,6 +576,7 @@ export default function PageEditorPage() {
       const { section } = await res.json();
       setSections((prev) => prev.map((s) => (s.id === section.id ? section : s)));
       setIsDirty(false);
+      setMobileIframeKey((k) => k + 1);
       toast.success("Saved");
     } else {
       toast.error("Failed to save");
@@ -771,7 +782,7 @@ export default function PageEditorPage() {
             {/* Desktop / Mobile preview toggle */}
             <div className="flex rounded-lg border border-gray-200 overflow-hidden">
               <button
-                onClick={() => setPreviewMode("desktop")}
+                onClick={() => updatePreviewMode("desktop")}
                 className={`flex items-center gap-1 px-2.5 py-1 text-[10px] font-semibold transition-colors ${
                   previewMode === "desktop"
                     ? "bg-teal/15 text-teal"
@@ -785,7 +796,7 @@ export default function PageEditorPage() {
                 Desktop
               </button>
               <button
-                onClick={() => setPreviewMode("mobile")}
+                onClick={() => updatePreviewMode("mobile")}
                 className={`flex items-center gap-1 px-2.5 py-1 text-[10px] font-semibold transition-colors border-l border-gray-200 ${
                   previewMode === "mobile"
                     ? "bg-teal/15 text-teal"
@@ -813,8 +824,8 @@ export default function PageEditorPage() {
           </div>
         </div>
 
-        {/* Live editable sections (always shown) */}
-        <div className={previewMode === "mobile" ? "mx-auto" : ""} style={previewMode === "mobile" ? { maxWidth: 393 } : undefined}>
+        {/* Live editable sections — desktop mode */}
+        {previewMode === "desktop" && (
         <div
           onDragEnter={(e) => {
             if (e.dataTransfer.types.includes("application/section-type")) {
@@ -907,7 +918,56 @@ export default function PageEditorPage() {
             </div>
           )}
         </div>
-        </div>
+        )}
+
+        {/* Mobile preview — real iframe at 393px viewport + section list */}
+        {previewMode === "mobile" && (
+          <div className="flex-1 flex bg-gray-100 overflow-hidden">
+            {/* Phone frame */}
+            <div className="flex-1 flex items-start justify-center py-6 overflow-y-auto">
+              <div className="flex flex-col items-center">
+                <div className="bg-gray-900 rounded-[2.5rem] p-3 shadow-2xl">
+                  <div className="flex justify-center mb-1">
+                    <div className="w-20 h-4 bg-gray-800 rounded-full" />
+                  </div>
+                  <div className="rounded-[2rem] overflow-hidden bg-white" style={{ width: 393, height: 852 }}>
+                    <iframe
+                      key={mobileIframeKey}
+                      src={`/preview/${pageId}`}
+                      className="border-0 w-full h-full"
+                      title="Mobile preview"
+                    />
+                  </div>
+                  <div className="flex justify-center mt-2">
+                    <div className="w-28 h-1 bg-gray-600 rounded-full" />
+                  </div>
+                </div>
+              </div>
+            </div>
+            {/* Section list for editing */}
+            <div className="w-56 flex-shrink-0 bg-white border-l border-gray-200 overflow-y-auto">
+              <div className="px-3 py-2 border-b border-gray-100">
+                <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Sections</p>
+              </div>
+              <div className="py-1">
+                {sections.map((section) => (
+                  <button
+                    key={section.id}
+                    onClick={() => handleSelectSection(section.id)}
+                    className={`w-full text-left px-3 py-2 text-xs transition-colors ${
+                      selectedSectionId === section.id
+                        ? "bg-teal/10 text-teal font-semibold border-l-2 border-teal"
+                        : "text-gray-600 hover:bg-gray-50 border-l-2 border-transparent"
+                    }`}
+                  >
+                    {SECTION_TYPE_LABELS[section.section_type as SectionType] || section.section_type}
+                  </button>
+                ))}
+              </div>
+              <p className="px-3 py-2 text-[9px] text-gray-400">Save to refresh preview.</p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Editor panel — floating (overlay) or static (side column) */}
