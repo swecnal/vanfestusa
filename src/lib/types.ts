@@ -677,6 +677,74 @@ export interface GlobalNavbarConfig {
   }>;
 }
 
+// ─── Footer Builder Types ───
+
+export type FooterElementType = "logo_text" | "text_area" | "social_icons" | "link_list" | "contact_info";
+
+export interface FooterLogoTextData {
+  logoSrc: string;
+  logoHeight: number;
+  brandName: string;
+  tagline: string;
+  subtitle: string;
+}
+
+export interface FooterTextAreaData {
+  html: string;
+}
+
+export interface FooterSocialIconsData {
+  links: Array<{ id: string; platform: string; url: string; newTab: boolean }>;
+  iconSize: "sm" | "md" | "lg";
+  spacing: number;
+}
+
+export interface FooterLinkListData {
+  headerHtml: string;
+  links: Array<{ id: string; text: string; href: string; newTab: boolean }>;
+  spacing: number;
+}
+
+export interface FooterContactInfoData {
+  items: Array<{ id: string; type: "email" | "phone" | "instagram" | "custom"; label: string; value: string; href: string }>;
+}
+
+export type FooterElementData = FooterLogoTextData | FooterTextAreaData | FooterSocialIconsData | FooterLinkListData | FooterContactInfoData;
+
+export interface FooterElement {
+  id: string;
+  type: FooterElementType;
+  data: FooterElementData;
+}
+
+export interface FooterColumnConfig {
+  id: string;
+  elements: FooterElement[];
+  alignment: "left" | "center" | "right";
+  verticalAlign: "top" | "center" | "bottom";
+}
+
+export interface FooterBuilderConfig {
+  version: 2;
+  columns: FooterColumnConfig[];
+  columnCount: number;
+  columnGap: number;
+  backgroundColor: string;
+  textColor: string;
+  accentColor: string;
+  paddingY: string;
+  paddingX: string;
+  bottomBar: {
+    enabled: boolean;
+    copyrightHtml: string;
+    legalHtml: string;
+  };
+  dividerAbove?: {
+    enabled: boolean;
+    config: Record<string, unknown> | null;
+  };
+}
+
 // ─── Page with Sections (joined) ───
 
 export interface PageWithSections extends Page {

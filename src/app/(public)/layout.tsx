@@ -2,19 +2,32 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import FooterDivider from "@/components/FooterDivider";
 import type { VehicleStreamConfig } from "@/components/VehicleStream";
+import type { FooterBuilderConfig } from "@/lib/types";
 import { getSupabaseServer } from "@/lib/supabase/server";
 
-async function getGlobalSetting(key: string) {
+async function getGlobalSettings() {
   try {
     const supabase = getSupabaseServer();
-    const { data } = await supabase
+    const { data: rows } = await supabase
       .from("global_settings")
-      .select("value")
-      .eq("key", key)
-      .single();
-    return data?.value || null;
+      .select("key, value")
+      .in("key", ["navbar_config", "footer_config", "vehicle_stream_config", "footer_builder_config"]);
+
+    if (!rows) return { navbarConfig: null, footerConfig: null, vehicleStreamConfig: null, footerBuilderConfig: null };
+
+    const map: Record<string, unknown> = {};
+    for (const row of rows) {
+      map[row.key] = row.value;
+    }
+
+    return {
+      navbarConfig: map.navbar_config || null,
+      footerConfig: map.footer_config || null,
+      vehicleStreamConfig: map.vehicle_stream_config || null,
+      footerBuilderConfig: (map.footer_builder_config as FooterBuilderConfig) || null,
+    };
   } catch {
-    return null;
+    return { navbarConfig: null, footerConfig: null, vehicleStreamConfig: null, footerBuilderConfig: null };
   }
 }
 
@@ -23,20 +36,21 @@ export default async function PublicLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [navbarConfig, footerConfig, vehicleStreamConfig] = await Promise.all([
-    getGlobalSetting("navbar_config"),
-    getGlobalSetting("footer_config"),
-    getGlobalSetting("vehicle_stream_config"),
-  ]);
+  const { navbarConfig, footerConfig, vehicleStreamConfig, footerBuilderConfig } = await getGlobalSettings();
+
+  // If v2 footer builder config exists, the divider is managed within the footer builder
+  const showStandaloneDivider = !footerBuilderConfig?.version;
 
   return (
     <>
       {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
       <Navbar config={navbarConfig as any} />
       <main>{children}</main>
-      <FooterDivider config={vehicleStreamConfig as VehicleStreamConfig | null} />
+      {showStandaloneDivider && (
+        <FooterDivider config={vehicleStreamConfig as VehicleStreamConfig | null} />
+      )}
       {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-      <Footer config={footerConfig as any} />
+      <Footer config={footerConfig as any} builderConfig={footerBuilderConfig} />
     </>
   );
 }

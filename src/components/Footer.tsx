@@ -1,4 +1,14 @@
 import Link from "next/link";
+import type {
+  FooterBuilderConfig,
+  FooterColumnConfig,
+  FooterElement,
+  FooterLogoTextData,
+  FooterTextAreaData,
+  FooterSocialIconsData,
+  FooterLinkListData,
+  FooterContactInfoData,
+} from "@/lib/types";
 
 interface FooterConfig {
   brand?: { tagline?: string };
@@ -15,7 +25,238 @@ const SOCIAL_ICONS: Record<string, string> = {
   twitter: "M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z",
 };
 
-export default function Footer({ config }: { config?: FooterConfig | null }) {
+const ICON_SIZE: Record<string, string> = {
+  sm: "w-7 h-7",
+  md: "w-9 h-9",
+  lg: "w-11 h-11",
+};
+
+const SVG_SIZE: Record<string, string> = {
+  sm: "w-3 h-3",
+  md: "w-4 h-4",
+  lg: "w-5 h-5",
+};
+
+const TEXT_ALIGN: Record<string, string> = {
+  left: "text-left",
+  center: "text-center",
+  right: "text-right",
+};
+
+const VERTICAL_ALIGN: Record<string, string> = {
+  top: "justify-start",
+  center: "justify-center",
+  bottom: "justify-end",
+};
+
+/* ─── V2 Element Renderers ─── */
+
+function RenderLogoText({ data, textColor, accentColor }: { data: FooterLogoTextData; textColor: string; accentColor: string }) {
+  return (
+    <div>
+      <div className="flex items-center gap-3 mb-4">
+        {data.logoSrc && (
+          <img src={data.logoSrc} alt={data.brandName} style={{ height: data.logoHeight || 40 }} />
+        )}
+        {data.brandName && (
+          <span className="font-display font-bold text-xl" style={{ color: textColor }}>{data.brandName}</span>
+        )}
+      </div>
+      {data.tagline && (
+        <div className="text-sm leading-relaxed site-html-content" style={{ color: `${textColor}99` }} dangerouslySetInnerHTML={{ __html: data.tagline }} />
+      )}
+      {data.subtitle && (
+        <div className="text-xs mt-2 italic font-accent site-html-content" style={{ color: `${textColor}66` }} dangerouslySetInnerHTML={{ __html: data.subtitle }} />
+      )}
+    </div>
+  );
+  void accentColor;
+}
+
+function RenderTextArea({ data, textColor }: { data: FooterTextAreaData; textColor: string }) {
+  return (
+    <div className="site-html-content" style={{ color: `${textColor}99` }} dangerouslySetInnerHTML={{ __html: data.html }} />
+  );
+}
+
+function RenderSocialIcons({ data, accentColor }: { data: FooterSocialIconsData; accentColor: string }) {
+  const iconSize = ICON_SIZE[data.iconSize] || ICON_SIZE.md;
+  const svgSize = SVG_SIZE[data.iconSize] || SVG_SIZE.md;
+
+  return (
+    <div className="flex flex-wrap" style={{ gap: data.spacing || 12 }}>
+      {data.links.map((link) => (
+        <a
+          key={link.id}
+          href={link.url}
+          target={link.newTab ? "_blank" : undefined}
+          rel={link.newTab ? "noopener noreferrer" : undefined}
+          className={`${iconSize} rounded-full bg-white/10 flex items-center justify-center transition-colors`}
+          style={{ color: "white" }}
+          aria-label={link.platform}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = accentColor; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.backgroundColor = "rgba(255,255,255,0.1)"; }}
+        >
+          <svg className={svgSize} fill="currentColor" viewBox="0 0 24 24">
+            <path d={SOCIAL_ICONS[link.platform] || SOCIAL_ICONS.instagram} />
+          </svg>
+        </a>
+      ))}
+    </div>
+  );
+}
+
+function RenderLinkList({ data, textColor, accentColor }: { data: FooterLinkListData; textColor: string; accentColor: string }) {
+  return (
+    <div>
+      {data.headerHtml && (
+        <h3
+          className="font-display font-bold text-sm uppercase tracking-wider mb-4 site-html-content"
+          style={{ color: accentColor }}
+          dangerouslySetInnerHTML={{ __html: data.headerHtml }}
+        />
+      )}
+      <ul style={{ gap: data.spacing || 8 }} className="flex flex-col">
+        {data.links.map((link) => (
+          <li key={link.id}>
+            {link.newTab ? (
+              <a
+                href={link.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm transition-colors"
+                style={{ color: `${textColor}99` }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = textColor; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = `${textColor}99`; }}
+              >
+                {link.text}
+              </a>
+            ) : (
+              <Link
+                href={link.href}
+                className="text-sm transition-colors"
+                style={{ color: `${textColor}99` }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = textColor; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = `${textColor}99`; }}
+              >
+                {link.text}
+              </Link>
+            )}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function RenderContactInfo({ data, textColor, accentColor }: { data: FooterContactInfoData; textColor: string; accentColor: string }) {
+  return (
+    <ul className="space-y-3 text-sm" style={{ color: `${textColor}99` }}>
+      {data.items.map((item) => (
+        <li key={item.id}>
+          {item.href ? (
+            <a
+              href={item.href}
+              target={item.type === "instagram" || item.href.startsWith("http") ? "_blank" : undefined}
+              rel={item.type === "instagram" || item.href.startsWith("http") ? "noopener noreferrer" : undefined}
+              className="transition-colors"
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = textColor; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = `${textColor}99`; }}
+            >
+              {item.value}
+            </a>
+          ) : (
+            <span>{item.value}</span>
+          )}
+        </li>
+      ))}
+    </ul>
+  );
+  void accentColor;
+}
+
+function RenderElement({ element, textColor, accentColor }: { element: FooterElement; textColor: string; accentColor: string }) {
+  switch (element.type) {
+    case "logo_text":
+      return <RenderLogoText data={element.data as FooterLogoTextData} textColor={textColor} accentColor={accentColor} />;
+    case "text_area":
+      return <RenderTextArea data={element.data as FooterTextAreaData} textColor={textColor} />;
+    case "social_icons":
+      return <RenderSocialIcons data={element.data as FooterSocialIconsData} accentColor={accentColor} />;
+    case "link_list":
+      return <RenderLinkList data={element.data as FooterLinkListData} textColor={textColor} accentColor={accentColor} />;
+    case "contact_info":
+      return <RenderContactInfo data={element.data as FooterContactInfoData} textColor={textColor} accentColor={accentColor} />;
+    default:
+      return null;
+  }
+}
+
+function RenderColumn({ column, textColor, accentColor }: { column: FooterColumnConfig; textColor: string; accentColor: string }) {
+  return (
+    <div className={`flex flex-col gap-4 ${TEXT_ALIGN[column.alignment] || ""} ${VERTICAL_ALIGN[column.verticalAlign] || ""}`}>
+      {column.elements.map((element) => (
+        <RenderElement key={element.id} element={element} textColor={textColor} accentColor={accentColor} />
+      ))}
+    </div>
+  );
+}
+
+/* ─── V2 Footer Renderer ─── */
+
+function FooterV2({ config }: { config: FooterBuilderConfig }) {
+  const { columns, columnCount, columnGap, backgroundColor, textColor, accentColor, paddingY, paddingX, bottomBar } = config;
+  const visibleColumns = columns.slice(0, columnCount);
+
+  return (
+    <footer style={{ backgroundColor, color: textColor }}>
+      <div
+        className="mx-auto max-w-7xl"
+        style={{ paddingTop: paddingY, paddingBottom: paddingY, paddingLeft: paddingX, paddingRight: paddingX }}
+      >
+        <div
+          className="grid grid-cols-1 md:grid-cols-2"
+          style={{
+            gap: columnGap,
+            gridTemplateColumns: `repeat(1, minmax(0, 1fr))`,
+          }}
+        >
+          {visibleColumns.map((col) => (
+            <RenderColumn key={col.id} column={col} textColor={textColor} accentColor={accentColor} />
+          ))}
+        </div>
+
+        {bottomBar.enabled && (
+          <div
+            className="mt-12 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4"
+            style={{ borderTopWidth: 1, borderTopStyle: "solid", borderTopColor: `${textColor}1a` }}
+          >
+            {bottomBar.copyrightHtml && (
+              <p className="text-xs" style={{ color: `${textColor}66` }} dangerouslySetInnerHTML={{ __html: bottomBar.copyrightHtml }} />
+            )}
+            {bottomBar.legalHtml && (
+              <p className="text-xs" style={{ color: `${textColor}4d` }} dangerouslySetInnerHTML={{ __html: bottomBar.legalHtml }} />
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Responsive grid override */}
+      <style>{`
+        @media (min-width: 1024px) {
+          footer > div > .grid { grid-template-columns: repeat(${columnCount}, minmax(0, 1fr)) !important; }
+        }
+        @media (min-width: 768px) and (max-width: 1023px) {
+          footer > div > .grid { grid-template-columns: repeat(${Math.min(columnCount, 2)}, minmax(0, 1fr)) !important; }
+        }
+      `}</style>
+    </footer>
+  );
+}
+
+/* ─── V1 Footer Renderer (existing) ─── */
+
+function FooterV1({ config }: { config?: FooterConfig | null }) {
   const tagline = config?.brand?.tagline || "The ULTIMATE vanlife experience!";
   const socialLinks = config?.socialLinks || [
     { platform: "instagram", url: "https://instagram.com/vanfestusa" },
@@ -171,4 +412,20 @@ export default function Footer({ config }: { config?: FooterConfig | null }) {
       </div>
     </footer>
   );
+}
+
+/* ─── Main Footer Component (detects v1 vs v2) ─── */
+
+export default function Footer({
+  config,
+  builderConfig,
+}: {
+  config?: FooterConfig | null;
+  builderConfig?: FooterBuilderConfig | null;
+}) {
+  // V2 takes priority
+  if (builderConfig?.version === 2) {
+    return <FooterV2 config={builderConfig} />;
+  }
+  return <FooterV1 config={config} />;
 }

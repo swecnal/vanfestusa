@@ -33,7 +33,7 @@ import { type SiteStyles, EMPTY_SITE_STYLES } from "@/lib/styles";
 import SectionRenderer from "@/components/sections/SectionRenderer";
 import SectionEditorPanel from "@/components/admin/SectionEditorPanel";
 import NavbarEditorInline from "@/components/admin/NavbarEditorInline";
-import FooterEditorInline from "@/components/admin/FooterEditorInline";
+import FooterBuilder from "@/components/admin/FooterBuilder";
 import ConfirmModal from "@/components/admin/ConfirmModal";
 
 interface PageData {
@@ -1092,7 +1092,7 @@ export default function PageEditorPage() {
         }`}>
           <div className="flex-shrink-0 bg-white p-4 border-b border-gray-100 flex items-center justify-between z-10">
             <h3 className="font-display font-semibold text-sm text-charcoal">
-              {globalEditTarget === "navbar" ? "Navbar" : "Footer & Divider"}
+              {globalEditTarget === "navbar" ? "Navbar" : "Footer Builder"}
             </h3>
             <button
               onClick={() => setGlobalEditTarget(null)}
@@ -1110,7 +1110,7 @@ export default function PageEditorPage() {
                 if (iframe) iframe.src = iframe.src;
               }} />
             ) : (
-              <FooterEditorInline onSave={() => {
+              <FooterBuilder onSave={() => {
                 const iframe = mobileIframeRef.current;
                 if (iframe) iframe.src = iframe.src;
               }} />
@@ -1124,7 +1124,7 @@ export default function PageEditorPage() {
         <div className="md:hidden fixed inset-0 z-50 bg-white flex flex-col">
           <div className="flex-shrink-0 bg-white px-4 py-3 border-b border-gray-100 flex items-center justify-between">
             <h3 className="font-display font-semibold text-sm text-charcoal">
-              {globalEditTarget === "navbar" ? "Navbar" : "Footer & Divider"}
+              {globalEditTarget === "navbar" ? "Navbar" : "Footer Builder"}
             </h3>
             <button
               onClick={() => setGlobalEditTarget(null)}
@@ -1142,7 +1142,7 @@ export default function PageEditorPage() {
                 if (iframe) iframe.src = iframe.src;
               }} />
             ) : (
-              <FooterEditorInline onSave={() => {
+              <FooterBuilder onSave={() => {
                 const iframe = mobileIframeRef.current;
                 if (iframe) iframe.src = iframe.src;
               }} />

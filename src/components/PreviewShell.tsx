@@ -5,7 +5,7 @@ import SectionRenderer from "@/components/sections/SectionRenderer";
 import Navbar from "@/components/Navbar";
 import FooterDivider from "@/components/FooterDivider";
 import Footer from "@/components/Footer";
-import type { Section, SectionSettings } from "@/lib/types";
+import type { Section, SectionSettings, FooterBuilderConfig } from "@/lib/types";
 import type { SiteStyles } from "@/lib/styles";
 import type { VehicleStreamConfig } from "@/components/VehicleStream";
 
@@ -14,6 +14,7 @@ interface Props {
   siteStyles: SiteStyles;
   navbarConfig?: unknown;
   footerConfig?: unknown;
+  footerBuilderConfig?: unknown;
   vehicleStreamConfig?: unknown;
   pageSlug?: string;
 }
@@ -23,6 +24,7 @@ export default function PreviewShell({
   siteStyles,
   navbarConfig,
   footerConfig,
+  footerBuilderConfig,
   vehicleStreamConfig,
 }: Props) {
   const [sections, setSections] = useState(initialSections);
@@ -215,15 +217,17 @@ export default function PreviewShell({
         </span>
       </div>
 
-      {/* Footer Divider */}
-      <div id="preview-divider" className="relative cursor-pointer">
-        <FooterDivider config={vehicleStreamConfig as VehicleStreamConfig | null} />
-      </div>
+      {/* Footer Divider (only shown for v1 footer) */}
+      {!(footerBuilderConfig as FooterBuilderConfig | null)?.version && (
+        <div id="preview-divider" className="relative cursor-pointer">
+          <FooterDivider config={vehicleStreamConfig as VehicleStreamConfig | null} />
+        </div>
+      )}
 
       {/* Footer */}
       <div id="preview-footer" className="relative cursor-pointer">
         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-        <Footer config={footerConfig as any} />
+        <Footer config={footerConfig as any} builderConfig={footerBuilderConfig as FooterBuilderConfig | null} />
         {hoveredGlobal === "footer" && globalSelected !== "footer" && (
           <div className="absolute inset-0 z-[60] pointer-events-none ring-1 ring-gray-400 ring-inset">
             <span className="absolute top-1 left-1 text-[8px] uppercase tracking-wider font-semibold px-1.5 py-0.5 rounded bg-charcoal/70 text-white">
