@@ -751,6 +751,17 @@ export default function PageEditorPage() {
     doSelectSection(id);
   }, [selectedSectionId, isDirty, editingData, editingSettings, doSelectSection, handleSaveSection]);
 
+  // Listen for clicks from the mobile preview iframe
+  useEffect(() => {
+    const handleMessage = (e: MessageEvent) => {
+      if (e.data?.type === "preview-select-section" && e.data.sectionId) {
+        handleSelectSection(e.data.sectionId);
+      }
+    };
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, [handleSelectSection]);
+
   if (loading) {
     return <div className="text-center text-gray-400 py-12">Loading...</div>;
   }
