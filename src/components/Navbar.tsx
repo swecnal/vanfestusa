@@ -183,7 +183,7 @@ function NavbarV2({ config }: { config: NavbarBuilderConfig }) {
   );
 
   const renderLinks = () => (
-    <div className="hidden lg:flex items-center gap-1">
+    <div className="hidden lg:flex items-center gap-1 whitespace-nowrap">
       {navLinks.map((link) => (
         <div
           key={link.id}
@@ -322,10 +322,12 @@ function NavbarV2({ config }: { config: NavbarBuilderConfig }) {
     </div>
   );
 
-  // Build zone map
+  // Build zone map — track which zone has links so it can flex-grow
   const zoneContent: Record<NavbarZone, React.ReactNode[]> = { left: [], center: [], right: [] };
+  const zoneHasLinks: Record<NavbarZone, boolean> = { left: false, center: false, right: false };
   zoneContent[config.layout.logo].push(<div key="logo">{renderLogo()}</div>);
   zoneContent[config.layout.links].push(<div key="links">{renderLinks()}</div>);
+  zoneHasLinks[config.layout.links] = true;
   zoneContent[config.layout.cta].push(<div key="cta">{renderCtaButtons()}</div>);
 
   const zoneAlign: Record<NavbarZone, string> = {
@@ -346,16 +348,17 @@ function NavbarV2({ config }: { config: NavbarBuilderConfig }) {
       }}
     >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex items-center">
-        {/* Three zones */}
-        <div className={`flex items-center gap-2 flex-1 ${zoneAlign.left}`}>
-          {zoneContent.left}
-        </div>
-        <div className={`flex items-center gap-2 flex-1 ${zoneAlign.center}`}>
-          {zoneContent.center}
-        </div>
-        <div className={`flex items-center gap-2 flex-1 ${zoneAlign.right}`}>
-          {zoneContent.right}
-        </div>
+        {/* Three zones — links zone grows, others shrink to content */}
+        {(["left", "center", "right"] as NavbarZone[]).map((zone) => (
+          <div
+            key={zone}
+            className={`flex items-center gap-2 ${zoneAlign[zone]} ${
+              zoneHasLinks[zone] ? "flex-1 min-w-0" : "flex-shrink-0"
+            }`}
+          >
+            {zoneContent[zone]}
+          </div>
+        ))}
       </div>
 
       {/* Mobile menu */}
