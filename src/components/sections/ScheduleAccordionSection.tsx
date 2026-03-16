@@ -109,14 +109,29 @@ export default function ScheduleAccordionSection({ data, settings }: Props) {
                 <div className="px-6 pb-4">
                   <div className="space-y-3">
                     {day.items.map((item, j) => (
-                      <div key={j} className="grid grid-cols-[100px_120px_1fr] gap-4 py-2 border-b border-charcoal/5 last:border-0">
-                        <span className="text-teal font-semibold text-sm">{item.time}</span>
-                        <span className="text-charcoal/50 text-sm">{item.location}</span>
-                        <div>
+                      <div key={j} className="py-2 border-b border-charcoal/5 last:border-0">
+                        {/* Mobile: stacked layout */}
+                        <div className="sm:hidden space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-teal font-semibold text-sm">{item.time}</span>
+                            <span className="text-charcoal/30">|</span>
+                            <span className="text-charcoal/50 text-sm">{item.location}</span>
+                          </div>
                           <p className="font-display font-semibold text-sm text-charcoal">{item.activity}</p>
                           {item.description && (
                             <p className="text-charcoal/50 text-xs mt-0.5">{item.description}</p>
                           )}
+                        </div>
+                        {/* Desktop: grid layout */}
+                        <div className="hidden sm:grid grid-cols-[100px_120px_1fr] gap-4">
+                          <span className="text-teal font-semibold text-sm">{item.time}</span>
+                          <span className="text-charcoal/50 text-sm">{item.location}</span>
+                          <div>
+                            <p className="font-display font-semibold text-sm text-charcoal">{item.activity}</p>
+                            {item.description && (
+                              <p className="text-charcoal/50 text-xs mt-0.5">{item.description}</p>
+                            )}
+                          </div>
                         </div>
                       </div>
                     ))}

@@ -35,9 +35,9 @@ export default function Footer({ config }: { config?: FooterConfig | null }) {
     {
       title: "Get Involved",
       links: [
-        { label: "Sponsors & Vendors", href: "/get-involved#sponsors" },
-        { label: "Exhibit Your Rig", href: "/get-involved#exhibit" },
-        { label: "Jobs @ VanFest", href: "/get-involved#jobs" },
+        { label: "Sponsors & Vendors", href: "/sponsors-vendors" },
+        { label: "Exhibit Your Rig", href: "/exhibit-your-rig" },
+        { label: "Jobs @ VanFest", href: "/jobs" },
         { label: "Merch", href: "/merch" },
       ],
     },

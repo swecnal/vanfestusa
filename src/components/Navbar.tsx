@@ -39,9 +39,9 @@ const defaultNavLinks: NavLink[] = [
     label: "Get Involved",
     href: "/get-involved",
     children: [
-      { label: "Sponsors & Vendors", href: "/get-involved#sponsors" },
-      { label: "Exhibit Your Rig", href: "/get-involved#exhibit" },
-      { label: "Jobs @ VanFest", href: "/get-involved#jobs" },
+      { label: "Sponsors & Vendors", href: "/sponsors-vendors" },
+      { label: "Exhibit Your Rig", href: "/exhibit-your-rig" },
+      { label: "Jobs @ VanFest", href: "/jobs" },
     ],
   },
   {
@@ -60,14 +60,14 @@ const defaultNavLinks: NavLink[] = [
 const escapeNavLinks: NavLink[] = [
   { label: "About", href: "/events/escape" },
   { label: "Schedule", href: "/events/escape#schedule" },
-  { label: "Map", href: "/map" },
+  { label: "Map", href: "/events/escape#map" },
   {
     label: "Get Involved",
-    href: "/events/escape#sponsors",
+    href: "/events/escape/sponsors-vendors",
     children: [
-      { label: "Jobs & Volunteers", href: "/events/escape#jobs" },
-      { label: "Sponsors & Vendors", href: "/events/escape#sponsors" },
-      { label: "Exhibit Your Rig", href: "/events/escape#exhibit" },
+      { label: "Jobs & Volunteers", href: "/events/escape/jobs" },
+      { label: "Sponsors & Vendors", href: "/events/escape/sponsors-vendors" },
+      { label: "Exhibit Your Rig", href: "/events/escape/exhibit-your-rig" },
     ],
   },
   { label: "FAQ", href: "/events/escape#faq" },
@@ -77,14 +77,14 @@ const escapeNavLinks: NavLink[] = [
 const liftoffNavLinks: NavLink[] = [
   { label: "About", href: "/events/liftoff" },
   { label: "Schedule", href: "/events/liftoff#schedule" },
-  { label: "Map", href: "/map" },
+  { label: "Map", href: "/events/liftoff#map" },
   {
     label: "Get Involved",
-    href: "/events/liftoff#sponsors",
+    href: "/events/liftoff/sponsors-vendors",
     children: [
-      { label: "Jobs & Volunteers", href: "/events/liftoff#jobs" },
-      { label: "Sponsors & Vendors", href: "/events/liftoff#sponsors" },
-      { label: "Exhibit Your Rig", href: "/events/liftoff#exhibit" },
+      { label: "Jobs & Volunteers", href: "/events/liftoff/jobs" },
+      { label: "Sponsors & Vendors", href: "/events/liftoff/sponsors-vendors" },
+      { label: "Exhibit Your Rig", href: "/events/liftoff/exhibit-your-rig" },
     ],
   },
   { label: "FAQ", href: "/events/liftoff#faq" },
