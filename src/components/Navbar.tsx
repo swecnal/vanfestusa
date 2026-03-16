@@ -213,6 +213,16 @@ function NavbarV2({ config }: { config: NavbarBuilderConfig }) {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
             </span>
+          ) : link.href.includes("#") ? (
+            <a
+              href={link.href}
+              className={`px-3.5 py-2.5 rounded-lg font-semibold transition-colors ${scrolled ? "text-sm" : "text-base"}`}
+              style={{ color: `${style.textColor}e6` }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = style.textColor; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = `${style.textColor}e6`; }}
+            >
+              {link.label}
+            </a>
           ) : (
             <Link
               href={link.href}
@@ -229,7 +239,19 @@ function NavbarV2({ config }: { config: NavbarBuilderConfig }) {
               className="absolute top-full left-0 mt-1 w-56 backdrop-blur-md rounded-lg shadow-xl border py-2"
               style={{ backgroundColor: `${style.bgColor}f2`, borderColor: `${style.textColor}1a` }}
             >
-              {link.children.map((child) => (
+              {link.children.map((child) =>
+                child.href.includes("#") ? (
+                <a
+                  key={child.id}
+                  href={child.href}
+                  className="block px-4 py-2 text-sm font-medium transition-colors"
+                  style={{ color: `${style.textColor}cc` }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = style.textColor; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = `${style.textColor}cc`; }}
+                >
+                  {child.label}
+                </a>
+                ) : (
                 <Link
                   key={child.id}
                   href={child.href}
@@ -240,7 +262,8 @@ function NavbarV2({ config }: { config: NavbarBuilderConfig }) {
                 >
                   {child.label}
                 </Link>
-              ))}
+                )
+              )}
             </div>
           )}
         </div>
@@ -395,7 +418,18 @@ function NavbarV2({ config }: { config: NavbarBuilderConfig }) {
                     </button>
                     {mobileExpanded === link.id && (
                       <div className="ml-4 space-y-1 mt-1">
-                        {link.children.map((child) => (
+                        {link.children.map((child) =>
+                          child.href.includes("#") ? (
+                          <a
+                            key={child.id}
+                            href={child.href}
+                            className="block px-3 py-2 text-sm font-medium rounded-lg"
+                            style={{ color: `${style.textColor}99` }}
+                            onClick={() => setMobileOpen(false)}
+                          >
+                            {child.label}
+                          </a>
+                          ) : (
                           <Link
                             key={child.id}
                             href={child.href}
@@ -405,10 +439,20 @@ function NavbarV2({ config }: { config: NavbarBuilderConfig }) {
                           >
                             {child.label}
                           </Link>
-                        ))}
+                          )
+                        )}
                       </div>
                     )}
                   </>
+                ) : link.href.includes("#") ? (
+                  <a
+                    href={link.href}
+                    className="block px-3 py-2.5 rounded-lg font-semibold"
+                    style={{ color: `${style.textColor}e6` }}
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    {link.label}
+                  </a>
                 ) : (
                   <Link
                     href={link.href}
@@ -557,6 +601,13 @@ function NavbarV1({ config }: NavbarV1Props) {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </span>
+              ) : link.href.includes("#") ? (
+                <a
+                  href={link.href}
+                  className={`px-3.5 py-2.5 rounded-lg font-semibold text-white/90 hover:text-white hover:bg-white/10 transition-colors ${scrolled ? "text-sm" : "text-base"}`}
+                >
+                  {link.label}
+                </a>
               ) : (
                 <Link
                   href={link.href}
@@ -568,6 +619,15 @@ function NavbarV1({ config }: NavbarV1Props) {
               {link.children && openDropdown === link.label && (
                 <div className="absolute top-full left-0 mt-1 w-56 bg-charcoal/95 backdrop-blur-md rounded-lg shadow-xl border border-white/10 py-2">
                   {link.children.map((child) => (
+                    child.href.includes("#") ? (
+                    <a
+                      key={child.label}
+                      href={child.href}
+                      className="block px-4 py-2 text-sm font-medium text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+                    >
+                      {child.label}
+                    </a>
+                    ) : (
                     <Link
                       key={child.label}
                       href={child.href}
@@ -575,6 +635,7 @@ function NavbarV1({ config }: NavbarV1Props) {
                     >
                       {child.label}
                     </Link>
+                    )
                   ))}
                 </div>
               )}
@@ -662,7 +723,17 @@ function NavbarV1({ config }: NavbarV1Props) {
                     </button>
                     {mobileExpanded === link.label && (
                       <div className="ml-4 space-y-1 mt-1">
-                        {link.children.map((child) => (
+                        {link.children.map((child) =>
+                          child.href.includes("#") ? (
+                          <a
+                            key={child.label}
+                            href={child.href}
+                            className="block px-3 py-2 text-sm font-medium text-white/60 hover:text-white hover:bg-white/10 rounded-lg"
+                            onClick={() => setMobileOpen(false)}
+                          >
+                            {child.label}
+                          </a>
+                          ) : (
                           <Link
                             key={child.label}
                             href={child.href}
@@ -671,10 +742,19 @@ function NavbarV1({ config }: NavbarV1Props) {
                           >
                             {child.label}
                           </Link>
-                        ))}
+                          )
+                        )}
                       </div>
                     )}
                   </>
+                ) : link.href.includes("#") ? (
+                  <a
+                    href={link.href}
+                    className="block px-3 py-2.5 text-white/90 hover:text-white hover:bg-white/10 rounded-lg font-semibold"
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    {link.label}
+                  </a>
                 ) : (
                   <Link
                     href={link.href}
