@@ -432,7 +432,7 @@ interface Props {
   onSave?: () => void;
   onDirtyChange?: (dirty: boolean) => void;
   saveRef?: React.MutableRefObject<(() => Promise<void>) | null>;
-  onConfigChange?: () => void;
+  onConfigChange?: (config: NavbarBuilderConfig) => void;
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
@@ -514,8 +514,11 @@ export default function NavbarBuilder({ onSave, onDirtyChange, saveRef, onConfig
   // ── Config updater helper ─────────────────────────────────────────────────
 
   const updateConfig = useCallback((updater: (prev: NavbarBuilderConfig) => NavbarBuilderConfig) => {
-    setConfig(updater);
-    onConfigChange?.();
+    setConfig(prev => {
+      const next = updater(prev);
+      onConfigChange?.(next);
+      return next;
+    });
   }, [onConfigChange]);
 
   // ── Top-level link management ─────────────────────────────────────────────

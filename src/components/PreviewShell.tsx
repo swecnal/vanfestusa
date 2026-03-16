@@ -32,6 +32,12 @@ export default function PreviewShell({
   const [sections, setSections] = useState(initialSections);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [globalSelected, setGlobalSelected] = useState<"navbar" | "footer" | null>(null);
+  const [liveNavbarConfig, setLiveNavbarConfig] = useState<NavbarBuilderConfig | null>(
+    (navbarBuilderConfig as NavbarBuilderConfig | null) ?? null
+  );
+  const [liveFooterConfig, setLiveFooterConfig] = useState<FooterBuilderConfig | null>(
+    (footerBuilderConfig as FooterBuilderConfig | null) ?? null
+  );
 
   // Sync if initialSections change (e.g. iframe reload)
   useEffect(() => {
@@ -76,6 +82,14 @@ export default function PreviewShell({
 
       if (msg.type === "preview-deselect-global") {
         setGlobalSelected(null);
+      }
+
+      if (msg.type === "preview-update-navbar" && msg.config) {
+        setLiveNavbarConfig(msg.config as NavbarBuilderConfig);
+      }
+
+      if (msg.type === "preview-update-footer" && msg.config) {
+        setLiveFooterConfig(msg.config as FooterBuilderConfig);
       }
     };
 
@@ -169,7 +183,7 @@ export default function PreviewShell({
       {/* Navbar */}
       <div id="preview-navbar" className="relative cursor-pointer">
         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-        <Navbar config={navbarConfig as any} builderConfig={navbarBuilderConfig as NavbarBuilderConfig | null} />
+        <Navbar config={navbarConfig as any} builderConfig={liveNavbarConfig} />
         {hoveredGlobal === "navbar" && globalSelected !== "navbar" && (
           <div className="absolute inset-0 z-[60] pointer-events-none ring-1 ring-gray-400 ring-inset">
             <span className="absolute bottom-1 left-1 text-[8px] uppercase tracking-wider font-semibold px-1.5 py-0.5 rounded bg-charcoal/70 text-white">
@@ -220,7 +234,7 @@ export default function PreviewShell({
       </div>
 
       {/* Footer Divider (only shown for v1 footer) */}
-      {!(footerBuilderConfig as FooterBuilderConfig | null)?.version && (
+      {!liveFooterConfig?.version && (
         <div id="preview-divider" className="relative cursor-pointer">
           <FooterDivider config={vehicleStreamConfig as VehicleStreamConfig | null} />
         </div>
@@ -229,7 +243,7 @@ export default function PreviewShell({
       {/* Footer */}
       <div id="preview-footer" className="relative cursor-pointer">
         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-        <Footer config={footerConfig as any} builderConfig={footerBuilderConfig as FooterBuilderConfig | null} />
+        <Footer config={footerConfig as any} builderConfig={liveFooterConfig} />
         {hoveredGlobal === "footer" && globalSelected !== "footer" && (
           <div className="absolute inset-0 z-[60] pointer-events-none ring-1 ring-gray-400 ring-inset">
             <span className="absolute top-1 left-1 text-[8px] uppercase tracking-wider font-semibold px-1.5 py-0.5 rounded bg-charcoal/70 text-white">

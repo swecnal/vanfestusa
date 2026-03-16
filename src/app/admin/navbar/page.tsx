@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import NavbarBuilder from "@/components/admin/NavbarBuilder";
 import ConfirmModal from "@/components/admin/ConfirmModal";
+import type { NavbarBuilderConfig } from "@/lib/types";
 
 interface PageOption {
   id: string;
@@ -74,8 +75,8 @@ export default function NavbarEditorPage() {
   }, []);
 
   // ── Real-time preview refresh via postMessage ────────────────────────────
-  const triggerPreviewRefresh = useCallback(() => {
-    const msg = { type: "preview-refresh-navbar" };
+  const triggerPreviewRefresh = useCallback((config: NavbarBuilderConfig) => {
+    const msg = { type: "preview-update-navbar", config };
     desktopIframeRef.current?.contentWindow?.postMessage(msg, "*");
     mobileIframeRef.current?.contentWindow?.postMessage(msg, "*");
   }, []);
