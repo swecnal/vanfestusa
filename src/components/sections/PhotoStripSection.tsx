@@ -1,4 +1,5 @@
 import type { PhotoStripData, SectionSettings } from "@/lib/types";
+import { sectionSpacingStyles, sectionBgClass } from "@/lib/types";
 
 interface Props {
   data: Record<string, unknown>;
@@ -10,7 +11,7 @@ export default function PhotoStripSection({ data, settings }: Props) {
   const cols = d.columns || d.images.length || 4;
 
   return (
-    <section className={settings.customClasses || ""}>
+    <section style={sectionSpacingStyles(settings)} className={`${sectionBgClass(settings)} ${settings.customClasses || ""}`}>
       <div
         className="grid gap-0"
         style={{ gridTemplateColumns: `repeat(${Math.min(cols, 6)}, 1fr)` }}

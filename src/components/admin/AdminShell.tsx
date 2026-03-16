@@ -340,19 +340,41 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
       <Toaster position="top-right" richColors toastOptions={{ duration: 1500 }} />
 
       {/* Desktop sidebar (hidden on mobile) */}
-      <aside
-        className={`hidden md:flex bg-charcoal text-white flex-col transition-all duration-200 flex-shrink-0 ${
-          sidebarOpen
-            ? "w-64 relative"
-            : sidebarHover
-              ? "w-64 fixed top-0 left-0 bottom-0 z-50 shadow-2xl"
-              : "w-16 relative"
-        }`}
-        onMouseEnter={() => { if (!sidebarOpen) setSidebarHover(true); }}
-        onMouseLeave={() => { if (!sidebarOpen) setSidebarHover(false); }}
-      >
-        <SidebarContent showFull={sidebarOpen || sidebarHover} {...sidebarContentProps} />
-      </aside>
+      <div className={`hidden md:flex flex-shrink-0 relative ${
+        sidebarOpen ? "w-64" : sidebarHover ? "w-16" : "w-16"
+      }`}>
+        <aside
+          className={`bg-charcoal text-white flex flex-col transition-all duration-200 ${
+            sidebarOpen
+              ? "w-64 relative"
+              : sidebarHover
+                ? "w-64 fixed top-0 left-0 bottom-0 z-50 shadow-2xl"
+                : "w-16 relative"
+          }`}
+          onMouseEnter={() => { if (!sidebarOpen) setSidebarHover(true); }}
+          onMouseLeave={() => { if (!sidebarOpen) setSidebarHover(false); }}
+        >
+          <SidebarContent showFull={sidebarOpen || sidebarHover} {...sidebarContentProps} />
+        </aside>
+        {/* Edge handle for expand/collapse */}
+        <button
+          onClick={() => { setSidebarOpen(!sidebarOpen); setSidebarHover(false); }}
+          className="absolute top-0 right-0 w-3 h-full z-[51] group cursor-col-resize flex items-center justify-center"
+          title={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
+          aria-label={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
+        >
+          {/* Visible edge line */}
+          <div className="w-[3px] h-full bg-gray-200 group-hover:bg-teal transition-colors" />
+          {/* Chevron indicator on hover */}
+          <div className="absolute top-1/2 -translate-y-1/2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="w-5 h-8 rounded-r-md bg-charcoal border border-l-0 border-gray-300 group-hover:border-teal flex items-center justify-center shadow-md">
+              <svg className="w-3 h-3 text-white/80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d={sidebarOpen ? "M15 19l-7-7 7-7" : "M9 5l7 7-7 7"} />
+              </svg>
+            </div>
+          </div>
+        </button>
+      </div>
 
       {/* Desktop hover overlay backdrop (hidden on mobile) */}
       {!sidebarOpen && sidebarHover && (

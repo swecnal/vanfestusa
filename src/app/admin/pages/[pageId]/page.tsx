@@ -878,11 +878,28 @@ export default function PageEditorPage() {
                 >
                   {page.slug}
                 </span>
-                <span className={`hidden sm:inline px-2 py-0.5 rounded-full text-[10px] font-semibold ${
-                  page.is_published ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
-                }`}>
+                <button
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    const res = await fetch(`/api/pages/${page.id}`, {
+                      method: "PUT",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ is_published: !page.is_published }),
+                    });
+                    if (res.ok) {
+                      toast.success(`Page ${!page.is_published ? "published" : "unpublished"}`);
+                      setPage({ ...page, is_published: !page.is_published });
+                    }
+                  }}
+                  className={`hidden sm:inline px-2 py-0.5 rounded-full text-[10px] font-semibold cursor-pointer transition-colors ${
+                    page.is_published
+                      ? "bg-green-100 text-green-700 hover:bg-red-100 hover:text-red-600"
+                      : "bg-gray-100 text-gray-500 hover:bg-green-100 hover:text-green-700"
+                  }`}
+                  title={page.is_published ? "Click to unpublish" : "Click to publish"}
+                >
                   {page.is_published ? "Published" : "Draft"}
-                </span>
+                </button>
               </>
             )}
           </div>
