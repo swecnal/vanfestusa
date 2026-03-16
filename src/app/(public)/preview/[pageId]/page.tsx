@@ -10,15 +10,15 @@ interface PageProps {
   params: Promise<{ pageId: string }>;
 }
 
-async function getSiteStyles(): Promise<SiteStyles> {
+async function getGlobalSettings() {
   try {
     const supabase = getSupabaseServer();
     const { data: rows } = await supabase
       .from("global_settings")
       .select("key, value")
-      .in("key", ["button_styles", "link_styles", "heading_styles"]);
+      .in("key", ["button_styles", "link_styles", "heading_styles", "navbar_config", "footer_config", "vehicle_stream_config"]);
 
-    if (!rows) return EMPTY_SITE_STYLES;
+    if (!rows) return { siteStyles: EMPTY_SITE_STYLES, navbarConfig: null, footerConfig: null, vehicleStreamConfig: null };
 
     const map: Record<string, unknown> = {};
     for (const row of rows) {
@@ -26,12 +26,17 @@ async function getSiteStyles(): Promise<SiteStyles> {
     }
 
     return {
-      button_styles: (map.button_styles as SiteStyles["button_styles"]) || EMPTY_SITE_STYLES.button_styles,
-      link_styles: (map.link_styles as SiteStyles["link_styles"]) || EMPTY_SITE_STYLES.link_styles,
-      heading_styles: (map.heading_styles as SiteStyles["heading_styles"]) || EMPTY_SITE_STYLES.heading_styles,
+      siteStyles: {
+        button_styles: (map.button_styles as SiteStyles["button_styles"]) || EMPTY_SITE_STYLES.button_styles,
+        link_styles: (map.link_styles as SiteStyles["link_styles"]) || EMPTY_SITE_STYLES.link_styles,
+        heading_styles: (map.heading_styles as SiteStyles["heading_styles"]) || EMPTY_SITE_STYLES.heading_styles,
+      },
+      navbarConfig: map.navbar_config || null,
+      footerConfig: map.footer_config || null,
+      vehicleStreamConfig: map.vehicle_stream_config || null,
     };
   } catch {
-    return EMPTY_SITE_STYLES;
+    return { siteStyles: EMPTY_SITE_STYLES, navbarConfig: null, footerConfig: null, vehicleStreamConfig: null };
   }
 }
 
@@ -54,11 +59,18 @@ export default async function PreviewPage({ params }: PageProps) {
     .order("sort_order", { ascending: true });
 
   const visibleSections = ((sections || []) as Section[]).filter((s) => s.is_visible);
-  const siteStyles = await getSiteStyles();
+  const { siteStyles, navbarConfig, footerConfig, vehicleStreamConfig } = await getGlobalSettings();
 
   return (
     <main>
-      <PreviewShell initialSections={visibleSections} siteStyles={siteStyles} />
+      <PreviewShell
+        initialSections={visibleSections}
+        siteStyles={siteStyles}
+        navbarConfig={navbarConfig}
+        footerConfig={footerConfig}
+        vehicleStreamConfig={vehicleStreamConfig}
+        pageSlug={page.slug}
+      />
     </main>
   );
 }

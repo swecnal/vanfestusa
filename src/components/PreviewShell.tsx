@@ -2,17 +2,32 @@
 
 import { useState, useEffect, useCallback } from "react";
 import SectionRenderer from "@/components/sections/SectionRenderer";
+import Navbar from "@/components/Navbar";
+import FooterDivider from "@/components/FooterDivider";
+import Footer from "@/components/Footer";
 import type { Section, SectionSettings } from "@/lib/types";
 import type { SiteStyles } from "@/lib/styles";
+import type { VehicleStreamConfig } from "@/components/VehicleStream";
 
 interface Props {
   initialSections: Section[];
   siteStyles: SiteStyles;
+  navbarConfig?: unknown;
+  footerConfig?: unknown;
+  vehicleStreamConfig?: unknown;
+  pageSlug?: string;
 }
 
-export default function PreviewShell({ initialSections, siteStyles }: Props) {
+export default function PreviewShell({
+  initialSections,
+  siteStyles,
+  navbarConfig,
+  footerConfig,
+  vehicleStreamConfig,
+}: Props) {
   const [sections, setSections] = useState(initialSections);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [globalSelected, setGlobalSelected] = useState<"navbar" | "footer" | null>(null);
 
   // Sync if initialSections change (e.g. iframe reload)
   useEffect(() => {
@@ -42,10 +57,21 @@ export default function PreviewShell({ initialSections, siteStyles }: Props) {
 
       if (msg.type === "preview-select" && msg.sectionId) {
         setSelectedId(msg.sectionId);
+        setGlobalSelected(null);
       }
 
       if (msg.type === "preview-deselect") {
         setSelectedId(null);
+        setGlobalSelected(null);
+      }
+
+      if (msg.type === "preview-select-global" && msg.target) {
+        setGlobalSelected(msg.target);
+        setSelectedId(null);
+      }
+
+      if (msg.type === "preview-deselect-global") {
+        setGlobalSelected(null);
       }
     };
 
@@ -58,11 +84,28 @@ export default function PreviewShell({ initialSections, siteStyles }: Props) {
     if (window === window.parent) return;
     let el = e.target as HTMLElement | null;
     while (el) {
+      if (el.id === "preview-navbar") {
+        e.preventDefault();
+        e.stopPropagation();
+        setGlobalSelected("navbar");
+        setSelectedId(null);
+        window.parent.postMessage({ type: "preview-select-global", target: "navbar" }, "*");
+        return;
+      }
+      if (el.id === "preview-footer" || el.id === "preview-divider") {
+        e.preventDefault();
+        e.stopPropagation();
+        setGlobalSelected("footer");
+        setSelectedId(null);
+        window.parent.postMessage({ type: "preview-select-global", target: "footer" }, "*");
+        return;
+      }
       if (el.id && el.id.startsWith("section-")) {
         e.preventDefault();
         e.stopPropagation();
         const sectionId = el.id.replace("section-", "");
         setSelectedId(sectionId);
+        setGlobalSelected(null);
         window.parent.postMessage({ type: "preview-select-section", sectionId }, "*");
         return;
       }
@@ -80,20 +123,35 @@ export default function PreviewShell({ initialSections, siteStyles }: Props) {
 
   // Handle hover — highlight section
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const [hoveredGlobal, setHoveredGlobal] = useState<"navbar" | "footer" | null>(null);
 
   const handleMouseOver = useCallback((e: React.MouseEvent) => {
     let el = e.target as HTMLElement | null;
     while (el) {
+      if (el.id === "preview-navbar") {
+        setHoveredGlobal("navbar");
+        setHoveredId(null);
+        return;
+      }
+      if (el.id === "preview-footer" || el.id === "preview-divider") {
+        setHoveredGlobal("footer");
+        setHoveredId(null);
+        return;
+      }
       if (el.id && el.id.startsWith("section-")) {
         setHoveredId(el.id.replace("section-", ""));
+        setHoveredGlobal(null);
         return;
       }
       el = el.parentElement;
     }
+    setHoveredId(null);
+    setHoveredGlobal(null);
   }, []);
 
   const handleMouseLeave = useCallback(() => {
     setHoveredId(null);
+    setHoveredGlobal(null);
   }, []);
 
   return (
@@ -104,6 +162,27 @@ export default function PreviewShell({ initialSections, siteStyles }: Props) {
       onMouseOver={handleMouseOver}
       onMouseLeave={handleMouseLeave}
     >
+      {/* Navbar */}
+      <div id="preview-navbar" className="relative cursor-pointer">
+        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+        <Navbar config={navbarConfig as any} />
+        {hoveredGlobal === "navbar" && globalSelected !== "navbar" && (
+          <div className="absolute inset-0 z-[60] pointer-events-none ring-1 ring-gray-400 ring-inset">
+            <span className="absolute bottom-1 left-1 text-[8px] uppercase tracking-wider font-semibold px-1.5 py-0.5 rounded bg-charcoal/70 text-white">
+              Navbar
+            </span>
+          </div>
+        )}
+        {globalSelected === "navbar" && (
+          <div className="absolute inset-0 z-[60] pointer-events-none ring-2 ring-teal ring-inset shadow-lg shadow-teal/10">
+            <span className="absolute bottom-1 left-1 text-[8px] uppercase tracking-wider font-semibold px-1.5 py-0.5 rounded bg-teal text-white">
+              Navbar
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* Sections */}
       {sections.map((section) => (
         <div key={section.id} className="relative">
           <SectionRenderer section={section} siteStyles={siteStyles} />
@@ -127,6 +206,39 @@ export default function PreviewShell({ initialSections, siteStyles }: Props) {
           )}
         </div>
       ))}
+
+      {/* Footer separator */}
+      <div className="relative my-2">
+        <div className="border-t-2 border-dashed border-gray-300 mx-4" />
+        <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-3 text-[10px] text-gray-400 font-semibold uppercase tracking-wider">
+          Footer
+        </span>
+      </div>
+
+      {/* Footer Divider */}
+      <div id="preview-divider" className="relative cursor-pointer">
+        <FooterDivider config={vehicleStreamConfig as VehicleStreamConfig | null} />
+      </div>
+
+      {/* Footer */}
+      <div id="preview-footer" className="relative cursor-pointer">
+        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+        <Footer config={footerConfig as any} />
+        {hoveredGlobal === "footer" && globalSelected !== "footer" && (
+          <div className="absolute inset-0 z-[60] pointer-events-none ring-1 ring-gray-400 ring-inset">
+            <span className="absolute top-1 left-1 text-[8px] uppercase tracking-wider font-semibold px-1.5 py-0.5 rounded bg-charcoal/70 text-white">
+              Footer
+            </span>
+          </div>
+        )}
+        {globalSelected === "footer" && (
+          <div className="absolute inset-0 z-[60] pointer-events-none ring-2 ring-teal ring-inset shadow-lg shadow-teal/10">
+            <span className="absolute top-1 left-1 text-[8px] uppercase tracking-wider font-semibold px-1.5 py-0.5 rounded bg-teal text-white">
+              Footer
+            </span>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

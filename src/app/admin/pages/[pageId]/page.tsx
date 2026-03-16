@@ -32,6 +32,8 @@ import { SECTION_DEFAULTS } from "@/lib/section-defaults";
 import { type SiteStyles, EMPTY_SITE_STYLES } from "@/lib/styles";
 import SectionRenderer from "@/components/sections/SectionRenderer";
 import SectionEditorPanel from "@/components/admin/SectionEditorPanel";
+import NavbarEditorInline from "@/components/admin/NavbarEditorInline";
+import FooterEditorInline from "@/components/admin/FooterEditorInline";
 import ConfirmModal from "@/components/admin/ConfirmModal";
 
 interface PageData {
@@ -334,6 +336,7 @@ export default function PageEditorPage() {
   const [page, setPage] = useState<PageData | null>(null);
   const [sections, setSections] = useState<Section[]>([]);
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
+  const [globalEditTarget, setGlobalEditTarget] = useState<"navbar" | "footer" | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [externalDragActive, setExternalDragActive] = useState(false);
@@ -731,6 +734,7 @@ export default function PageEditorPage() {
     setEditingData(null);
     setEditingSettings(null);
     setIsDirty(false);
+    setGlobalEditTarget(null);
   }, [selectedSectionId]);
 
   // Click-to-toggle with unsaved changes guard
@@ -767,7 +771,14 @@ export default function PageEditorPage() {
   useEffect(() => {
     const handleMessage = (e: MessageEvent) => {
       if (e.data?.type === "preview-select-section" && e.data.sectionId) {
+        setGlobalEditTarget(null);
         handleSelectSection(e.data.sectionId);
+      }
+      if (e.data?.type === "preview-select-global" && e.data.target) {
+        setSelectedSectionId(null);
+        setEditingData(null);
+        setEditingSettings(null);
+        setGlobalEditTarget(e.data.target);
       }
     };
     window.addEventListener("message", handleMessage);
@@ -793,7 +804,7 @@ export default function PageEditorPage() {
     return <div className="text-center text-gray-400 py-12">Page not found</div>;
   }
 
-  const isStatic = editPaneMode === "static" && selectedSection;
+  const isStatic = editPaneMode === "static" && (selectedSection || globalEditTarget);
   const publicBase = typeof window !== "undefined" && window.location.hostname.startsWith("admin.")
     ? `https://${window.location.hostname.replace("admin.", "")}`
     : "";
@@ -1068,6 +1079,74 @@ export default function PageEditorPage() {
               onUngroupChild={handleUngroupChild}
               previewMode={previewMode}
             />
+          </div>
+        </div>
+      )}
+
+      {/* Global editor panel (navbar/footer) — desktop */}
+      {globalEditTarget && !selectedSection && (
+        <div className={`hidden md:flex ${
+          editPaneMode === "static"
+            ? "w-96 flex-shrink-0 bg-white border-l border-gray-200 flex-col h-full"
+            : "fixed top-[57px] right-0 bottom-0 w-96 z-40 bg-white border-l border-gray-200 shadow-2xl flex-col"
+        }`}>
+          <div className="flex-shrink-0 bg-white p-4 border-b border-gray-100 flex items-center justify-between z-10">
+            <h3 className="font-display font-semibold text-sm text-charcoal">
+              {globalEditTarget === "navbar" ? "Navbar" : "Footer & Divider"}
+            </h3>
+            <button
+              onClick={() => setGlobalEditTarget(null)}
+              className="text-gray-400 hover:text-gray-600"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto admin-scrollbar">
+            {globalEditTarget === "navbar" ? (
+              <NavbarEditorInline onSave={() => {
+                const iframe = mobileIframeRef.current;
+                if (iframe) iframe.src = iframe.src;
+              }} />
+            ) : (
+              <FooterEditorInline onSave={() => {
+                const iframe = mobileIframeRef.current;
+                if (iframe) iframe.src = iframe.src;
+              }} />
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Global editor panel (navbar/footer) — mobile */}
+      {globalEditTarget && !selectedSection && (
+        <div className="md:hidden fixed inset-0 z-50 bg-white flex flex-col">
+          <div className="flex-shrink-0 bg-white px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+            <h3 className="font-display font-semibold text-sm text-charcoal">
+              {globalEditTarget === "navbar" ? "Navbar" : "Footer & Divider"}
+            </h3>
+            <button
+              onClick={() => setGlobalEditTarget(null)}
+              className="text-gray-400 hover:text-gray-600 p-1"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto admin-scrollbar" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
+            {globalEditTarget === "navbar" ? (
+              <NavbarEditorInline onSave={() => {
+                const iframe = mobileIframeRef.current;
+                if (iframe) iframe.src = iframe.src;
+              }} />
+            ) : (
+              <FooterEditorInline onSave={() => {
+                const iframe = mobileIframeRef.current;
+                if (iframe) iframe.src = iframe.src;
+              }} />
+            )}
           </div>
         </div>
       )}
