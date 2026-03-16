@@ -8,6 +8,7 @@ import { FontFamily } from "@tiptap/extension-font-family";
 import { TextAlign } from "@tiptap/extension-text-align";
 import { Link } from "@tiptap/extension-link";
 import { Highlight } from "@tiptap/extension-highlight";
+import { Underline as UnderlineExt } from "@tiptap/extension-underline";
 import { useEffect, useRef, useState, useCallback } from "react";
 import type { SiteStyles, ButtonStyle } from "@/lib/styles";
 import { buttonStyleToCSS, buttonStyleToCSSString, findButtonStyle, EMPTY_SITE_STYLES } from "@/lib/styles";
@@ -182,6 +183,7 @@ function defaultCustomStyle(): ButtonStyle {
 
 export default function RichTextEditor({ content, onChange, siteStyles = EMPTY_SITE_STYLES, onSiteStylesChange }: Props) {
   const isInternalUpdate = useRef(false);
+  const customColorRef = useRef<HTMLInputElement>(null);
   const [linkUrl, setLinkUrl] = useState("");
   const [showLinkInput, setShowLinkInput] = useState(false);
 
@@ -208,6 +210,7 @@ export default function RichTextEditor({ content, onChange, siteStyles = EMPTY_S
       FontSize,
       LineHeight,
       StylePreserver,
+      UnderlineExt,
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       CustomLink.configure({
         openOnClick: false,
@@ -456,6 +459,9 @@ export default function RichTextEditor({ content, onChange, siteStyles = EMPTY_S
         <ToolbarButton active={editor.isActive("italic")} onClick={() => editor.chain().focus().toggleItalic().run()} title="Italic">
           <em>I</em>
         </ToolbarButton>
+        <ToolbarButton active={editor.isActive("underline")} onClick={() => editor.chain().focus().toggleUnderline().run()} title="Underline">
+          <u>U</u>
+        </ToolbarButton>
         <ToolbarButton active={editor.isActive("strike")} onClick={() => editor.chain().focus().toggleStrike().run()} title="Strikethrough">
           <s>S</s>
         </ToolbarButton>
@@ -492,7 +498,7 @@ export default function RichTextEditor({ content, onChange, siteStyles = EMPTY_S
 
         <div className="w-px h-5 bg-gray-200 mx-0.5" />
 
-        <div className="flex gap-0.5">
+        <div className="flex gap-0.5 items-center">
           {COLORS.map((color) => (
             <button
               key={color}
@@ -502,6 +508,18 @@ export default function RichTextEditor({ content, onChange, siteStyles = EMPTY_S
               title={color}
             />
           ))}
+          <button
+            onClick={() => customColorRef.current?.click()}
+            className="w-4 h-4 rounded-full border border-gray-300 hover:scale-125 transition-transform relative overflow-hidden"
+            title="Custom color"
+            style={{ background: "conic-gradient(red, yellow, lime, aqua, blue, magenta, red)" }}
+          />
+          <input
+            ref={customColorRef}
+            type="color"
+            className="sr-only"
+            onChange={(e) => editor.chain().focus().setColor(e.target.value).run()}
+          />
         </div>
 
         <div className="w-px h-5 bg-gray-200 mx-0.5" />
@@ -509,6 +527,12 @@ export default function RichTextEditor({ content, onChange, siteStyles = EMPTY_S
         <ToolbarButton active={editor.isActive("bulletList")} onClick={() => editor.chain().focus().toggleBulletList().run()} title="Bullet List">
           <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
             <path d="M4 6a2 2 0 110-4 2 2 0 010 4zm0 8a2 2 0 110-4 2 2 0 010 4zm0 8a2 2 0 110-4 2 2 0 010 4zm4-18h14v2H8V4zm0 8h14v2H8v-2zm0 8h14v2H8v-2z" />
+          </svg>
+        </ToolbarButton>
+
+        <ToolbarButton active={editor.isActive("orderedList")} onClick={() => editor.chain().focus().toggleOrderedList().run()} title="Numbered List">
+          <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M2 4h2v2H2v1h3V3H1v1zm0 7h2v1H1v1h3V9H1v1h1zm-1 7h3v1H2v1h1v1H1v1h3v-5H1v1zm5-14h16v2H6V4zm0 8h16v2H6v-2zm0 8h16v2H6v-2z" />
           </svg>
         </ToolbarButton>
 

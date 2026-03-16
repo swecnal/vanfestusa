@@ -34,10 +34,8 @@ export default function CtaCardsSection({ data, settings }: Props) {
               href={card.href}
               className="group bg-sand hover:bg-teal/10 rounded-2xl p-6 transition-colors border border-transparent hover:border-teal/20"
             >
-              <h3 className="font-display font-bold text-lg mb-2 group-hover:text-teal transition-colors">
-                {card.title}
-              </h3>
-              <p className="text-charcoal/60 text-sm">{card.description}</p>
+              <h3 className="font-display font-bold text-lg mb-2 group-hover:text-teal transition-colors" dangerouslySetInnerHTML={{ __html: card.title || "" }} />
+              <div className="text-charcoal/60 text-sm site-html-content" dangerouslySetInnerHTML={{ __html: card.description || "" }} />
             </Link>
           ))}
         </div>

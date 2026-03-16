@@ -62,25 +62,22 @@ export default function FeatureGridSection({ data, settings, siteStyles = EMPTY_
                   isLight ? "text-white" : "text-charcoal"
                 }`}
                 style={textStyleConfigToCSS(item.titleStyle || {})}
-              >
-                {item.title}
-              </h3>
+                dangerouslySetInnerHTML={{ __html: item.title || "" }}
+              />
               {item.subtitle && (
                 <p
                   className={`text-sm mb-2 ${isLight ? "text-white/50" : "text-charcoal/50"}`}
                   style={textStyleConfigToCSS(item.subtitleStyle || {})}
-                >
-                  {item.subtitle}
-                </p>
+                  dangerouslySetInnerHTML={{ __html: item.subtitle || "" }}
+                />
               )}
-              <p
-                className={`text-sm leading-relaxed ${
+              <div
+                className={`text-sm leading-relaxed site-html-content ${
                   isLight ? "text-white/60" : "text-charcoal/60"
                 }`}
                 style={textStyleConfigToCSS(item.descriptionStyle || {})}
-              >
-                {item.description}
-              </p>
+                dangerouslySetInnerHTML={{ __html: item.description || "" }}
+              />
               {item.action?.text && item.action?.href && (() => {
                 const isBtn = item.action!.type === "button";
                 const btnStyle = isBtn && item.action!.styleId

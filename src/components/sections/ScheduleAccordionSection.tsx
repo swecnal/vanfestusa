@@ -61,9 +61,7 @@ export default function ScheduleAccordionSection({ data, settings }: Props) {
           <h2 className="font-display font-black text-3xl md:text-4xl text-charcoal mb-4 text-center" style={headingStyle ? textStyleConfigToCSS(headingStyle) : undefined} dangerouslySetInnerHTML={{ __html: d.heading || "" }} />
         )}
         {d.disclaimer && (
-          <p className="text-charcoal/50 text-center text-sm mb-8 italic">
-            {d.disclaimer}
-          </p>
+          <div className="text-charcoal/50 text-center text-sm mb-8 italic site-html-content" dangerouslySetInnerHTML={{ __html: d.disclaimer || "" }} />
         )}
         {d.showExpandAll && (
           <div className="flex justify-end mb-4">

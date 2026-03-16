@@ -34,10 +34,8 @@ export default function ContactFormSection({ data, settings }: Props) {
                 href={card.href}
                 className="bg-sand rounded-xl p-6 text-center hover:bg-teal/10 transition-colors group"
               >
-                <h3 className="font-display font-bold text-lg text-charcoal group-hover:text-teal transition-colors">
-                  {card.title}
-                </h3>
-                <p className="text-charcoal/60 text-sm mt-1">{card.value}</p>
+                <h3 className="font-display font-bold text-lg text-charcoal group-hover:text-teal transition-colors" dangerouslySetInnerHTML={{ __html: card.title || "" }} />
+                <div className="text-charcoal/60 text-sm mt-1 site-html-content" dangerouslySetInnerHTML={{ __html: card.value || "" }} />
               </a>
             ))}
           </div>

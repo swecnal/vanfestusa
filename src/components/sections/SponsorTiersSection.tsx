@@ -30,7 +30,7 @@ export default function SponsorTiersSection({ data, settings }: Props) {
   const tiersContent = (
     <div className="space-y-3">
       {d.introText && (
-        <p className="text-charcoal/70 text-sm leading-relaxed mb-6">{d.introText}</p>
+        <div className="text-charcoal/70 text-sm leading-relaxed mb-6 site-html-content" dangerouslySetInnerHTML={{ __html: d.introText || "" }} />
       )}
       {d.tiers.map((tier, i) => (
         <div key={i} className="border border-charcoal/10 rounded-xl overflow-hidden">
@@ -76,7 +76,7 @@ export default function SponsorTiersSection({ data, settings }: Props) {
         </div>
       ))}
       {d.disclaimerText && (
-        <p className="text-charcoal/40 text-xs italic mt-4">{d.disclaimerText}</p>
+        <div className="text-charcoal/40 text-xs italic mt-4 site-html-content" dangerouslySetInnerHTML={{ __html: d.disclaimerText || "" }} />
       )}
       {d.ctaText && (
         <div className="text-center mt-6">
@@ -84,7 +84,7 @@ export default function SponsorTiersSection({ data, settings }: Props) {
             href={`mailto:hello@vanfestusa.com${d.emailSubject ? `?subject=${encodeURIComponent(d.emailSubject)}` : ""}`}
             className={`inline-block bg-${accentColor} hover:opacity-90 text-white font-bold px-8 py-3 rounded-xl transition-opacity`}
           >
-            {d.ctaText}
+            <span dangerouslySetInnerHTML={{ __html: d.ctaText || "" }} />
           </a>
         </div>
       )}

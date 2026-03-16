@@ -47,16 +47,14 @@ function renderCard(card: TwoColumnCardsData["cards"][number], i: number, siteSt
           <h3
             className={`font-display font-bold text-xl mb-2 ${isBackground ? "text-white" : "text-teal-dark"}`}
             style={textStyleConfigToCSS(card.titleStyle || {})}
-          >
-            {card.title}
-          </h3>
+            dangerouslySetInnerHTML={{ __html: card.title || "" }}
+          />
           {card.subtitle && (
             <p
               className={`text-xs mb-2 ${isBackground ? "text-white/70" : "text-charcoal/50"}`}
               style={textStyleConfigToCSS(card.subtitleStyle || {})}
-            >
-              {card.subtitle}
-            </p>
+              dangerouslySetInnerHTML={{ __html: card.subtitle || "" }}
+            />
           )}
           <div
             className={`text-sm leading-relaxed site-html-content ${isBackground ? "text-white/80" : "text-charcoal/70"}`}

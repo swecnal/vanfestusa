@@ -137,9 +137,7 @@ export default function AccordionParentSection({ data, settings, siteStyles = EM
                 onClick={() => toggleItem(i)}
                 className="w-full text-left px-6 py-4 flex items-center justify-between gap-4 hover:bg-sand/50 transition-colors"
               >
-                <span className="font-display font-semibold text-charcoal">
-                  {child.title}
-                </span>
+                <span className="font-display font-semibold text-charcoal" dangerouslySetInnerHTML={{ __html: child.title || "" }} />
                 <svg
                   className={`w-5 h-5 text-teal flex-shrink-0 transition-transform ${
                     openItems.has(i) ? "rotate-180" : ""

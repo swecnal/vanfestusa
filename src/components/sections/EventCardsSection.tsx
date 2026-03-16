@@ -70,41 +70,36 @@ export default function EventCardsSection({ data, settings }: Props) {
                     <span
                       className="inline-block bg-white/20 text-white text-xs font-bold px-3 py-1 rounded-lg mb-4"
                       style={textStyleConfigToCSS(d.tagStyle || {})}
-                    >
-                      {ev.tag}
-                    </span>
+                      dangerouslySetInnerHTML={{ __html: ev.tag || "" }}
+                    />
                     <h3
                       className={`font-display font-black ${isFeatureCard ? "text-4xl md:text-5xl" : "text-3xl"} mb-1`}
                       style={{
                         ...(ev.fontOverride ? { fontFamily: ev.fontOverride } : {}),
                         ...textStyleConfigToCSS(d.titleStyle || {}),
                       }}
-                    >
-                      {ev.name}
-                    </h3>
+                      dangerouslySetInnerHTML={{ __html: ev.name || "" }}
+                    />
                     {ev.location && (
                       <p
                         className="text-white/80 text-sm"
                         style={textStyleConfigToCSS(d.locationStyle || {})}
-                      >
-                        {ev.location}
-                      </p>
+                        dangerouslySetInnerHTML={{ __html: ev.location || "" }}
+                      />
                     )}
                     <p
                       className="text-white/80 text-sm font-semibold mt-1"
                       style={textStyleConfigToCSS(d.dateStyle || {})}
-                    >
-                      {ev.dates}
-                    </p>
+                      dangerouslySetInnerHTML={{ __html: ev.dates || "" }}
+                    />
                   </div>
                 </Link>
                 <div className="p-8 flex flex-col flex-grow">
-                  <p
-                    className="text-charcoal/70 text-sm leading-relaxed mb-6 flex-grow"
+                  <div
+                    className="text-charcoal/70 text-sm leading-relaxed mb-6 flex-grow site-html-content"
                     style={textStyleConfigToCSS(d.descriptionStyle || {})}
-                  >
-                    {ev.description}
-                  </p>
+                    dangerouslySetInnerHTML={{ __html: ev.description || "" }}
+                  />
                   <div className="flex items-center justify-between">
                     <Link
                       href={ev.href}
