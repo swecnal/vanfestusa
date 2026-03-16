@@ -63,7 +63,7 @@ const defaultNavLinks: NavLink[] = [
 const escapeNavLinks: NavLink[] = [
   { label: "About", href: "/events/escape" },
   { label: "Schedule", href: "/events/escape#schedule" },
-  { label: "Map", href: "/events/escape#map" },
+  { label: "Map", href: "/events/escape/map" },
   {
     label: "Get Involved",
     href: "/events/escape/sponsors-vendors",
@@ -73,14 +73,14 @@ const escapeNavLinks: NavLink[] = [
       { label: "Exhibit Your Rig", href: "/events/escape/exhibit-your-rig" },
     ],
   },
-  { label: "FAQ", href: "/events/escape#faq" },
+  { label: "FAQ", href: "/events/escape/faq" },
   { label: "Contact", href: "/contact" },
 ];
 
 const liftoffNavLinks: NavLink[] = [
   { label: "About", href: "/events/liftoff" },
   { label: "Schedule", href: "/events/liftoff#schedule" },
-  { label: "Map", href: "/events/liftoff#map" },
+  { label: "Map", href: "/events/liftoff/map" },
   {
     label: "Get Involved",
     href: "/events/liftoff/sponsors-vendors",
@@ -90,7 +90,7 @@ const liftoffNavLinks: NavLink[] = [
       { label: "Exhibit Your Rig", href: "/events/liftoff/exhibit-your-rig" },
     ],
   },
-  { label: "FAQ", href: "/events/liftoff#faq" },
+  { label: "FAQ", href: "/events/liftoff/faq" },
   { label: "Contact", href: "/contact" },
 ];
 

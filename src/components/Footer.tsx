@@ -276,9 +276,8 @@ function FooterV1({ config }: { config?: FooterConfig | null }) {
     {
       title: "Get Involved",
       links: [
-        { label: "Sponsors & Vendors", href: "/sponsors-vendors" },
-        { label: "Exhibit Your Rig", href: "/exhibit-your-rig" },
-        { label: "Jobs @ VanFest", href: "/jobs" },
+        { label: "Get Involved", href: "/get-involved" },
+        { label: "Sponsors", href: "/sponsors" },
         { label: "Merch", href: "/merch" },
       ],
     },
