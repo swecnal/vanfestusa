@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
 import { getSupabaseServer } from "@/lib/supabase/server";
-import SectionRenderer from "@/components/sections/SectionRenderer";
-import PreviewClickBridge from "@/components/PreviewClickBridge";
+import PreviewShell from "@/components/PreviewShell";
 import type { Section } from "@/lib/types";
 import { type SiteStyles, EMPTY_SITE_STYLES } from "@/lib/styles";
 
@@ -59,10 +58,7 @@ export default async function PreviewPage({ params }: PageProps) {
 
   return (
     <main>
-      <PreviewClickBridge />
-      {visibleSections.map((section) => (
-        <SectionRenderer key={section.id} section={section} siteStyles={siteStyles} />
-      ))}
+      <PreviewShell initialSections={visibleSections} siteStyles={siteStyles} />
     </main>
   );
 }

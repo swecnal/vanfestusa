@@ -374,6 +374,7 @@ export default function PageEditorPage() {
     sessionStorage.setItem("vf_previewMode", mode);
   };
   const [mobileIframeKey, setMobileIframeKey] = useState(0);
+  const mobileIframeRef = useRef<HTMLIFrameElement>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -589,7 +590,16 @@ export default function PageEditorPage() {
     setEditingData(data);
     setEditingSettings(settings);
     setIsDirty(true);
-  }, []);
+    // Push live update to mobile preview iframe
+    if (selectedSectionId && mobileIframeRef.current?.contentWindow) {
+      mobileIframeRef.current.contentWindow.postMessage({
+        type: "preview-update-section",
+        sectionId: selectedSectionId,
+        data,
+        settings,
+      }, "*");
+    }
+  }, [selectedSectionId]);
 
   // Accordion groups on the page (for "move into accordion" feature)
   const accordionGroups = sections
@@ -761,6 +771,17 @@ export default function PageEditorPage() {
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
   }, [handleSelectSection]);
+
+  // Sync selected section highlight to iframe
+  useEffect(() => {
+    const iframeWin = mobileIframeRef.current?.contentWindow;
+    if (!iframeWin) return;
+    if (selectedSectionId) {
+      iframeWin.postMessage({ type: "preview-select", sectionId: selectedSectionId }, "*");
+    } else {
+      iframeWin.postMessage({ type: "preview-deselect" }, "*");
+    }
+  }, [selectedSectionId]);
 
   if (loading) {
     return <div className="text-center text-gray-400 py-12">Loading...</div>;
@@ -943,6 +964,7 @@ export default function PageEditorPage() {
                   </div>
                   <div className="rounded-[2rem] overflow-hidden bg-white" style={{ width: 393, height: 852 }}>
                     <iframe
+                      ref={mobileIframeRef}
                       key={mobileIframeKey}
                       src={`/preview/${pageId}`}
                       className="border-0 w-full h-full"
