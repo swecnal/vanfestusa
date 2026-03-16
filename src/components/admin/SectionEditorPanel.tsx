@@ -482,6 +482,7 @@ function SectionFields({
             <RichTextEditor content={(data.subtitle as string) || ""} onChange={(html) => updateData("subtitle", html)} siteStyles={siteStyles} />
           </Field>
           <Field label="Background Image">
+            <p className="text-[10px] text-gray-400 mb-1">Ideal: 1920x1080px (16:9). Shown at low opacity behind text.</p>
             <ImagePicker
               value={(data.bgImage as string) || ""}
               onChange={(url) => updateData("bgImage", url)}
@@ -1829,6 +1830,7 @@ function HeroCarouselEditor({
           Slides ({slides.length})
         </summary>
         <div className="p-3 border-t border-gray-100">
+          <p className="text-[10px] text-gray-400 mb-2">Ideal: 1920x1080px or wider (16:9). Full-screen with overlay text.</p>
           <ImageArrayEditor
             images={slides.map((s) => ({ src: s.image, alt: s.alt }))}
             onChange={(imgs) =>

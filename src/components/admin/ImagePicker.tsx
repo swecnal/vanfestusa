@@ -25,13 +25,18 @@ export default function ImagePicker({ value, onChange }: Props) {
 
       if (res.ok) {
         const { asset } = await res.json();
-        onChange(asset.public_url);
-        toast.success("Image uploaded");
+        if (asset?.public_url) {
+          onChange(asset.public_url);
+          toast.success("Image uploaded — remember to Save");
+        } else {
+          toast.error("Upload succeeded but no URL returned");
+        }
       } else {
-        toast.error("Upload failed");
+        const err = await res.json().catch(() => ({}));
+        toast.error(err.error || `Upload failed (${res.status})`);
       }
-    } catch {
-      toast.error("Upload error");
+    } catch (e) {
+      toast.error(`Upload error: ${e instanceof Error ? e.message : "network issue"}`);
     }
     setUploading(false);
   };
@@ -44,13 +49,22 @@ export default function ImagePicker({ value, onChange }: Props) {
             src={value}
             alt=""
             className="w-full h-32 object-cover"
+            onError={(e) => {
+              (e.target as HTMLImageElement).style.display = "none";
+            }}
           />
-          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
             <button
               onClick={() => fileRef.current?.click()}
               className="bg-white text-charcoal text-xs font-semibold px-3 py-1.5 rounded-lg"
             >
               Replace
+            </button>
+            <button
+              onClick={() => onChange("")}
+              className="bg-red-500 text-white text-xs font-semibold px-3 py-1.5 rounded-lg"
+            >
+              Remove
             </button>
           </div>
         </div>
