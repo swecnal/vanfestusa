@@ -9,6 +9,7 @@ import {
   useSensor,
   useSensors,
   DragOverlay,
+  useDroppable,
   type DragEndEvent,
   type DragStartEvent,
 } from "@dnd-kit/core";
@@ -202,37 +203,26 @@ function buildTree(pages: PageItem[], orderMap: Record<string, string[]>): TreeN
   return root;
 }
 
-/* ─── Nest drop zone — shows when dragging over a page to nest under it ─── */
+/* ─── Nest drop zone — uses @dnd-kit useDroppable so it works with DndContext ─── */
 function NestDropZone({
   pageId,
   label,
-  onNest,
 }: {
   pageId: string;
   label: string;
-  onNest: (targetPageId: string) => void;
 }) {
-  const [over, setOver] = useState(false);
+  const { isOver, setNodeRef } = useDroppable({
+    id: `nest-${pageId}`,
+  });
 
   return (
     <div
+      ref={setNodeRef}
       className={`ml-8 mr-2 my-0.5 h-6 rounded border-2 border-dashed flex items-center justify-center transition-colors ${
-        over ? "border-teal bg-teal/10" : "border-white/20 bg-white/5"
+        isOver ? "border-teal bg-teal/10" : "border-white/20 bg-white/5"
       }`}
-      onDragOver={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setOver(true);
-      }}
-      onDragLeave={() => setOver(false)}
-      onDrop={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setOver(false);
-        onNest(pageId);
-      }}
     >
-      <span className={`text-[9px] font-semibold uppercase tracking-wider ${over ? "text-teal" : "text-white/30"}`}>
+      <span className={`text-[9px] font-semibold uppercase tracking-wider ${isOver ? "text-teal" : "text-white/30"}`}>
         Nest under {label}
       </span>
     </div>
@@ -247,7 +237,6 @@ function SortableTreeItem({
   onSelect,
   onAddChild,
   activeDragId,
-  onNestUnder,
 }: {
   node: TreeNode;
   depth: number;
@@ -255,7 +244,6 @@ function SortableTreeItem({
   onSelect: (pageId: string) => void;
   onAddChild: (parentSlug: string) => void;
   activeDragId: string | null;
-  onNestUnder: (targetPageId: string) => void;
 }) {
   const [expanded, setExpanded] = useState(node.expanded);
   const hasChildren = node.children.length > 0;
@@ -379,7 +367,7 @@ function SortableTreeItem({
 
       {/* Nest drop zone — appears when dragging another page over this one */}
       {showNestZone && (
-        <NestDropZone pageId={node.page!.id} label={node.label} onNest={onNestUnder} />
+        <NestDropZone pageId={node.page!.id} label={node.label} />
       )}
 
       {/* Children */}
@@ -391,7 +379,6 @@ function SortableTreeItem({
           onSelect={onSelect}
           onAddChild={onAddChild}
           activeDragId={activeDragId}
-          onNestUnder={onNestUnder}
         />
       )}
     </div>
@@ -405,7 +392,6 @@ function SortableChildren({
   onSelect,
   onAddChild,
   activeDragId,
-  onNestUnder,
 }: {
   nodes: TreeNode[];
   depth: number;
@@ -413,7 +399,6 @@ function SortableChildren({
   onSelect: (pageId: string) => void;
   onAddChild: (parentSlug: string) => void;
   activeDragId: string | null;
-  onNestUnder: (targetPageId: string) => void;
 }) {
   const ids = nodes.map((n) => n.page?.id || `folder-${n.label}`);
 
@@ -429,7 +414,6 @@ function SortableChildren({
             onSelect={onSelect}
             onAddChild={onAddChild}
             activeDragId={activeDragId}
-            onNestUnder={onNestUnder}
           />
         ))}
       </div>
@@ -512,9 +496,8 @@ export default function PageTree({ collapsed }: { collapsed: boolean }) {
   };
 
   // Nesting: move a page under another by updating its slug
-  const handleNestUnder = useCallback(async (targetPageId: string) => {
-    if (!activeDragId) return;
-    const draggedPage = pages.find((p) => p.id === activeDragId);
+  const handleNestUnder = useCallback(async (draggedPageId: string, targetPageId: string) => {
+    const draggedPage = pages.find((p) => p.id === draggedPageId);
     const targetPage = pages.find((p) => p.id === targetPageId);
     if (!draggedPage || !targetPage) return;
 
@@ -544,8 +527,7 @@ export default function PageTree({ collapsed }: { collapsed: boolean }) {
     } catch {
       toast.error("Failed to move page");
     }
-    setActiveDragId(null);
-  }, [activeDragId, pages, fetchPages]);
+  }, [pages, fetchPages]);
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveDragId(String(event.active.id));
@@ -559,6 +541,13 @@ export default function PageTree({ collapsed }: { collapsed: boolean }) {
 
     const activeId = String(active.id);
     const overId = String(over.id);
+
+    // Check if dropped on a nest zone (id starts with "nest-")
+    if (overId.startsWith("nest-")) {
+      const targetPageId = overId.replace("nest-", "");
+      handleNestUnder(activeId, targetPageId);
+      return;
+    }
 
     const activePage = pages.find((p) => p.id === activeId);
     const overPage = pages.find((p) => p.id === overId);
@@ -630,7 +619,6 @@ export default function PageTree({ collapsed }: { collapsed: boolean }) {
           onSelect={handleSelect}
           onAddChild={handleAddChild}
           activeDragId={activeDragId}
-          onNestUnder={handleNestUnder}
         />
         <DragOverlay>
           {activeDragId && (() => {
