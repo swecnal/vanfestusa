@@ -62,7 +62,7 @@ const defaultNavLinks: NavLink[] = [
 
 const escapeNavLinks: NavLink[] = [
   { label: "About", href: "/events/escape" },
-  { label: "Schedule", href: "/events/escape#schedule" },
+  { label: "Schedule", href: "/events/escape/schedule" },
   { label: "Map", href: "/events/escape/map" },
   {
     label: "Get Involved",
@@ -79,7 +79,7 @@ const escapeNavLinks: NavLink[] = [
 
 const liftoffNavLinks: NavLink[] = [
   { label: "About", href: "/events/liftoff" },
-  { label: "Schedule", href: "/events/liftoff#schedule" },
+  { label: "Schedule", href: "/events/liftoff/schedule" },
   { label: "Map", href: "/events/liftoff/map" },
   {
     label: "Get Involved",
