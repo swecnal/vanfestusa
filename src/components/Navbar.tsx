@@ -125,12 +125,13 @@ function NavbarV2({ config }: { config: NavbarBuilderConfig }) {
     });
   }, []);
 
-  // Detect event mode
-  const isEventPage = pathname === "/events/escape" || pathname === "/events/liftoff";
-  const eventMode = pathname === "/events/escape" ? "escape" : pathname === "/events/liftoff" ? "liftoff" : null;
+  // Detect event mode (matches /events/escape and all sub-pages like /events/escape/map)
+  const eventMode = pathname.startsWith("/events/escape") ? "escape" : pathname.startsWith("/events/liftoff") ? "liftoff" : null;
+  const isEventPage = eventMode !== null;
 
-  // Resolve links and CTAs (event overrides)
-  const eventOverride = config.eventOverrides?.[pathname];
+  // Resolve links and CTAs (event overrides) — try exact path first, then base event path
+  const eventBasePath = eventMode ? `/events/${eventMode}` : null;
+  const eventOverride = config.eventOverrides?.[pathname] || (eventBasePath ? config.eventOverrides?.[eventBasePath] : undefined);
   const navLinks: NavbarLinkV2[] = eventOverride?.links || config.links;
   const ctaButtons: NavbarCtaConfig[] = eventOverride?.ctaButtons || config.ctaButtons;
 
@@ -468,7 +469,7 @@ function NavbarV1({ config }: NavbarV1Props) {
     ctaRef.current.style.animationDelay = `${Math.random() * 3}s`;
   }, []);
 
-  const eventMode = pathname === "/events/escape" ? "escape" : pathname === "/events/liftoff" ? "liftoff" : null;
+  const eventMode = pathname.startsWith("/events/escape") ? "escape" : pathname.startsWith("/events/liftoff") ? "liftoff" : null;
   const isEventPage = eventMode !== null;
 
   const eventOverride = config?.eventOverrides?.[pathname];

@@ -337,6 +337,7 @@ export default function PageEditorPage() {
   const [sections, setSections] = useState<Section[]>([]);
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
   const [globalEditTarget, setGlobalEditTarget] = useState<"navbar" | "footer" | null>(null);
+  const [editingPageMeta, setEditingPageMeta] = useState<{ title: string; slug: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [externalDragActive, setExternalDragActive] = useState(false);
@@ -816,15 +817,74 @@ export default function PageEditorPage() {
         {/* Page header bar */}
         <div className="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-gray-200 px-2 md:px-4 py-2 flex items-center justify-between">
           <div className="flex items-center gap-2 md:gap-3 min-w-0">
-            <h3 className="font-display font-bold text-sm text-charcoal truncate">
-              {page.title}
-            </h3>
-            <span className="hidden sm:inline text-xs text-gray-400">{page.slug}</span>
-            <span className={`hidden sm:inline px-2 py-0.5 rounded-full text-[10px] font-semibold ${
-              page.is_published ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
-            }`}>
-              {page.is_published ? "Published" : "Draft"}
-            </span>
+            {editingPageMeta ? (
+              <form
+                className="flex items-center gap-2 min-w-0"
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  const res = await fetch(`/api/pages/${pageId}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ title: editingPageMeta.title, slug: editingPageMeta.slug }),
+                  });
+                  if (res.ok) {
+                    const { page: updated } = await res.json();
+                    setPage((prev) => prev ? { ...prev, title: updated.title, slug: updated.slug } : prev);
+                    setEditingPageMeta(null);
+                    toast.success("Page updated");
+                  } else {
+                    toast.error("Failed to update page");
+                  }
+                }}
+              >
+                <input
+                  type="text"
+                  value={editingPageMeta.title}
+                  onChange={(e) => setEditingPageMeta((prev) => prev ? { ...prev, title: e.target.value } : prev)}
+                  className="font-display font-bold text-sm text-charcoal border border-gray-300 rounded px-2 py-0.5 w-40"
+                  autoFocus
+                />
+                <input
+                  type="text"
+                  value={editingPageMeta.slug}
+                  onChange={(e) => setEditingPageMeta((prev) => prev ? { ...prev, slug: e.target.value } : prev)}
+                  className="text-xs text-gray-500 border border-gray-300 rounded px-2 py-0.5 w-48 font-mono"
+                  placeholder="/slug"
+                />
+                <button type="submit" className="text-teal hover:text-teal-dark p-0.5" title="Save">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                </button>
+                <button type="button" onClick={() => setEditingPageMeta(null)} className="text-gray-400 hover:text-gray-600 p-0.5" title="Cancel">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </form>
+            ) : (
+              <>
+                <h3
+                  className="font-display font-bold text-sm text-charcoal truncate cursor-pointer hover:text-teal transition-colors"
+                  onClick={() => setEditingPageMeta({ title: page.title, slug: page.slug })}
+                  title="Click to rename"
+                >
+                  {page.title}
+                </h3>
+                <span
+                  className="hidden sm:inline text-xs text-gray-400 cursor-pointer hover:text-gray-600 transition-colors"
+                  onClick={() => setEditingPageMeta({ title: page.title, slug: page.slug })}
+                  title="Click to edit slug"
+                >
+                  {page.slug}
+                </span>
+                <span className={`hidden sm:inline px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                  page.is_published ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
+                }`}>
+                  {page.is_published ? "Published" : "Draft"}
+                </span>
+              </>
+            )}
           </div>
           <div className="flex items-center gap-2">
             {/* Desktop / Mobile preview toggle (hidden on phones) */}
