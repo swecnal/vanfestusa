@@ -641,22 +641,102 @@ function SectionFields({
       );
     }
 
-    case "faq_accordion":
+    case "faq_accordion": {
+      const faqItems = (data.items as Array<Record<string, string>>) || [];
+      const updateFaqItem = (index: number, field: string, value: string) => {
+        const next = [...faqItems];
+        next[index] = { ...next[index], [field]: value };
+        updateData("items", next);
+      };
+      const removeFaqItem = (index: number) => {
+        updateData("items", faqItems.filter((_, i) => i !== index));
+      };
+      const addFaqItem = () => {
+        updateData("items", [...faqItems, { question: "", answer: "" }]);
+      };
       return (
         <div className="space-y-3">
           <Field label="Heading">
             <RichTextEditor content={(data.heading as string) || ""} onChange={(html) => updateData("heading", html)} siteStyles={siteStyles} />
           </Field>
+
+          <details className="border border-gray-200 rounded-lg">
+            <summary className="px-3 py-2 text-xs font-semibold text-gray-500 cursor-pointer hover:bg-gray-50">
+              Question Formatting
+            </summary>
+            <div className="p-3 border-t border-gray-100">
+              <TextStyleEditor
+                label="All Questions"
+                value={(data.questionStyle as TextStyleConfig) || {}}
+                onChange={(style) => updateData("questionStyle", style)}
+              />
+            </div>
+          </details>
+
+          <details className="border border-gray-200 rounded-lg">
+            <summary className="px-3 py-2 text-xs font-semibold text-gray-500 cursor-pointer hover:bg-gray-50">
+              Answer Formatting
+            </summary>
+            <div className="p-3 border-t border-gray-100">
+              <TextStyleEditor
+                label="All Answers"
+                value={(data.answerStyle as TextStyleConfig) || {}}
+                onChange={(style) => updateData("answerStyle", style)}
+              />
+            </div>
+          </details>
+
           <Field label="FAQ Items">
-            <ArrayEditor
-              items={(data.items as Array<Record<string, string>>) || []}
-              onChange={(items) => updateData("items", items)}
-              fields={["question", "answer"]}
-              siteStyles={siteStyles}
-            />
+            <div className="space-y-2">
+              {faqItems.map((item, i) => (
+                <details key={i} className="bg-gray-50 rounded-lg relative group" open={i === 0}>
+                  <summary className="px-3 py-2 text-xs font-semibold text-gray-600 cursor-pointer hover:bg-gray-100 rounded-lg flex items-center justify-between">
+                    <span className="truncate flex-1 mr-2">
+                      {item.question ? item.question.replace(/<[^>]*>/g, "").slice(0, 60) || `Item ${i + 1}` : `Item ${i + 1}`}
+                    </span>
+                    <button
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); removeFaqItem(i); }}
+                      className="opacity-0 group-hover:opacity-100 bg-red-500 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center shadow-sm transition-all flex-shrink-0"
+                      title="Remove"
+                    >
+                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </summary>
+                  <div className="p-3 pt-1 space-y-2 border-t border-gray-200">
+                    <div>
+                      <label className="text-[10px] text-gray-400 uppercase">Question</label>
+                      <input
+                        type="text"
+                        value={(item.question || "").replace(/<[^>]*>/g, "")}
+                        onChange={(e) => updateFaqItem(i, "question", e.target.value)}
+                        className="w-full p-1.5 border border-gray-200 rounded text-xs"
+                        placeholder="Enter question..."
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-gray-400 uppercase">Answer</label>
+                      <RichTextEditor
+                        content={item.answer || ""}
+                        onChange={(html) => updateFaqItem(i, "answer", html)}
+                        siteStyles={siteStyles}
+                      />
+                    </div>
+                  </div>
+                </details>
+              ))}
+              <button
+                onClick={addFaqItem}
+                className="text-teal hover:text-teal-dark text-xs font-semibold transition-colors"
+              >
+                + Add Item
+              </button>
+            </div>
           </Field>
         </div>
       );
+    }
 
     case "cta_section": {
       const ctaButtons = (data.buttons as Array<Record<string, unknown>>) || [];

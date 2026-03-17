@@ -15,6 +15,8 @@ interface Props {
 export default function FaqAccordionSection({ data, settings, siteStyles = EMPTY_SITE_STYLES }: Props) {
   const d = data as unknown as FaqAccordionData;
   const headingStyle = (data as Record<string, unknown>).headingStyle as TextStyleConfig | undefined;
+  const questionStyle = (data as Record<string, unknown>).questionStyle as TextStyleConfig | undefined;
+  const answerStyle = (data as Record<string, unknown>).answerStyle as TextStyleConfig | undefined;
   const [openItems, setOpenItems] = useState<Set<number>>(new Set());
   const [allOpen, setAllOpen] = useState(false);
   const refs = useRef<(HTMLDivElement | null)[]>([]);
@@ -68,7 +70,7 @@ export default function FaqAccordionSection({ data, settings, siteStyles = EMPTY
                 onClick={() => toggleItem(i)}
                 className="w-full text-left px-6 py-4 flex items-center justify-between gap-4 hover:bg-sand/50 transition-colors"
               >
-                <span className="font-display font-semibold text-charcoal" dangerouslySetInnerHTML={{ __html: item.question || "" }} />
+                <span className="font-display font-semibold text-charcoal" style={questionStyle ? textStyleConfigToCSS(questionStyle) : undefined} dangerouslySetInnerHTML={{ __html: item.question || "" }} />
                 <svg
                   className={`w-5 h-5 text-teal flex-shrink-0 transition-transform ${
                     openItems.has(i) ? "rotate-180" : ""
@@ -87,7 +89,7 @@ export default function FaqAccordionSection({ data, settings, siteStyles = EMPTY
                   maxHeight: openItems.has(i) ? refs.current[i]?.scrollHeight : 0,
                 }}
               >
-                <div className="px-6 pb-4 text-charcoal/70 text-sm leading-relaxed site-html-content">
+                <div className="px-6 pb-4 text-charcoal/70 text-sm leading-relaxed site-html-content" style={answerStyle ? textStyleConfigToCSS(answerStyle) : undefined}>
                   <div dangerouslySetInnerHTML={{ __html: resolveButtonStylesInHtml(item.answer, siteStyles) }} />
                 </div>
               </div>

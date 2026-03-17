@@ -457,6 +457,8 @@ export interface CtaSectionData {
 export interface FaqAccordionData {
   heading?: string;
   headingStyle?: import("@/lib/styles").TextStyleConfig;
+  questionStyle?: import("@/lib/styles").TextStyleConfig;
+  answerStyle?: import("@/lib/styles").TextStyleConfig;
   showExpandAll?: boolean;
   items: Array<{
     question: string;
