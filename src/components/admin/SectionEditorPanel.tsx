@@ -481,13 +481,6 @@ function SectionFields({
           <Field label="Subtitle">
             <RichTextEditor content={(data.subtitle as string) || ""} onChange={(html) => updateData("subtitle", html)} siteStyles={siteStyles} />
           </Field>
-          <Field label="Background Image">
-            <p className="text-[10px] text-gray-400 mb-1">Ideal: 1920x1080px (16:9). Shown at low opacity behind text.</p>
-            <ImagePicker
-              value={(data.bgImage as string) || ""}
-              onChange={(url) => updateData("bgImage", url)}
-            />
-          </Field>
           <label className="flex items-center gap-2 text-sm">
             <input
               type="checkbox"
@@ -496,24 +489,6 @@ function SectionFields({
             />
             Light text (dark background)
           </label>
-          <Field label="Parallax">
-            <div className="flex gap-1">
-              {(["none", "light", "medium", "strong"] as const).map((level) => (
-                <button
-                  key={level}
-                  type="button"
-                  onClick={() => updateData("parallax", level)}
-                  className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
-                    ((data.parallax as string) || "none") === level
-                      ? "bg-teal text-white"
-                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  }`}
-                >
-                  {level.charAt(0).toUpperCase() + level.slice(1)}
-                </button>
-              ))}
-            </div>
-          </Field>
         </div>
       );
 
