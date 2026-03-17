@@ -621,6 +621,8 @@ export interface AccordionParentData {
   description?: string;
   titleStyle?: import("@/lib/styles").TextStyleConfig;
   descriptionStyle?: import("@/lib/styles").TextStyleConfig;
+  questionStyle?: import("@/lib/styles").TextStyleConfig;
+  answerStyle?: import("@/lib/styles").TextStyleConfig;
   showExpandAll?: boolean;
   children: Array<{
     title: string;

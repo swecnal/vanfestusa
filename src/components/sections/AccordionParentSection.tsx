@@ -14,6 +14,8 @@ interface Props {
 
 export default function AccordionParentSection({ data, settings, siteStyles = EMPTY_SITE_STYLES }: Props) {
   const d = data as unknown as AccordionParentData;
+  const questionStyle = (data as Record<string, unknown>).questionStyle as TextStyleConfig | undefined;
+  const answerStyle = (data as Record<string, unknown>).answerStyle as TextStyleConfig | undefined;
   const [openItems, setOpenItems] = useState<Set<number>>(new Set());
   const [allOpen, setAllOpen] = useState(false);
   const refs = useRef<(HTMLDivElement | null)[]>([]);
@@ -137,7 +139,7 @@ export default function AccordionParentSection({ data, settings, siteStyles = EM
                 onClick={() => toggleItem(i)}
                 className="w-full text-left px-6 py-4 flex items-center justify-between gap-4 hover:bg-sand/50 transition-colors"
               >
-                <span className="font-display font-semibold text-charcoal" dangerouslySetInnerHTML={{ __html: child.title || "" }} />
+                <span className="font-display font-semibold text-charcoal" style={questionStyle ? textStyleConfigToCSS(questionStyle) : undefined} dangerouslySetInnerHTML={{ __html: child.title || "" }} />
                 <svg
                   className={`w-5 h-5 text-teal flex-shrink-0 transition-transform ${
                     openItems.has(i) ? "rotate-180" : ""
@@ -177,7 +179,7 @@ export default function AccordionParentSection({ data, settings, siteStyles = EM
                     />
                   </div>
                 ) : (
-                  <div className="px-6 pb-4 text-charcoal/70 text-sm leading-relaxed site-html-content">
+                  <div className="px-6 pb-4 text-charcoal/70 text-sm leading-relaxed site-html-content" style={answerStyle ? textStyleConfigToCSS(answerStyle) : undefined}>
                     <div dangerouslySetInnerHTML={{ __html: resolveButtonStylesInHtml(child.body, siteStyles) }} />
                   </div>
                 )}

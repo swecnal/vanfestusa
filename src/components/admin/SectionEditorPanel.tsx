@@ -556,6 +556,32 @@ function SectionFields({
             Show Expand/Collapse All
           </label>
 
+          <details className="border border-gray-200 rounded-lg">
+            <summary className="px-3 py-2 text-xs font-semibold text-gray-500 cursor-pointer hover:bg-gray-50">
+              Question Formatting
+            </summary>
+            <div className="p-3 border-t border-gray-100">
+              <TextStyleEditor
+                label="All Questions"
+                value={(data.questionStyle as TextStyleConfig) || {}}
+                onChange={(style) => updateData("questionStyle", style)}
+              />
+            </div>
+          </details>
+
+          <details className="border border-gray-200 rounded-lg">
+            <summary className="px-3 py-2 text-xs font-semibold text-gray-500 cursor-pointer hover:bg-gray-50">
+              Answer Formatting
+            </summary>
+            <div className="p-3 border-t border-gray-100">
+              <TextStyleEditor
+                label="All Answers"
+                value={(data.answerStyle as TextStyleConfig) || {}}
+                onChange={(style) => updateData("answerStyle", style)}
+              />
+            </div>
+          </details>
+
           <div className="border-t border-gray-200 pt-3 mt-3">
             <div className="flex items-center justify-between mb-2">
               <p className="text-xs font-semibold text-gray-700">Accordion Items ({accChildren.length})</p>
@@ -571,7 +597,7 @@ function SectionFields({
                 <details key={i} className="border border-gray-200 rounded-lg overflow-hidden">
                   <summary className="px-3 py-2 text-sm font-medium text-gray-700 cursor-pointer hover:bg-gray-50 flex items-center gap-2">
                     <span className="text-gray-400 text-xs w-5">{i + 1}.</span>
-                    <span className="flex-1 truncate">{child.title || "Untitled"}</span>
+                    <span className="flex-1 truncate">{(child.title || "Untitled").replace(/<[^>]*>/g, "")}</span>
                     {child.sectionType && (
                       <span className="text-[9px] uppercase tracking-wider font-semibold px-1.5 py-0.5 rounded bg-teal/10 text-teal flex-shrink-0">
                         {SECTION_TYPE_LABELS[child.sectionType as SectionType] || child.sectionType}
@@ -601,9 +627,16 @@ function SectionFields({
                     </span>
                   </summary>
                   <div className="p-3 border-t border-gray-100 space-y-2">
-                    <Field label="Title">
-                      <RichTextEditor content={child.title || ""} onChange={(html) => updateAccChild(i, "title", html)} siteStyles={siteStyles} />
-                    </Field>
+                    <div>
+                      <label className="text-[10px] text-gray-400 uppercase">Question</label>
+                      <input
+                        type="text"
+                        value={(child.title || "").replace(/<[^>]*>/g, "")}
+                        onChange={(e) => updateAccChild(i, "title", e.target.value)}
+                        className="w-full p-1.5 border border-gray-200 rounded text-xs"
+                        placeholder="Enter question..."
+                      />
+                    </div>
                     {child.sectionType ? (
                       <div className="flex items-center gap-2 py-2">
                         <span className="text-[10px] uppercase tracking-wider font-semibold px-2 py-1 rounded bg-teal/10 text-teal border border-teal/20">
@@ -624,13 +657,14 @@ function SectionFields({
                         )}
                       </div>
                     ) : (
-                      <Field label="Content">
+                      <div>
+                        <label className="text-[10px] text-gray-400 uppercase">Answer</label>
                         <RichTextEditor
                           content={child.body || ""}
                           onChange={(html) => updateAccChild(i, "body", html)}
                           siteStyles={siteStyles}
                         />
-                      </Field>
+                      </div>
                     )}
                   </div>
                 </details>
