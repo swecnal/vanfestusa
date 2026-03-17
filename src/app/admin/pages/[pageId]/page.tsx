@@ -275,7 +275,7 @@ function DropZone({
   isActive,
 }: {
   index: number;
-  onDrop: (type: SectionType, index: number) => void;
+  onDrop: (type: SectionType, index: number, meta?: Record<string, unknown>) => void;
   isActive: boolean;
 }) {
   const [isOver, setIsOver] = useState(false);
@@ -311,7 +311,11 @@ function DropZone({
         e.preventDefault();
         setIsOver(false);
         const type = e.dataTransfer.getData("application/section-type") as SectionType;
-        if (type) onDrop(type, index);
+        if (type) {
+          const metaStr = e.dataTransfer.getData("application/section-meta");
+          const meta = metaStr ? JSON.parse(metaStr) as Record<string, unknown> : undefined;
+          onDrop(type, index, meta);
+        }
       }}
     >
       {isOver && (
@@ -526,13 +530,23 @@ export default function PageEditorPage() {
     }
   };
 
-  const handleAddSectionAtIndex = useCallback(async (type: SectionType, index?: number) => {
+  const handleAddSectionAtIndex = useCallback(async (type: SectionType, index?: number, meta?: Record<string, unknown>) => {
+    // One navbar per page guard
+    if (type === "navbar" && sections.some((s) => s.section_type === "navbar")) {
+      toast.error("This page already has a navbar. Only one navbar per page is allowed.");
+      return;
+    }
+
+    const sectionData = type === "navbar" && meta?.navbarId
+      ? { navbarId: meta.navbarId }
+      : SECTION_DEFAULTS[type];
+
     const res = await fetch(`/api/pages/${pageId}/sections`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         section_type: type,
-        data: SECTION_DEFAULTS[type],
+        data: sectionData,
       }),
     });
 
@@ -991,7 +1005,11 @@ export default function PageEditorPage() {
               onDrop={(e) => {
                 e.preventDefault();
                 const type = e.dataTransfer.getData("application/section-type") as SectionType;
-                if (type) handleAddSectionAtIndex(type, 0);
+                if (type) {
+                  const metaStr = e.dataTransfer.getData("application/section-meta");
+                  const meta = metaStr ? JSON.parse(metaStr) as Record<string, unknown> : undefined;
+                  handleAddSectionAtIndex(type, 0, meta);
+                }
               }}
             >
               <svg className="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>

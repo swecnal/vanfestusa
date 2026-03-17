@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { usePageEditor } from "@/lib/page-editor-context";
-import type { SectionType } from "@/lib/types";
+import type { SectionType, SavedNavbar } from "@/lib/types";
 
 interface ElementItem {
   type: SectionType;
   label: string;
+  navbarId?: string;
 }
 
 interface ElementCategory {
@@ -72,6 +73,7 @@ const ELEMENT_CATEGORIES: ElementCategory[] = [
 ];
 
 const CATEGORY_ICONS: Record<string, string> = {
+  Navbars: "M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5",
   Heroes: "M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5a2.25 2.25 0 002.25-2.25V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z",
   Content: "M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25H12",
   "Cards & Grids": "M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zm0 9.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zm9.75-9.75A2.25 2.25 0 0115.75 3.75H18a2.25 2.25 0 012.25 2.25v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zm0 9.75a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 15.75V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z",
@@ -83,7 +85,9 @@ const CATEGORY_ICONS: Record<string, string> = {
 
 export default function ElementPalette({ collapsed }: { collapsed?: boolean }) {
   const { addSection } = usePageEditor();
+  const [savedNavbars, setSavedNavbars] = useState<SavedNavbar[]>([]);
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({
+    Navbars: true,
     Heroes: true,
     Content: true,
     "Cards & Grids": true,
@@ -93,26 +97,56 @@ export default function ElementPalette({ collapsed }: { collapsed?: boolean }) {
     Decorative: true,
   });
 
+  // Fetch saved navbars for the dynamic category
+  useEffect(() => {
+    fetch("/api/global-settings")
+      .then((r) => r.json())
+      .then((res) => {
+        const navbars = (res.settings?.navbars || []) as SavedNavbar[];
+        setSavedNavbars(navbars);
+      })
+      .catch(() => {});
+  }, []);
+
   const isActive = addSection !== null;
 
   const toggleCategory = (label: string) => {
     setExpandedCategories((prev) => ({ ...prev, [label]: !prev[label] }));
   };
 
-  const handleDragStart = (e: React.DragEvent, type: SectionType) => {
+  const handleDragStart = (e: React.DragEvent, item: ElementItem) => {
     if (!isActive) {
       e.preventDefault();
       return;
     }
-    e.dataTransfer.setData("application/section-type", type);
+    e.dataTransfer.setData("application/section-type", item.type);
+    if (item.navbarId) {
+      e.dataTransfer.setData("application/section-meta", JSON.stringify({ navbarId: item.navbarId }));
+    }
     e.dataTransfer.effectAllowed = "copy";
   };
 
-  const handleClick = (type: SectionType) => {
+  const handleClick = (item: ElementItem) => {
     if (isActive && addSection) {
-      addSection(type);
+      const meta = item.navbarId ? { navbarId: item.navbarId } : undefined;
+      addSection(item.type, undefined, meta);
     }
   };
+
+  // Build dynamic categories: Navbars first (if any exist), then static
+  const navbarCategory: ElementCategory | null = savedNavbars.length > 0
+    ? {
+        label: "Navbars",
+        items: savedNavbars.map((n) => ({
+          type: "navbar" as SectionType,
+          label: n.name,
+          navbarId: n.id,
+        })),
+      }
+    : null;
+  const allCategories = navbarCategory
+    ? [navbarCategory, ...ELEMENT_CATEGORIES]
+    : ELEMENT_CATEGORIES;
 
   if (collapsed) {
     return (
@@ -131,7 +165,7 @@ export default function ElementPalette({ collapsed }: { collapsed?: boolean }) {
 
   return (
     <div className="space-y-0.5">
-      {ELEMENT_CATEGORIES.map((cat) => (
+      {allCategories.map((cat) => (
         <div key={cat.label}>
           {/* Category header */}
           <button
@@ -160,10 +194,10 @@ export default function ElementPalette({ collapsed }: { collapsed?: boolean }) {
             <div className="ml-4 space-y-px">
               {cat.items.map((item) => (
                 <div
-                  key={item.type}
+                  key={item.navbarId || item.type}
                   draggable={isActive}
-                  onDragStart={(e) => handleDragStart(e, item.type)}
-                  onClick={() => handleClick(item.type)}
+                  onDragStart={(e) => handleDragStart(e, item)}
+                  onClick={() => handleClick(item)}
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs transition-all ${
                     isActive
                       ? "text-white/60 hover:text-white hover:bg-white/10 cursor-grab active:cursor-grabbing"

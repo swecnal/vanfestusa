@@ -3,7 +3,7 @@
 import { createContext, useContext, useState, useCallback } from "react";
 import type { SectionType } from "./types";
 
-type AddSectionFn = (type: SectionType, index?: number) => Promise<void>;
+type AddSectionFn = (type: SectionType, index?: number, meta?: Record<string, unknown>) => Promise<void>;
 
 interface PageEditorContextValue {
   addSection: AddSectionFn | null;

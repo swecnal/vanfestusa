@@ -1,6 +1,7 @@
-import type { Section } from "@/lib/types";
+import type { Section, SavedNavbar } from "@/lib/types";
 import { backgroundConfigStyles, buildMobileStyleBlock } from "@/lib/types";
 import { type SiteStyles, EMPTY_SITE_STYLES } from "@/lib/styles";
+import Navbar from "@/components/Navbar";
 import HeroCarouselSection from "./HeroCarouselSection";
 import HeroSimpleSection from "./HeroSimpleSection";
 import TextBlockSection from "./TextBlockSection";
@@ -27,6 +28,7 @@ import HtmlBlockSection from "./HtmlBlockSection";
 interface Props {
   section: Section;
   siteStyles?: SiteStyles;
+  navbars?: SavedNavbar[];
 }
 
 function deviceVisibilityClass(dv?: string): string {
@@ -35,7 +37,7 @@ function deviceVisibilityClass(dv?: string): string {
   return "";
 }
 
-export default function SectionRenderer({ section, siteStyles = EMPTY_SITE_STYLES }: Props) {
+export default function SectionRenderer({ section, siteStyles = EMPTY_SITE_STYLES, navbars }: Props) {
   if (!section.is_visible) return null;
 
   const { section_type, data, settings } = section;
@@ -89,6 +91,12 @@ export default function SectionRenderer({ section, siteStyles = EMPTY_SITE_STYLE
         return <ContactFormSection data={data} settings={settings} />;
       case "html_block":
         return <HtmlBlockSection data={data} />;
+      case "navbar": {
+        const navbarId = (data as Record<string, unknown>)?.navbarId as string;
+        const navConfig = navbars?.find((n) => n.id === navbarId)?.config;
+        if (!navConfig) return null;
+        return <Navbar builderConfig={navConfig} />;
+      }
       default:
         return null;
     }

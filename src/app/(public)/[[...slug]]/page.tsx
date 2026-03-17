@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getSupabaseServer } from "@/lib/supabase/server";
 import SectionRenderer from "@/components/sections/SectionRenderer";
-import type { Section } from "@/lib/types";
+import type { Section, SavedNavbar } from "@/lib/types";
 import { type SiteStyles, EMPTY_SITE_STYLES } from "@/lib/styles";
 
 // No caching — CMS changes appear immediately
@@ -46,15 +46,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-async function getSiteStyles(): Promise<SiteStyles> {
+async function getSiteStylesAndNavbars(): Promise<{ siteStyles: SiteStyles; navbars: SavedNavbar[] }> {
   try {
     const supabase = getSupabaseServer();
     const { data: rows } = await supabase
       .from("global_settings")
       .select("key, value")
-      .in("key", ["button_styles", "link_styles", "heading_styles"]);
+      .in("key", ["button_styles", "link_styles", "heading_styles", "navbars"]);
 
-    if (!rows) return EMPTY_SITE_STYLES;
+    if (!rows) return { siteStyles: EMPTY_SITE_STYLES, navbars: [] };
 
     const map: Record<string, unknown> = {};
     for (const row of rows) {
@@ -62,12 +62,15 @@ async function getSiteStyles(): Promise<SiteStyles> {
     }
 
     return {
-      button_styles: (map.button_styles as SiteStyles["button_styles"]) || EMPTY_SITE_STYLES.button_styles,
-      link_styles: (map.link_styles as SiteStyles["link_styles"]) || EMPTY_SITE_STYLES.link_styles,
-      heading_styles: (map.heading_styles as SiteStyles["heading_styles"]) || EMPTY_SITE_STYLES.heading_styles,
+      siteStyles: {
+        button_styles: (map.button_styles as SiteStyles["button_styles"]) || EMPTY_SITE_STYLES.button_styles,
+        link_styles: (map.link_styles as SiteStyles["link_styles"]) || EMPTY_SITE_STYLES.link_styles,
+        heading_styles: (map.heading_styles as SiteStyles["heading_styles"]) || EMPTY_SITE_STYLES.heading_styles,
+      },
+      navbars: (map.navbars as SavedNavbar[]) || [],
     };
   } catch {
-    return EMPTY_SITE_STYLES;
+    return { siteStyles: EMPTY_SITE_STYLES, navbars: [] };
   }
 }
 
@@ -79,12 +82,16 @@ export default async function DynamicPage({ params }: PageProps) {
   if (!page) notFound();
 
   const sections = (page.sections as Section[]).filter((s) => s.is_visible);
-  const siteStyles = await getSiteStyles();
+  const { siteStyles, navbars } = await getSiteStylesAndNavbars();
+  const hasNavbarSection = sections.some((s) => s.section_type === "navbar");
 
   return (
     <>
+      {hasNavbarSection && (
+        <style dangerouslySetInnerHTML={{ __html: "#layout-navbar{display:none!important}" }} />
+      )}
       {sections.map((section) => (
-        <SectionRenderer key={section.id} section={section} siteStyles={siteStyles} />
+        <SectionRenderer key={section.id} section={section} siteStyles={siteStyles} navbars={navbars} />
       ))}
     </>
   );

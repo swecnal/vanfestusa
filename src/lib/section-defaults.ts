@@ -113,4 +113,7 @@ export const SECTION_DEFAULTS: Record<SectionType, Record<string, unknown>> = {
   html_block: {
     html: "<div>Custom HTML</div>",
   },
+  navbar: {
+    navbarId: "",
+  },
 };

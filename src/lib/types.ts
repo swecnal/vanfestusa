@@ -90,7 +90,8 @@ export type SectionType =
   | "vehicle_stream"
   | "accordion_parent"
   | "contact_form"
-  | "html_block";
+  | "html_block"
+  | "navbar";
 
 // ─── Background Config ───
 
@@ -803,6 +804,19 @@ export interface NavbarBuilderConfig {
   };
 }
 
+// ─── Multi-Navbar System ───
+
+export interface SavedNavbar {
+  id: string;
+  name: string;
+  config: NavbarBuilderConfig;
+  isDefault: boolean;
+}
+
+export interface NavbarSectionData {
+  navbarId: string;
+}
+
 // ─── Page with Sections (joined) ───
 
 export interface PageWithSections extends Page {
@@ -834,4 +848,5 @@ export const SECTION_TYPE_LABELS: Record<SectionType, string> = {
   vehicle_stream: "Vehicle Stream",
   contact_form: "Contact Form",
   html_block: "HTML Block",
+  navbar: "Navbar",
 };

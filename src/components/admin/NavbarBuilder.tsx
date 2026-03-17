@@ -54,7 +54,7 @@ const DEFAULT_LINKS: NavbarLinkV2[] = [
   { id: "def-8", label: "Contact", href: "/contact" },
 ];
 
-const EMPTY_CONFIG: NavbarBuilderConfig = {
+export const EMPTY_CONFIG: NavbarBuilderConfig = {
   version: 2,
   layout: { logo: "left", links: "center", cta: "right" },
   logo: {
@@ -80,7 +80,7 @@ const ZONE_LABELS: Record<NavbarZone, string> = { left: "Left", center: "Center"
 const VARIANT_LABELS: Record<string, string> = { primary: "Primary (filled)", secondary: "Secondary (filled)", outline: "Outline" };
 
 // Convert legacy v1 config into v2
-function convertLegacyToV2(legacy: Record<string, unknown>): NavbarBuilderConfig {
+export function convertLegacyToV2(legacy: Record<string, unknown>): NavbarBuilderConfig {
   const links = (legacy.links || []) as Array<{ id?: string; label: string; href: string; external?: boolean; children?: Array<{ id?: string; label: string; href: string }> }>;
   const ctaButton = (legacy.ctaButton || { text: "Get Tickets", href: "https://tickets.vanfestusa.com", external: true }) as { text: string; href: string; external?: boolean };
   const eventOverrides = (legacy.eventOverrides || undefined) as NavbarBuilderConfig["eventOverrides"];
@@ -316,14 +316,21 @@ interface Props {
   onDirtyChange?: (dirty: boolean) => void;
   saveRef?: React.MutableRefObject<(() => Promise<void>) | null>;
   onConfigChange?: (config: NavbarBuilderConfig) => void;
+  /** When provided, NavbarBuilder uses this config instead of loading from API */
+  externalConfig?: NavbarBuilderConfig;
+  /** Called on every change when using externalConfig mode */
+  onExternalConfigChange?: (config: NavbarBuilderConfig) => void;
+  /** Hide the save button (used when parent manages saving) */
+  hideSaveButton?: boolean;
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export default function NavbarBuilder({ onSave, onDirtyChange, saveRef, onConfigChange }: Props) {
-  const [config, setConfig] = useState<NavbarBuilderConfig>(EMPTY_CONFIG);
-  const [loadedConfig, setLoadedConfig] = useState<NavbarBuilderConfig | null>(null);
-  const [loading, setLoading] = useState(true);
+export default function NavbarBuilder({ onSave, onDirtyChange, saveRef, onConfigChange, externalConfig, onExternalConfigChange, hideSaveButton }: Props) {
+  const isExternal = !!externalConfig;
+  const [config, setConfig] = useState<NavbarBuilderConfig>(externalConfig || EMPTY_CONFIG);
+  const [loadedConfig, setLoadedConfig] = useState<NavbarBuilderConfig | null>(externalConfig || null);
+  const [loading, setLoading] = useState(!isExternal);
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
 
@@ -332,9 +339,18 @@ export default function NavbarBuilder({ onSave, onDirtyChange, saveRef, onConfig
     useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } })
   );
 
-  // ── Load ──────────────────────────────────────────────────────────────────
+  // ── Sync external config ──────────────────────────────────────────────────
+  useEffect(() => {
+    if (externalConfig) {
+      setConfig(externalConfig);
+      setLoadedConfig(externalConfig);
+    }
+  }, [externalConfig]);
+
+  // ── Load (only in standalone mode) ────────────────────────────────────────
 
   useEffect(() => {
+    if (isExternal) return;
     fetch("/api/global-settings")
       .then((r) => r.json())
       .then((res) => {
@@ -352,7 +368,7 @@ export default function NavbarBuilder({ onSave, onDirtyChange, saveRef, onConfig
       })
       .catch(() => toast.error("Failed to load navbar config"))
       .finally(() => setLoading(false));
-  }, []);
+  }, [isExternal]);
 
   // ── Dirty tracking ────────────────────────────────────────────────────────
 
@@ -363,9 +379,10 @@ export default function NavbarBuilder({ onSave, onDirtyChange, saveRef, onConfig
     onDirtyChange?.(isDirty);
   }, [config, loadedConfig, onDirtyChange]);
 
-  // ── Save ──────────────────────────────────────────────────────────────────
+  // ── Save (only in standalone mode) ────────────────────────────────────────
 
   const save = useCallback(async () => {
+    if (isExternal) return;
     setSaving(true);
     try {
       const res = await fetch("/api/global-settings", {
@@ -384,7 +401,7 @@ export default function NavbarBuilder({ onSave, onDirtyChange, saveRef, onConfig
     } finally {
       setSaving(false);
     }
-  }, [config, onSave, onDirtyChange]);
+  }, [config, onSave, onDirtyChange, isExternal]);
 
   // Wire saveRef on mount (and whenever save changes)
   useEffect(() => {
@@ -399,9 +416,10 @@ export default function NavbarBuilder({ onSave, onDirtyChange, saveRef, onConfig
     setConfig(prev => {
       const next = updater(prev);
       onConfigChange?.(next);
+      onExternalConfigChange?.(next);
       return next;
     });
-  }, [onConfigChange]);
+  }, [onConfigChange, onExternalConfigChange]);
 
   // ── Flat tree items (derived from config.links) ──────────────────────────
 
@@ -839,19 +857,21 @@ export default function NavbarBuilder({ onSave, onDirtyChange, saveRef, onConfig
       </div>
 
       {/* Sticky save button */}
-      <div className="bg-white border-t border-gray-100 p-4 sticky bottom-0 z-10">
-        <button
-          onClick={save}
-          disabled={saving}
-          className={`w-full font-semibold py-2 rounded-lg transition-colors disabled:opacity-50 text-sm ${
-            dirty
-              ? "bg-teal hover:bg-teal-dark text-white"
-              : "bg-gray-100 text-gray-400 cursor-default"
-          }`}
-        >
-          {saving ? "Saving..." : dirty ? "Save Navbar" : "No Changes"}
-        </button>
-      </div>
+      {!hideSaveButton && (
+        <div className="bg-white border-t border-gray-100 p-4 sticky bottom-0 z-10">
+          <button
+            onClick={save}
+            disabled={saving}
+            className={`w-full font-semibold py-2 rounded-lg transition-colors disabled:opacity-50 text-sm ${
+              dirty
+                ? "bg-teal hover:bg-teal-dark text-white"
+                : "bg-gray-100 text-gray-400 cursor-default"
+            }`}
+          >
+            {saving ? "Saving..." : dirty ? "Save Navbar" : "No Changes"}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

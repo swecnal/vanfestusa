@@ -5,7 +5,7 @@ import SectionRenderer from "@/components/sections/SectionRenderer";
 import Navbar from "@/components/Navbar";
 import FooterDivider from "@/components/FooterDivider";
 import Footer from "@/components/Footer";
-import type { Section, SectionSettings, FooterBuilderConfig, NavbarBuilderConfig } from "@/lib/types";
+import type { Section, SectionSettings, FooterBuilderConfig, NavbarBuilderConfig, SavedNavbar } from "@/lib/types";
 import type { SiteStyles } from "@/lib/styles";
 import type { VehicleStreamConfig } from "@/components/VehicleStream";
 
@@ -18,6 +18,7 @@ interface Props {
   footerBuilderConfig?: unknown;
   vehicleStreamConfig?: unknown;
   pageSlug?: string;
+  navbars?: SavedNavbar[];
 }
 
 export default function PreviewShell({
@@ -28,6 +29,7 @@ export default function PreviewShell({
   footerConfig,
   footerBuilderConfig,
   vehicleStreamConfig,
+  navbars,
 }: Props) {
   const [sections, setSections] = useState(initialSections);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -180,7 +182,8 @@ export default function PreviewShell({
       onMouseOver={handleMouseOver}
       onMouseLeave={handleMouseLeave}
     >
-      {/* Navbar */}
+      {/* Navbar — hidden when a page has its own navbar section */}
+      {!sections.some((s) => s.section_type === "navbar") && (
       <div id="preview-navbar" className="relative cursor-pointer">
         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
         <Navbar config={navbarConfig as any} builderConfig={liveNavbarConfig} />
@@ -199,11 +202,12 @@ export default function PreviewShell({
           </div>
         )}
       </div>
+      )}
 
       {/* Sections */}
       {sections.map((section) => (
         <div key={section.id} className="relative">
-          <SectionRenderer section={section} siteStyles={siteStyles} />
+          <SectionRenderer section={section} siteStyles={siteStyles} navbars={navbars} />
 
           {/* Hover outline */}
           {hoveredId === section.id && selectedId !== section.id && (

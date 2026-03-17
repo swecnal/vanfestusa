@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import type { Section, SectionType, BackgroundConfig } from "@/lib/types";
+import type { Section, SectionType, BackgroundConfig, SavedNavbar } from "@/lib/types";
 import { SECTION_TYPE_LABELS, SPACING_PRESETS } from "@/lib/types";
 import RichTextEditor from "./RichTextEditor";
 import ImagePicker from "./ImagePicker";
@@ -31,13 +31,14 @@ export default function SectionEditorPanel({ section, onSave, saving, isDirty, o
   const [data, setData] = useState<Record<string, unknown>>(section.data);
   const [settings, setSettings] = useState<Record<string, unknown>>(section.settings as unknown as Record<string, unknown>);
   const [siteStyles, setSiteStyles] = useState<SiteStyles>(EMPTY_SITE_STYLES);
+  const [savedNavbars, setSavedNavbars] = useState<SavedNavbar[]>([]);
 
   useEffect(() => {
     setData(section.data);
     setSettings(section.settings as unknown as Record<string, unknown>);
   }, [section.id, section.data, section.settings]);
 
-  // Fetch saved button/link styles once
+  // Fetch saved button/link styles + navbars once
   useEffect(() => {
     fetch("/api/global-settings")
       .then((r) => r.json())
@@ -48,6 +49,7 @@ export default function SectionEditorPanel({ section, onSave, saving, isDirty, o
           link_styles: s.link_styles || { primary: [], secondary: [] },
           heading_styles: s.heading_styles || EMPTY_SITE_STYLES.heading_styles,
         });
+        if (s.navbars) setSavedNavbars(s.navbars as SavedNavbar[]);
       })
       .catch(() => {});
   }, []);
@@ -409,6 +411,7 @@ export default function SectionEditorPanel({ section, onSave, saving, isDirty, o
         siteStyles={siteStyles}
         sectionId={section.id}
         onUngroupChild={onUngroupChild}
+        savedNavbars={savedNavbars}
       />
 
       {/* Save button */}
@@ -458,6 +461,7 @@ function SectionFields({
   siteStyles,
   sectionId,
   onUngroupChild,
+  savedNavbars,
 }: {
   type: string;
   data: Record<string, unknown>;
@@ -465,6 +469,7 @@ function SectionFields({
   siteStyles: SiteStyles;
   sectionId?: string;
   onUngroupChild?: (accordionId: string, childIndex: number) => void;
+  savedNavbars?: SavedNavbar[];
 }) {
   switch (type) {
     case "hero_carousel":
@@ -1665,6 +1670,32 @@ function SectionFields({
         </div>
       );
     }
+
+    case "navbar":
+      return (
+        <div className="space-y-3">
+          <Field label="Navbar">
+            <select
+              value={(data.navbarId as string) || ""}
+              onChange={(e) => updateData("navbarId", e.target.value)}
+              className="input-sm"
+            >
+              <option value="">Select a navbar...</option>
+              {(savedNavbars || []).map((n) => (
+                <option key={n.id} value={n.id}>
+                  {n.name}{n.isDefault ? " (Default)" : ""}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <a
+            href="/admin/navbar"
+            className="inline-block text-xs text-teal hover:text-teal-dark transition-colors"
+          >
+            Edit in Navbar Manager &rarr;
+          </a>
+        </div>
+      );
 
     default:
       return (

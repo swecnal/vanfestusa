@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { getSupabaseServer } from "@/lib/supabase/server";
 import PreviewShell from "@/components/PreviewShell";
-import type { Section } from "@/lib/types";
+import type { Section, SavedNavbar } from "@/lib/types";
 import { type SiteStyles, EMPTY_SITE_STYLES } from "@/lib/styles";
 
 export const dynamic = "force-dynamic";
@@ -16,9 +16,9 @@ async function getGlobalSettings() {
     const { data: rows } = await supabase
       .from("global_settings")
       .select("key, value")
-      .in("key", ["button_styles", "link_styles", "heading_styles", "navbar_config", "footer_config", "vehicle_stream_config", "footer_builder_config", "navbar_builder_config"]);
+      .in("key", ["button_styles", "link_styles", "heading_styles", "navbar_config", "footer_config", "vehicle_stream_config", "footer_builder_config", "navbar_builder_config", "navbars"]);
 
-    if (!rows) return { siteStyles: EMPTY_SITE_STYLES, navbarConfig: null, footerConfig: null, vehicleStreamConfig: null, footerBuilderConfig: null, navbarBuilderConfig: null };
+    if (!rows) return { siteStyles: EMPTY_SITE_STYLES, navbarConfig: null, footerConfig: null, vehicleStreamConfig: null, footerBuilderConfig: null, navbarBuilderConfig: null, navbars: [] };
 
     const map: Record<string, unknown> = {};
     for (const row of rows) {
@@ -36,9 +36,10 @@ async function getGlobalSettings() {
       vehicleStreamConfig: map.vehicle_stream_config || null,
       footerBuilderConfig: map.footer_builder_config || null,
       navbarBuilderConfig: map.navbar_builder_config || null,
+      navbars: (map.navbars as SavedNavbar[]) || [],
     };
   } catch {
-    return { siteStyles: EMPTY_SITE_STYLES, navbarConfig: null, footerConfig: null, vehicleStreamConfig: null, footerBuilderConfig: null, navbarBuilderConfig: null };
+    return { siteStyles: EMPTY_SITE_STYLES, navbarConfig: null, footerConfig: null, vehicleStreamConfig: null, footerBuilderConfig: null, navbarBuilderConfig: null, navbars: [] };
   }
 }
 
@@ -61,7 +62,7 @@ export default async function PreviewPage({ params }: PageProps) {
     .order("sort_order", { ascending: true });
 
   const visibleSections = ((sections || []) as Section[]).filter((s) => s.is_visible);
-  const { siteStyles, navbarConfig, footerConfig, vehicleStreamConfig, footerBuilderConfig, navbarBuilderConfig } = await getGlobalSettings();
+  const { siteStyles, navbarConfig, footerConfig, vehicleStreamConfig, footerBuilderConfig, navbarBuilderConfig, navbars } = await getGlobalSettings();
 
   return (
     <PreviewShell
@@ -73,6 +74,7 @@ export default async function PreviewPage({ params }: PageProps) {
       footerBuilderConfig={footerBuilderConfig}
       vehicleStreamConfig={vehicleStreamConfig}
       pageSlug={page.slug}
+      navbars={navbars}
     />
   );
 }

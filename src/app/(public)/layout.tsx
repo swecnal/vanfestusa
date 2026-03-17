@@ -45,7 +45,9 @@ export default async function PublicLayout({
   return (
     <>
       {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-      <Navbar config={navbarConfig as any} builderConfig={navbarBuilderConfig} />
+      <div id="layout-navbar">
+        <Navbar config={navbarConfig as any} builderConfig={navbarBuilderConfig} />
+      </div>
       <main>{children}</main>
       {showStandaloneDivider && (
         <FooterDivider config={vehicleStreamConfig as VehicleStreamConfig | null} />
