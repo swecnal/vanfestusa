@@ -142,6 +142,50 @@ const CustomLink = Link.extend({
   },
 });
 
+/* ─── Text Shadow extension ─── */
+const TextShadowExt = Extension.create({
+  name: "textShadow",
+  addGlobalAttributes() {
+    return [
+      {
+        types: ["textStyle"],
+        attributes: {
+          textShadow: {
+            default: null,
+            parseHTML: (el) => el.style.textShadow || null,
+            renderHTML: (attrs) => {
+              if (!attrs.textShadow) return {};
+              return { style: `text-shadow: ${attrs.textShadow}` };
+            },
+          },
+        },
+      },
+    ];
+  },
+});
+
+/* ─── Text Stroke/Outline extension ─── */
+const TextStrokeExt = Extension.create({
+  name: "textStroke",
+  addGlobalAttributes() {
+    return [
+      {
+        types: ["textStyle"],
+        attributes: {
+          textStroke: {
+            default: null,
+            parseHTML: (el) => el.style.getPropertyValue("-webkit-text-stroke") || null,
+            renderHTML: (attrs) => {
+              if (!attrs.textStroke) return {};
+              return { style: `-webkit-text-stroke: ${attrs.textStroke}; paint-order: stroke fill` };
+            },
+          },
+        },
+      },
+    ];
+  },
+});
+
 const FONT_FAMILIES = [
   { label: "Poppins", value: "Poppins" },
   { label: "Gothic A1", value: "Gothic A1" },
@@ -149,9 +193,17 @@ const FONT_FAMILIES = [
   { label: "Orbitron", value: "Orbitron" },
 ];
 
-const COLORS = [
-  "#1a1a1a", "#1CA288", "#17806C", "#F5F0E8", "#ffffff",
-  "#ef4444", "#f97316", "#eab308", "#3b82f6", "#8b5cf6",
+const TEXT_COLORS = [
+  { label: "Black", hex: "#1a1a1a" },
+  { label: "White", hex: "#ffffff" },
+  { label: "Teal", hex: "#1CA288" },
+  { label: "Dark Teal", hex: "#17806C" },
+  { label: "Cream", hex: "#F5F0E8" },
+  { label: "Red", hex: "#ef4444" },
+  { label: "Orange", hex: "#f97316" },
+  { label: "Yellow", hex: "#eab308" },
+  { label: "Blue", hex: "#3b82f6" },
+  { label: "Purple", hex: "#8b5cf6" },
 ];
 
 const FONT_OPTIONS = ["Poppins", "Gothic A1", "EB Garamond", "Orbitron", "inherit"];
@@ -201,6 +253,16 @@ export default function RichTextEditor({ content, onChange, siteStyles = EMPTY_S
   const [customSaveName, setCustomSaveName] = useState("");
   const [customSaveType, setCustomSaveType] = useState<"main" | "secondary">("main");
 
+  /* ─── Color / Shadow / Stroke panel state ─── */
+  const [colorOpen, setColorOpen] = useState(false);
+  const [shadowOpen, setShadowOpen] = useState(false);
+  const [shadow, setShadow] = useState({ color: "#000000", angle: 135, distance: 2, blur: 4 });
+  const [strokeOpen, setStrokeOpen] = useState(false);
+  const [stroke, setStroke] = useState({ color: "#000000", width: 1 });
+  const colorPanelRef = useRef<HTMLDivElement>(null);
+  const shadowPanelRef = useRef<HTMLDivElement>(null);
+  const strokePanelRef = useRef<HTMLDivElement>(null);
+
   const editor = useEditor({
     extensions: [
       StarterKit,
@@ -210,6 +272,8 @@ export default function RichTextEditor({ content, onChange, siteStyles = EMPTY_S
       FontSize,
       LineHeight,
       StylePreserver,
+      TextShadowExt,
+      TextStrokeExt,
       UnderlineExt,
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       CustomLink.configure({
@@ -323,6 +387,37 @@ export default function RichTextEditor({ content, onChange, siteStyles = EMPTY_S
       document.removeEventListener("mousedown", handleOutsideClick);
     };
   }, [linkPopover]);
+
+  /* ─── Close color/shadow/stroke panels on click outside ─── */
+  useEffect(() => {
+    if (!colorOpen && !shadowOpen && !strokeOpen) return;
+    const handle = (e: MouseEvent) => {
+      const t = e.target as Node;
+      if (colorOpen && colorPanelRef.current && !colorPanelRef.current.contains(t)) setColorOpen(false);
+      if (shadowOpen && shadowPanelRef.current && !shadowPanelRef.current.contains(t)) setShadowOpen(false);
+      if (strokeOpen && strokePanelRef.current && !strokePanelRef.current.contains(t)) setStrokeOpen(false);
+    };
+    const timer = setTimeout(() => document.addEventListener("mousedown", handle), 0);
+    return () => { clearTimeout(timer); document.removeEventListener("mousedown", handle); };
+  }, [colorOpen, shadowOpen, strokeOpen]);
+
+  /* ─── Shadow / Stroke helpers ─── */
+  const applyShadow = useCallback((s: { color: string; angle: number; distance: number; blur: number }) => {
+    if (!editor) return;
+    const rad = s.angle * Math.PI / 180;
+    const x = s.distance * Math.cos(rad);
+    const y = s.distance * Math.sin(rad);
+    const css = `${x.toFixed(1)}px ${y.toFixed(1)}px ${s.blur}px ${s.color}`;
+    const { from, to } = editor.state.selection;
+    editor.chain().setTextSelection({ from, to }).setMark("textStyle", { textShadow: css }).run();
+  }, [editor]);
+
+  const applyStroke = useCallback((s: { color: string; width: number }) => {
+    if (!editor) return;
+    const css = `${s.width}px ${s.color}`;
+    const { from, to } = editor.state.selection;
+    editor.chain().setTextSelection({ from, to }).setMark("textStyle", { textStroke: css }).run();
+  }, [editor]);
 
   /* ─── Apply a global button style ─── */
   const applyButtonStyle = useCallback(
@@ -498,28 +593,162 @@ export default function RichTextEditor({ content, onChange, siteStyles = EMPTY_S
 
         <div className="w-px h-5 bg-gray-200 mx-0.5" />
 
-        <div className="flex gap-0.5 items-center">
-          {COLORS.map((color) => (
-            <button
-              key={color}
-              onClick={() => editor.chain().focus().setColor(color).run()}
-              className="w-4 h-4 rounded-full border border-gray-300 hover:scale-125 transition-transform"
-              style={{ backgroundColor: color }}
-              title={color}
-            />
-          ))}
+        {/* Text Color Dropdown */}
+        <div ref={colorPanelRef} className="relative">
           <button
-            onClick={() => customColorRef.current?.click()}
-            className="w-4 h-4 rounded-full border border-gray-300 hover:scale-125 transition-transform relative overflow-hidden"
-            title="Custom color"
-            style={{ background: "conic-gradient(red, yellow, lime, aqua, blue, magenta, red)" }}
-          />
-          <input
-            ref={customColorRef}
-            type="color"
-            className="sr-only"
-            onChange={(e) => editor.chain().focus().setColor(e.target.value).run()}
-          />
+            onClick={() => { setColorOpen(!colorOpen); setShadowOpen(false); setStrokeOpen(false); }}
+            className={`flex items-center gap-0.5 px-1.5 py-1 rounded text-xs font-bold transition-colors ${colorOpen ? "bg-teal/20 text-teal" : "text-gray-500 hover:bg-gray-200 hover:text-gray-700"}`}
+            title="Text Color"
+          >
+            <span className="relative leading-none">
+              A
+              <span className="absolute -bottom-0.5 left-0 right-0 h-[3px] rounded-full" style={{ backgroundColor: editor.getAttributes("textStyle").color || "#1a1a1a" }} />
+            </span>
+            <svg className="w-2.5 h-2.5 ml-0.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
+          </button>
+          {colorOpen && (
+            <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-50 w-36 py-1">
+              {TEXT_COLORS.map((c) => (
+                <button
+                  key={c.hex}
+                  onClick={() => { editor.chain().focus().setColor(c.hex).run(); setColorOpen(false); }}
+                  className="flex items-center gap-2 w-full px-2.5 py-1 hover:bg-gray-50 text-left"
+                >
+                  <span className="w-3.5 h-3.5 rounded-full border border-gray-200 flex-shrink-0" style={{ backgroundColor: c.hex }} />
+                  <span className="text-[10px] text-gray-700">{c.label}</span>
+                </button>
+              ))}
+              <div className="border-t border-gray-100 mt-0.5 pt-0.5">
+                <button
+                  onClick={() => customColorRef.current?.click()}
+                  className="flex items-center gap-2 w-full px-2.5 py-1 hover:bg-gray-50 text-left"
+                >
+                  <span className="w-3.5 h-3.5 rounded-full border border-gray-200 flex-shrink-0" style={{ background: "conic-gradient(red, yellow, lime, aqua, blue, magenta, red)" }} />
+                  <span className="text-[10px] text-gray-700">Custom...</span>
+                </button>
+              </div>
+              <input
+                ref={customColorRef}
+                type="color"
+                className="sr-only"
+                onChange={(e) => { editor.chain().focus().setColor(e.target.value).run(); setColorOpen(false); }}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Text Shadow */}
+        <div ref={shadowPanelRef} className="relative">
+          <ToolbarButton
+            active={shadowOpen || !!editor.getAttributes("textStyle").textShadow}
+            onClick={() => {
+              if (!shadowOpen) {
+                const current = editor.getAttributes("textStyle").textShadow as string | undefined;
+                if (current) {
+                  const m = current.match(/([-\d.]+)px\s+([-\d.]+)px\s+([-\d.]+)px\s+(.*)/);
+                  if (m) {
+                    const x = parseFloat(m[1]), y = parseFloat(m[2]);
+                    const dist = Math.round(Math.sqrt(x * x + y * y));
+                    let ang = Math.round(Math.atan2(y, x) * 180 / Math.PI);
+                    if (ang < 0) ang += 360;
+                    setShadow({ color: m[4].trim(), angle: ang, distance: dist, blur: parseFloat(m[3]) });
+                  }
+                } else {
+                  setShadow({ color: "#000000", angle: 135, distance: 2, blur: 4 });
+                }
+              }
+              setShadowOpen(!shadowOpen); setColorOpen(false); setStrokeOpen(false);
+            }}
+            title="Text Shadow"
+          >
+            <span className="text-[9px] font-bold leading-none" style={{ textShadow: "1px 1px 1px rgba(0,0,0,0.5)" }}>S</span>
+          </ToolbarButton>
+          {shadowOpen && (
+            <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-50 w-52 p-2.5 space-y-2" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center justify-between">
+                <label className="text-[9px] font-semibold text-gray-600 uppercase">Text Shadow</label>
+                <button
+                  onClick={() => {
+                    const { from, to } = editor.state.selection;
+                    editor.chain().setTextSelection({ from, to }).setMark("textStyle", { textShadow: null }).removeEmptyTextStyle().run();
+                    setShadowOpen(false);
+                  }}
+                  className="text-[9px] text-red-400 hover:text-red-600"
+                >
+                  Remove
+                </button>
+              </div>
+              <div>
+                <label className="text-[8px] text-gray-400 block mb-0.5">Color</label>
+                <div className="flex items-center gap-1">
+                  <input type="color" value={shadow.color} onChange={(e) => { const n = { ...shadow, color: e.target.value }; setShadow(n); applyShadow(n); }} className="w-6 h-5 rounded border border-gray-200 cursor-pointer p-0" />
+                  <input type="text" value={shadow.color} onChange={(e) => { const n = { ...shadow, color: e.target.value }; setShadow(n); applyShadow(n); }} className="flex-1 h-5 text-[9px] border border-gray-200 rounded px-1 bg-white" />
+                </div>
+              </div>
+              <div>
+                <label className="text-[8px] text-gray-400">Angle: {shadow.angle}°</label>
+                <input type="range" min={0} max={360} value={shadow.angle} onChange={(e) => { const n = { ...shadow, angle: Number(e.target.value) }; setShadow(n); applyShadow(n); }} className="w-full h-1.5 accent-teal" />
+              </div>
+              <div>
+                <label className="text-[8px] text-gray-400">Distance: {shadow.distance}px</label>
+                <input type="range" min={0} max={20} value={shadow.distance} onChange={(e) => { const n = { ...shadow, distance: Number(e.target.value) }; setShadow(n); applyShadow(n); }} className="w-full h-1.5 accent-teal" />
+              </div>
+              <div>
+                <label className="text-[8px] text-gray-400">Blur: {shadow.blur}px</label>
+                <input type="range" min={0} max={20} value={shadow.blur} onChange={(e) => { const n = { ...shadow, blur: Number(e.target.value) }; setShadow(n); applyShadow(n); }} className="w-full h-1.5 accent-teal" />
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Text Stroke/Outline */}
+        <div ref={strokePanelRef} className="relative">
+          <ToolbarButton
+            active={strokeOpen || !!editor.getAttributes("textStyle").textStroke}
+            onClick={() => {
+              if (!strokeOpen) {
+                const current = editor.getAttributes("textStyle").textStroke as string | undefined;
+                if (current) {
+                  const m = current.match(/([\d.]+)px\s+(.*)/);
+                  if (m) setStroke({ width: parseFloat(m[1]), color: m[2].trim() });
+                } else {
+                  setStroke({ color: "#000000", width: 1 });
+                }
+              }
+              setStrokeOpen(!strokeOpen); setColorOpen(false); setShadowOpen(false);
+            }}
+            title="Text Outline"
+          >
+            <span className="text-[9px] font-bold leading-none" style={{ WebkitTextStroke: "0.7px currentColor" }}>O</span>
+          </ToolbarButton>
+          {strokeOpen && (
+            <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-50 w-52 p-2.5 space-y-2" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center justify-between">
+                <label className="text-[9px] font-semibold text-gray-600 uppercase">Text Outline</label>
+                <button
+                  onClick={() => {
+                    const { from, to } = editor.state.selection;
+                    editor.chain().setTextSelection({ from, to }).setMark("textStyle", { textStroke: null }).removeEmptyTextStyle().run();
+                    setStrokeOpen(false);
+                  }}
+                  className="text-[9px] text-red-400 hover:text-red-600"
+                >
+                  Remove
+                </button>
+              </div>
+              <div>
+                <label className="text-[8px] text-gray-400 block mb-0.5">Color</label>
+                <div className="flex items-center gap-1">
+                  <input type="color" value={stroke.color} onChange={(e) => { const n = { ...stroke, color: e.target.value }; setStroke(n); applyStroke(n); }} className="w-6 h-5 rounded border border-gray-200 cursor-pointer p-0" />
+                  <input type="text" value={stroke.color} onChange={(e) => { const n = { ...stroke, color: e.target.value }; setStroke(n); applyStroke(n); }} className="flex-1 h-5 text-[9px] border border-gray-200 rounded px-1 bg-white" />
+                </div>
+              </div>
+              <div>
+                <label className="text-[8px] text-gray-400">Thickness: {stroke.width}px</label>
+                <input type="range" min={0.5} max={5} step={0.5} value={stroke.width} onChange={(e) => { const n = { ...stroke, width: Number(e.target.value) }; setStroke(n); applyStroke(n); }} className="w-full h-1.5 accent-teal" />
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="w-px h-5 bg-gray-200 mx-0.5" />
