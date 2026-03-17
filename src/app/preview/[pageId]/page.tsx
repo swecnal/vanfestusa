@@ -64,17 +64,15 @@ export default async function PreviewPage({ params }: PageProps) {
   const { siteStyles, navbarConfig, footerConfig, vehicleStreamConfig, footerBuilderConfig, navbarBuilderConfig } = await getGlobalSettings();
 
   return (
-    <main>
-      <PreviewShell
-        initialSections={visibleSections}
-        siteStyles={siteStyles}
-        navbarConfig={navbarConfig}
-        navbarBuilderConfig={navbarBuilderConfig}
-        footerConfig={footerConfig}
-        footerBuilderConfig={footerBuilderConfig}
-        vehicleStreamConfig={vehicleStreamConfig}
-        pageSlug={page.slug}
-      />
-    </main>
+    <PreviewShell
+      initialSections={visibleSections}
+      siteStyles={siteStyles}
+      navbarConfig={navbarConfig}
+      navbarBuilderConfig={navbarBuilderConfig}
+      footerConfig={footerConfig}
+      footerBuilderConfig={footerBuilderConfig}
+      vehicleStreamConfig={vehicleStreamConfig}
+      pageSlug={page.slug}
+    />
   );
 }
