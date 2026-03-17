@@ -18,6 +18,7 @@ interface Props {
   onChange: (html: string) => void;
   siteStyles?: SiteStyles;
   onSiteStylesChange?: () => void; // callback to refresh siteStyles after saving a new one
+  minimal?: boolean; // hide font/color/shadow/stroke/heading/align — show only bold/italic/underline/strike/lists/link
 }
 
 /* ─── Custom FontSize extension ─── */
@@ -240,7 +241,7 @@ function defaultCustomStyle(): ButtonStyle {
   };
 }
 
-export default function RichTextEditor({ content, onChange, siteStyles = EMPTY_SITE_STYLES, onSiteStylesChange }: Props) {
+export default function RichTextEditor({ content, onChange, siteStyles = EMPTY_SITE_STYLES, onSiteStylesChange, minimal }: Props) {
   const isInternalUpdate = useRef(false);
   const customColorRef = useRef<HTMLInputElement>(null);
   const [linkUrl, setLinkUrl] = useState("");
@@ -557,26 +558,30 @@ export default function RichTextEditor({ content, onChange, siteStyles = EMPTY_S
     <div ref={wrapperRef} className="relative border border-gray-300 rounded-lg overflow-visible">
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-0.5 p-1.5 bg-gray-50 border-b border-gray-200 rounded-t-lg">
-        {/* Font family */}
-        <select
-          value={editor.getAttributes("textStyle").fontFamily || ""}
-          onChange={(e) => {
-            if (e.target.value) {
-              editor.chain().focus().setFontFamily(e.target.value).run();
-            } else {
-              editor.chain().focus().unsetFontFamily().run();
-            }
-          }}
-          className="text-[10px] px-1 py-1 border border-gray-300 rounded bg-white h-6"
-          style={{ maxWidth: "72px" }}
-        >
-          <option value="">Font</option>
-          {FONT_FAMILIES.map((f) => (
-            <option key={f.value} value={f.value}>{f.label}</option>
-          ))}
-        </select>
+        {!minimal && (
+          <>
+            {/* Font family */}
+            <select
+              value={editor.getAttributes("textStyle").fontFamily || ""}
+              onChange={(e) => {
+                if (e.target.value) {
+                  editor.chain().focus().setFontFamily(e.target.value).run();
+                } else {
+                  editor.chain().focus().unsetFontFamily().run();
+                }
+              }}
+              className="text-[10px] px-1 py-1 border border-gray-300 rounded bg-white h-6"
+              style={{ maxWidth: "72px" }}
+            >
+              <option value="">Font</option>
+              {FONT_FAMILIES.map((f) => (
+                <option key={f.value} value={f.value}>{f.label}</option>
+              ))}
+            </select>
 
-        <div className="w-px h-5 bg-gray-200 mx-0.5" />
+            <div className="w-px h-5 bg-gray-200 mx-0.5" />
+          </>
+        )}
 
         <ToolbarButton active={editor.isActive("bold")} onClick={() => editor.chain().focus().toggleBold().run()} title="Bold">
           <strong>B</strong>
@@ -591,6 +596,8 @@ export default function RichTextEditor({ content, onChange, siteStyles = EMPTY_S
           <s>S</s>
         </ToolbarButton>
 
+        {!minimal && (
+          <>
         <div className="w-px h-5 bg-gray-200 mx-0.5" />
 
         {[1, 2, 3].map((level) => (
@@ -778,6 +785,8 @@ export default function RichTextEditor({ content, onChange, siteStyles = EMPTY_S
             </div>
           )}
         </div>
+          </>
+        )}
 
         <div className="w-px h-5 bg-gray-200 mx-0.5" />
 

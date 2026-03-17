@@ -663,6 +663,7 @@ function SectionFields({
                           content={child.body || ""}
                           onChange={(html) => updateAccChild(i, "body", html)}
                           siteStyles={siteStyles}
+                          minimal
                         />
                       </div>
                     )}
@@ -755,6 +756,7 @@ function SectionFields({
                         content={item.answer || ""}
                         onChange={(html) => updateFaqItem(i, "answer", html)}
                         siteStyles={siteStyles}
+                        minimal
                       />
                     </div>
                   </div>
