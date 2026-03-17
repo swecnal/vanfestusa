@@ -196,6 +196,7 @@ export default function BackgroundEditor({ value, onChange }: Props) {
       {/* Image */}
       {config.type === "image" && (
         <div className="space-y-2 p-2 bg-gray-50 rounded-lg border border-gray-200">
+          <p className="text-[10px] text-gray-400">Ideal: 1920x800px or wider. Use &quot;Fit to Section&quot; for full-bleed hero backgrounds.</p>
           <ImagePicker
             value={config.imageUrl || ""}
             onChange={(url) => update({ imageUrl: url })}
