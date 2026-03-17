@@ -802,6 +802,7 @@ export interface NavbarBuilderConfig {
     bgColorEnd?: string;
     textColor?: string;
   };
+  disabledZones?: ("logo" | "links" | "cta")[];
   style?: {
     bgColor: string;
     bgOpacity: number;

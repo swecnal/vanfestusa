@@ -74,6 +74,7 @@ export default function NavbarEditorPage() {
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [previewNavbarId, setPreviewNavbarId] = useState<string | null>(null);
 
   // Preview state
   const [pages, setPages] = useState<PageOption[]>([]);
@@ -148,7 +149,6 @@ export default function NavbarEditorPage() {
         }
 
         setNavbars(loaded);
-        if (loaded.length > 0) setExpandedId(loaded[0].id);
 
         const pageList = (pagesRes.pages || []) as PageOption[];
         setPages(pageList);
@@ -353,16 +353,15 @@ export default function NavbarEditorPage() {
     mobileIframeRef.current?.contentWindow?.postMessage(msg, "*");
   }, []);
 
-  // When accordion expands, push that navbar's config to preview
+  // When preview navbar changes or its config updates, push to preview
   useEffect(() => {
-    if (!expandedId) return;
-    const nav = navbars.find((n) => n.id === expandedId);
+    if (!previewNavbarId) return;
+    const nav = navbars.find((n) => n.id === previewNavbarId);
     if (nav) {
-      // Small delay to let iframe load if it just mounted
       const timer = setTimeout(() => triggerPreviewRefresh(nav.config), 100);
       return () => clearTimeout(timer);
     }
-  }, [expandedId, navbars, triggerPreviewRefresh]);
+  }, [previewNavbarId, navbars, triggerPreviewRefresh]);
 
   const handlePageChange = (id: string) => {
     setPreviewPageId(id);
@@ -500,14 +499,15 @@ export default function NavbarEditorPage() {
             <div className="p-3 space-y-2">
               {navbars.map((nav) => {
                 const isExpanded = expandedId === nav.id;
+                const isPreviewing = previewNavbarId === nav.id;
                 const pagesUsing = usageMap[nav.id] || [];
                 return (
-                  <div key={nav.id} className="border border-gray-200 rounded-lg overflow-hidden">
-                    <button
-                      onClick={() => setExpandedId(isExpanded ? null : nav.id)}
-                      className="w-full text-left px-3 py-2.5 flex items-center justify-between gap-2 hover:bg-gray-50 transition-colors"
-                    >
-                      <div className="flex items-center gap-2 min-w-0">
+                  <div key={nav.id} className={`border rounded-lg overflow-hidden ${isPreviewing ? "border-teal" : "border-gray-200"}`}>
+                    <div className="flex items-center justify-between gap-2 hover:bg-gray-50 transition-colors">
+                      <button
+                        onClick={() => setExpandedId(isExpanded ? null : nav.id)}
+                        className="flex-1 text-left px-3 py-2.5 flex items-center gap-2 min-w-0"
+                      >
                         <svg
                           className={`w-3.5 h-3.5 text-gray-400 flex-shrink-0 transition-transform ${isExpanded ? "rotate-90" : ""}`}
                           fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
@@ -518,13 +518,41 @@ export default function NavbarEditorPage() {
                         {nav.isDefault && (
                           <span className="text-[9px] bg-teal/10 text-teal font-bold px-1.5 py-0.5 rounded flex-shrink-0">DEFAULT</span>
                         )}
+                        {pagesUsing.length > 0 && (
+                          <span className="text-[9px] text-gray-400 flex-shrink-0">
+                            {pagesUsing.length} page{pagesUsing.length !== 1 ? "s" : ""}
+                          </span>
+                        )}
+                      </button>
+                      <div className="flex items-center gap-1 pr-2">
+                        {/* Eye icon — toggle preview */}
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setPreviewNavbarId(isPreviewing ? null : nav.id); }}
+                          className={`p-1.5 rounded transition-colors ${isPreviewing ? "text-teal bg-teal/10" : "text-gray-300 hover:text-gray-500"}`}
+                          title={isPreviewing ? "Stop previewing" : "Preview this navbar"}
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            {isPreviewing ? (
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178zM15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            ) : (
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178zM15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            )}
+                          </svg>
+                        </button>
+                        {/* Red X — delete */}
+                        {navbars.length > 1 && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); initiateDelete(nav); }}
+                            className="p-1.5 rounded text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors"
+                            title="Delete navbar"
+                          >
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        )}
                       </div>
-                      {pagesUsing.length > 0 && (
-                        <span className="text-[9px] text-gray-400 flex-shrink-0">
-                          {pagesUsing.length} page{pagesUsing.length !== 1 ? "s" : ""}
-                        </span>
-                      )}
-                    </button>
+                    </div>
 
                     {isExpanded && (
                       <div className="border-t border-gray-100">
@@ -553,14 +581,6 @@ export default function NavbarEditorPage() {
                                 Set as Default
                               </button>
                             )}
-                            {navbars.length > 1 && (
-                              <button
-                                onClick={() => initiateDelete(nav)}
-                                className="text-[10px] text-red-500 hover:text-red-700 bg-white border border-gray-200 px-2 py-0.5 rounded transition-colors"
-                              >
-                                Delete
-                              </button>
-                            )}
                           </div>
                           {pagesUsing.length > 0 && (
                             <div className="mt-2 text-[10px] text-gray-400">
@@ -574,7 +594,7 @@ export default function NavbarEditorPage() {
                           externalConfig={nav.config}
                           onExternalConfigChange={(config) => updateNavbarConfig(nav.id, config)}
                           hideSaveButton
-                          onConfigChange={triggerPreviewRefresh}
+                          onConfigChange={isPreviewing ? triggerPreviewRefresh : undefined}
                         />
                       </div>
                     )}

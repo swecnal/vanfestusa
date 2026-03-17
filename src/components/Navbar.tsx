@@ -329,12 +329,15 @@ function NavbarV2({ config }: { config: NavbarBuilderConfig }) {
   );
 
   // Build zone map — track which zone has links so it can flex-grow
+  const disabled = config.disabledZones || [];
   const zoneContent: Record<NavbarZone, React.ReactNode[]> = { left: [], center: [], right: [] };
   const zoneHasLinks: Record<NavbarZone, boolean> = { left: false, center: false, right: false };
-  zoneContent[config.layout.logo].push(<div key="logo">{renderLogo()}</div>);
-  zoneContent[config.layout.links].push(<div key="links">{renderLinks()}</div>);
-  zoneHasLinks[config.layout.links] = true;
-  zoneContent[config.layout.cta].push(<div key="cta">{renderCtaButtons()}</div>);
+  if (!disabled.includes("logo")) zoneContent[config.layout.logo].push(<div key="logo">{renderLogo()}</div>);
+  if (!disabled.includes("links")) {
+    zoneContent[config.layout.links].push(<div key="links">{renderLinks()}</div>);
+    zoneHasLinks[config.layout.links] = true;
+  }
+  if (!disabled.includes("cta")) zoneContent[config.layout.cta].push(<div key="cta">{renderCtaButtons()}</div>);
 
   const zoneAlign: Record<NavbarZone, string> = {
     left: "justify-start",

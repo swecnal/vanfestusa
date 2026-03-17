@@ -71,6 +71,7 @@ function SortableLiveSection({
   activeDragId,
   activeDragType,
   previewMode,
+  navbars,
 }: {
   section: Section;
   isSelected: boolean;
@@ -86,6 +87,7 @@ function SortableLiveSection({
   activeDragId?: string | null;
   activeDragType?: string | null;
   previewMode: "desktop" | "mobile";
+  navbars?: SavedNavbar[];
 }) {
   const [showAccordionMenu, setShowAccordionMenu] = useState(false);
   const { attributes, listeners, setNodeRef, transform, transition } =
@@ -222,7 +224,7 @@ function SortableLiveSection({
 
       {/* Live section render */}
       <div className={`${!section.is_visible ? "opacity-30" : ""} ${isVisibilityMismatch ? "opacity-20" : ""}`}>
-        <SectionRenderer section={displaySection} siteStyles={siteStyles} />
+        <SectionRenderer section={displaySection} siteStyles={siteStyles} navbars={navbars} />
       </div>
 
       {/* Visibility mismatch badge */}
@@ -821,6 +823,8 @@ export default function PageEditorPage() {
       const res = await fetch(`/api/pages/${pageId}`, { method: "DELETE" });
       if (res.ok) {
         toast.success("Page deleted");
+        // Notify PageTree to refresh
+        window.dispatchEvent(new CustomEvent("page-tree-refresh"));
         router.push("/admin/pages");
       } else {
         toast.error("Failed to delete page");
@@ -1145,6 +1149,7 @@ export default function PageEditorPage() {
                           activeDragId={activeDragId}
                           activeDragType={dragSection?.section_type || null}
                           previewMode={previewMode}
+                          navbars={savedNavbars}
                         />
                         <DropZone index={idx + 1} onDrop={handleAddSectionAtIndex} isActive={externalDragActive} />
                       </div>

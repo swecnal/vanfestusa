@@ -528,6 +528,13 @@ export default function PageTree({ collapsed }: { collapsed: boolean }) {
     fetchOrder();
   }, [fetchPages, fetchOrder]);
 
+  // Listen for page-tree-refresh events (e.g. after page deletion)
+  useEffect(() => {
+    const handler = () => fetchPages();
+    window.addEventListener("page-tree-refresh", handler);
+    return () => window.removeEventListener("page-tree-refresh", handler);
+  }, [fetchPages]);
+
   const saveOrder = useCallback(
     async (newOrder: Record<string, string[]>) => {
       setOrderMap(newOrder);

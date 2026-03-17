@@ -316,27 +316,38 @@ function FlatSortableRow({
 const ZONE_POSITIONS: NavbarZone[] = ["left", "center", "right"];
 const ZONE_ELEMENT_LABELS: Record<string, string> = { logo: "Logo", links: "Links", cta: "CTA" };
 
-function LayoutZonePill({ id }: { id: string }) {
+function LayoutZonePill({ id, disabled, onToggle }: { id: string; disabled: boolean; onToggle: () => void }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
   return (
     <div
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 }}
-      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-grab active:cursor-grabbing select-none border transition-colors ${
-        isDragging ? "border-teal bg-teal/10 text-teal shadow-md z-50" : "border-gray-300 bg-white text-charcoal hover:border-gray-400"
+      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold select-none border transition-colors ${
+        disabled
+          ? "border-gray-200 bg-gray-100 text-gray-300 line-through"
+          : isDragging
+            ? "border-teal bg-teal/10 text-teal shadow-md z-50"
+            : "border-gray-300 bg-white text-charcoal hover:border-gray-400"
       }`}
-      {...attributes}
-      {...listeners}
     >
-      <svg className="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M4 8h16M4 16h16" />
-      </svg>
-      {ZONE_ELEMENT_LABELS[id] || id}
+      <span className="cursor-grab active:cursor-grabbing touch-none p-0.5" {...attributes} {...listeners}>
+        <svg className="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M4 8h16M4 16h16" />
+        </svg>
+      </span>
+      <span className="cursor-pointer" onClick={onToggle}>
+        {ZONE_ELEMENT_LABELS[id] || id}
+      </span>
     </div>
   );
 }
 
-function LayoutZoneDnd({ layout, onChange }: { layout: NavbarBuilderConfig["layout"]; onChange: (layout: NavbarBuilderConfig["layout"]) => void }) {
+function LayoutZoneDnd({ layout, onChange, disabledZones, onDisabledChange }: {
+  layout: NavbarBuilderConfig["layout"];
+  onChange: (layout: NavbarBuilderConfig["layout"]) => void;
+  disabledZones: ("logo" | "links" | "cta")[];
+  onDisabledChange: (zones: ("logo" | "links" | "cta")[]) => void;
+}) {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 3 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } })
@@ -361,6 +372,14 @@ function LayoutZoneDnd({ layout, onChange }: { layout: NavbarBuilderConfig["layo
     } as NavbarBuilderConfig["layout"]);
   };
 
+  const toggleZone = (id: "logo" | "links" | "cta") => {
+    if (disabledZones.includes(id)) {
+      onDisabledChange(disabledZones.filter((z) => z !== id));
+    } else {
+      onDisabledChange([...disabledZones, id]);
+    }
+  };
+
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
       <SortableContext items={order} strategy={horizontalListSortingStrategy}>
@@ -368,11 +387,12 @@ function LayoutZoneDnd({ layout, onChange }: { layout: NavbarBuilderConfig["layo
           {order.map((id, i) => (
             <div key={id} className="flex items-center gap-2">
               {i > 0 && <span className="text-[10px] text-gray-300">&middot;</span>}
-              <LayoutZonePill id={id} />
+              <LayoutZonePill id={id} disabled={disabledZones.includes(id)} onToggle={() => toggleZone(id)} />
             </div>
           ))}
         </div>
-        <div className="flex justify-between mt-1">
+        <p className="text-[10px] text-gray-400 mt-1">Click to enable/disable &middot; Drag to reorder</p>
+        <div className="flex justify-between">
           <span className="text-[9px] text-gray-300">Left</span>
           <span className="text-[9px] text-gray-300">Center</span>
           <span className="text-[9px] text-gray-300">Right</span>
@@ -686,7 +706,12 @@ export default function NavbarBuilder({ onSave, onDirtyChange, saveRef, onConfig
         <div className="bg-gray-50 rounded-lg p-3 space-y-2">
           <h4 className="text-xs font-semibold text-gray-700">Layout Zones</h4>
           <p className="text-[10px] text-gray-400">Drag to reorder: Left &middot; Center &middot; Right</p>
-          <LayoutZoneDnd layout={config.layout} onChange={(layout) => updateConfig(prev => ({ ...prev, layout }))} />
+          <LayoutZoneDnd
+            layout={config.layout}
+            onChange={(layout) => updateConfig(prev => ({ ...prev, layout }))}
+            disabledZones={config.disabledZones || []}
+            onDisabledChange={(disabledZones) => updateConfig(prev => ({ ...prev, disabledZones }))}
+          />
         </div>
 
         {/* Logo */}
