@@ -260,6 +260,9 @@ export default function RichTextEditor({ content, onChange, siteStyles = EMPTY_S
   const [customSaveName, setCustomSaveName] = useState("");
   const [customSaveType, setCustomSaveType] = useState<"main" | "secondary">("main");
 
+  /* ─── Light text detection ─── */
+  const [hasLightText, setHasLightText] = useState(false);
+
   /* ─── Color / Shadow / Stroke panel state ─── */
   const [colorOpen, setColorOpen] = useState(false);
   const [shadowOpen, setShadowOpen] = useState(false);
@@ -269,6 +272,23 @@ export default function RichTextEditor({ content, onChange, siteStyles = EMPTY_S
   const colorPanelRef = useRef<HTMLDivElement>(null);
   const shadowPanelRef = useRef<HTMLDivElement>(null);
   const strokePanelRef = useRef<HTMLDivElement>(null);
+
+  const checkForLightText = useCallback((html: string) => {
+    const matches = html.match(/color:\s*([^;"]+)/gi) || [];
+    const found = matches.some((m) => {
+      const hex = m.replace(/color:\s*/i, "").trim();
+      if (hex.startsWith("#") && hex.length >= 7) return isLightColor(hex);
+      if (hex.startsWith("rgb")) {
+        const nums = hex.match(/\d+/g);
+        if (nums && nums.length >= 3) {
+          const [r, g, b] = nums.map(Number);
+          return (r * 299 + g * 587 + b * 114) / 1000 > 200;
+        }
+      }
+      return hex === "white";
+    });
+    setHasLightText(found);
+  }, []);
 
   const editor = useEditor({
     extensions: [
@@ -314,7 +334,9 @@ export default function RichTextEditor({ content, onChange, siteStyles = EMPTY_S
     },
     onUpdate: ({ editor: ed }) => {
       isInternalUpdate.current = true;
-      onChange(ed.getHTML());
+      const html = ed.getHTML();
+      onChange(html);
+      checkForLightText(html);
     },
   });
 
@@ -326,7 +348,8 @@ export default function RichTextEditor({ content, onChange, siteStyles = EMPTY_S
     if (editor && content !== editor.getHTML()) {
       editor.commands.setContent(content);
     }
-  }, [content, editor]);
+    checkForLightText(content);
+  }, [content, editor, checkForLightText]);
 
   /* ─── Intercept clicks on links inside the editor ─── */
   useEffect(() => {
@@ -1084,21 +1107,22 @@ export default function RichTextEditor({ content, onChange, siteStyles = EMPTY_S
         </div>
       )}
 
-      {/* Editor — checkerboard bg so white/light text is always visible */}
+      {/* Editor */}
       {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
       <div
         onClick={(e) => { const a = (e.target as HTMLElement).closest("a"); if (a) { e.preventDefault(); e.stopPropagation(); } }}
-        style={{
-          backgroundImage: "linear-gradient(45deg, #f0f0f0 25%, transparent 25%), linear-gradient(-45deg, #f0f0f0 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #f0f0f0 75%), linear-gradient(-45deg, transparent 75%, #f0f0f0 75%)",
-          backgroundSize: "16px 16px",
-          backgroundPosition: "0 0, 0 8px, 8px -8px, -8px 0px",
-        }}
+        style={{ backgroundColor: hasLightText ? "#d1d5db" : "#ffffff" }}
       >
         <EditorContent
           editor={editor}
           className="site-html-content max-w-none p-3 min-h-[120px] focus:outline-none [&_.ProseMirror]:outline-none [&_.ProseMirror]:min-h-[100px] [&_.ProseMirror_a]:cursor-pointer"
         />
       </div>
+      {hasLightText && (
+        <p className="text-[10px] text-red-500 px-3 py-1 bg-gray-100 border-t border-gray-200">
+          Text editor background changed to grey to maintain text visibility.
+        </p>
+      )}
     </div>
   );
 }
