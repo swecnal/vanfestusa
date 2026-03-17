@@ -15,11 +15,14 @@ export default function HeroSimpleSection({ data, settings }: Props) {
   const subtitleStyle = (data as Record<string, unknown>).subtitleStyle as TextStyleConfig | undefined;
   const parallax = ((data as Record<string, unknown>).parallax as ParallaxIntensity) || "none";
 
+  // When bgConfig has an active background (image/solid/gradient), don't apply
+  // the section's own opaque bg — let SectionRenderer's background layer show through
+  const hasBgConfig = settings.bgConfig?.type && settings.bgConfig.type !== "none";
+  const bgClass = hasBgConfig ? "" : (d.light ? "bg-charcoal" : "bg-white");
+
   return (
     <section
-      className={`relative pt-32 pb-20 px-4 overflow-hidden ${
-        d.light ? "bg-charcoal" : "bg-white"
-      } ${settings.customClasses || ""}`}
+      className={`relative pt-32 pb-20 px-4 overflow-hidden ${bgClass} ${settings.customClasses || ""}`}
     >
       {d.bgImage && (
         <ParallaxImage
