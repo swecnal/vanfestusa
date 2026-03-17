@@ -119,6 +119,13 @@ export default function SectionRenderer({ section, siteStyles = EMPTY_SITE_STYLE
           style={{ ...bgStyles, opacity: imageOpacity }}
         />
       )}
+      {/* Color overlay on top of bg image, behind content */}
+      {isImageBg && bgConfig?.overlayColor && (bgConfig.overlayOpacity ?? 0) > 0 && (
+        <div
+          className="absolute inset-0"
+          style={{ backgroundColor: bgConfig.overlayColor, opacity: (bgConfig.overlayOpacity ?? 0) / 100 }}
+        />
+      )}
       <div className={[hasBg ? "relative z-[1]" : "", "section-content"].filter(Boolean).join(" ")}>
         {content}
       </div>

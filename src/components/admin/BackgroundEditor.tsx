@@ -214,7 +214,7 @@ export default function BackgroundEditor({ value, onChange }: Props) {
             </select>
           </div>
           <div>
-            <label className="text-[9px] text-gray-400">Opacity: {config.imageOpacity ?? 100}%</label>
+            <label className="text-[9px] text-gray-400">Image Opacity: {config.imageOpacity ?? 100}%</label>
             <input
               type="range"
               min={0}
@@ -223,6 +223,36 @@ export default function BackgroundEditor({ value, onChange }: Props) {
               onChange={(e) => update({ imageOpacity: Number(e.target.value) })}
               className="w-full h-1.5 accent-teal"
             />
+          </div>
+          {/* Overlay */}
+          <div className="border-t border-gray-200 pt-2 mt-1 space-y-1.5">
+            <label className="text-[9px] text-gray-400 font-medium">Color Overlay</label>
+            <div className="flex items-center gap-1.5">
+              <input
+                type="color"
+                value={config.overlayColor || "#000000"}
+                onChange={(e) => update({ overlayColor: e.target.value, overlayOpacity: config.overlayOpacity || 30 })}
+                className="w-6 h-5 rounded border border-gray-200 cursor-pointer p-0"
+              />
+              <input
+                type="text"
+                value={config.overlayColor || "#000000"}
+                onChange={(e) => update({ overlayColor: e.target.value })}
+                className="flex-1 h-5 text-[9px] border border-gray-200 rounded px-1 bg-white"
+                placeholder="#000000"
+              />
+            </div>
+            <div>
+              <label className="text-[9px] text-gray-400">Overlay Opacity: {config.overlayOpacity ?? 0}%</label>
+              <input
+                type="range"
+                min={0}
+                max={100}
+                value={config.overlayOpacity ?? 0}
+                onChange={(e) => update({ overlayOpacity: Number(e.target.value), overlayColor: config.overlayColor || "#000000" })}
+                className="w-full h-1.5 accent-teal"
+              />
+            </div>
           </div>
         </div>
       )}

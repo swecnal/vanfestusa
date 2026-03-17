@@ -38,13 +38,15 @@ interface TreeNode {
   parentSlug: string;
 }
 
-/* ─── In-app modal for creating new pages ─── */
+/* ─── In-app modal for creating / duplicating pages ─── */
 function NewPageModal({
   parentSlug,
+  sourcePageId,
   onClose,
   onCreated,
 }: {
   parentSlug: string;
+  sourcePageId?: string;
   onClose: () => void;
   onCreated: (pageId: string) => void;
 }) {
@@ -65,6 +67,7 @@ function NewPageModal({
     if (!name.trim()) return;
     setCreating(true);
     try {
+      // Create the page
       const res = await fetch("/api/pages", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -72,8 +75,37 @@ function NewPageModal({
       });
       if (res.ok) {
         const data = await res.json();
-        toast.success(`Page "${name.trim()}" created`);
-        onCreated(data.page.id);
+        const newPageId = data.page.id;
+
+        // If duplicating, copy all sections from the source page
+        if (sourcePageId) {
+          try {
+            const srcRes = await fetch(`/api/pages/${sourcePageId}/sections`);
+            if (srcRes.ok) {
+              const { sections } = await srcRes.json();
+              for (const sec of sections || []) {
+                await fetch(`/api/pages/${newPageId}/sections`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    section_type: sec.section_type,
+                    data: sec.data,
+                    settings: sec.settings,
+                    sort_order: sec.sort_order,
+                    is_visible: sec.is_visible,
+                  }),
+                });
+              }
+            }
+          } catch {
+            // Sections copy failed, page still created
+          }
+          toast.success(`Duplicated as "${name.trim()}"`);
+        } else {
+          toast.success(`Page "${name.trim()}" created`);
+        }
+
+        onCreated(newPageId);
       } else {
         const err = await res.json();
         toast.error(err.error || "Failed to create page");
@@ -92,7 +124,7 @@ function NewPageModal({
         onSubmit={handleSubmit}
         className="relative bg-white rounded-xl shadow-2xl p-5 w-80 space-y-3"
       >
-        <h3 className="text-sm font-semibold text-charcoal">New Page</h3>
+        <h3 className="text-sm font-semibold text-charcoal">{sourcePageId ? "Duplicate Page" : "New Page"}</h3>
         <div>
           <label className="block text-[11px] text-gray-500 mb-1">Page Name</label>
           <input
@@ -100,13 +132,13 @@ function NewPageModal({
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal focus:border-teal outline-none"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 focus:ring-2 focus:ring-teal focus:border-teal outline-none"
             placeholder="e.g. About Us"
           />
         </div>
         {name.trim() && (
           <p className="text-[11px] text-gray-400">
-            Slug: <code className="bg-gray-100 px-1 rounded">{slug}</code>
+            Slug: <code className="bg-gray-100 px-1 rounded text-gray-700">{slug}</code>
           </p>
         )}
         <div className="flex gap-2 justify-end pt-1">
@@ -122,7 +154,7 @@ function NewPageModal({
             disabled={!name.trim() || creating}
             className="px-4 py-1.5 text-xs font-semibold bg-teal text-white rounded-lg hover:bg-teal-dark transition-colors disabled:opacity-50"
           >
-            {creating ? "Creating..." : "Create"}
+            {creating ? (sourcePageId ? "Duplicating..." : "Creating...") : (sourcePageId ? "Duplicate" : "Create")}
           </button>
         </div>
       </form>
@@ -236,13 +268,21 @@ function SortableTreeItem({
   activePageId,
   onSelect,
   onAddChild,
+  addMenuFor,
+  onNewPage,
+  onDuplicatePage,
+  onCloseMenu,
   activeDragId,
 }: {
   node: TreeNode;
   depth: number;
   activePageId: string | null;
   onSelect: (pageId: string) => void;
-  onAddChild: (parentSlug: string) => void;
+  onAddChild: (parentSlug: string, pageId: string) => void;
+  addMenuFor: { slug: string; pageId: string } | null;
+  onNewPage: (parentSlug: string) => void;
+  onDuplicatePage: (parentSlug: string, sourcePageId: string) => void;
+  onCloseMenu: () => void;
   activeDragId: string | null;
 }) {
   const [expanded, setExpanded] = useState(node.expanded);
@@ -341,18 +381,36 @@ function SortableTreeItem({
 
         {/* Add child page button — muted until hover */}
         {node.page && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onAddChild(node.page!.slug);
-            }}
-            className="w-4 h-4 flex-shrink-0 flex items-center justify-center rounded opacity-20 group-hover:opacity-80 hover:!opacity-100 hover:bg-teal/30 transition-all"
-            title={`Add sub-page under ${node.label}`}
-          >
-            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-            </svg>
-          </button>
+          <div className="relative flex-shrink-0">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onAddChild(node.page!.slug, node.page!.id);
+              }}
+              className="w-4 h-4 flex items-center justify-center rounded opacity-20 group-hover:opacity-80 hover:!opacity-100 hover:bg-teal/30 transition-all"
+              title={`Add sub-page under ${node.label}`}
+            >
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+              </svg>
+            </button>
+            {addMenuFor?.pageId === node.page.id && (
+              <div className="absolute right-0 top-5 z-50 bg-white rounded-lg shadow-xl border border-gray-200 py-1 w-36 text-gray-700">
+                <button
+                  onClick={(e) => { e.stopPropagation(); onCloseMenu(); onNewPage(node.page!.slug); }}
+                  className="w-full text-left px-3 py-1.5 text-[11px] hover:bg-gray-100 transition-colors"
+                >
+                  New Page
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); onCloseMenu(); onDuplicatePage(node.page!.slug, node.page!.id); }}
+                  className="w-full text-left px-3 py-1.5 text-[11px] hover:bg-gray-100 transition-colors"
+                >
+                  Duplicate Page
+                </button>
+              </div>
+            )}
+          </div>
         )}
 
         {/* Published indicator */}
@@ -378,6 +436,10 @@ function SortableTreeItem({
           activePageId={activePageId}
           onSelect={onSelect}
           onAddChild={onAddChild}
+          addMenuFor={addMenuFor}
+          onNewPage={onNewPage}
+          onDuplicatePage={onDuplicatePage}
+          onCloseMenu={onCloseMenu}
           activeDragId={activeDragId}
         />
       )}
@@ -391,13 +453,21 @@ function SortableChildren({
   activePageId,
   onSelect,
   onAddChild,
+  addMenuFor,
+  onNewPage,
+  onDuplicatePage,
+  onCloseMenu,
   activeDragId,
 }: {
   nodes: TreeNode[];
   depth: number;
   activePageId: string | null;
   onSelect: (pageId: string) => void;
-  onAddChild: (parentSlug: string) => void;
+  onAddChild: (parentSlug: string, pageId: string) => void;
+  addMenuFor: { slug: string; pageId: string } | null;
+  onNewPage: (parentSlug: string) => void;
+  onDuplicatePage: (parentSlug: string, sourcePageId: string) => void;
+  onCloseMenu: () => void;
   activeDragId: string | null;
 }) {
   const ids = nodes.map((n) => n.page?.id || `folder-${n.label}`);
@@ -413,6 +483,10 @@ function SortableChildren({
             activePageId={activePageId}
             onSelect={onSelect}
             onAddChild={onAddChild}
+            addMenuFor={addMenuFor}
+            onNewPage={onNewPage}
+            onDuplicatePage={onDuplicatePage}
+            onCloseMenu={onCloseMenu}
             activeDragId={activeDragId}
           />
         ))}
@@ -427,12 +501,22 @@ export default function PageTree({ collapsed }: { collapsed: boolean }) {
   const [loading, setLoading] = useState(true);
   const [orderMap, setOrderMap] = useState<Record<string, string[]>>({});
   const [newPageParent, setNewPageParent] = useState<string | null>(null);
+  const [newPageSource, setNewPageSource] = useState<string | undefined>(undefined);
+  const [addMenuFor, setAddMenuFor] = useState<{ slug: string; pageId: string } | null>(null);
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const router = useRouter();
   const pathname = usePathname();
 
   const activePageId =
     pathname.match(/\/admin\/pages\/([^/]+)/)?.[1] || null;
+
+  // Close add menu on click outside
+  useEffect(() => {
+    if (!addMenuFor) return;
+    const handler = () => setAddMenuFor(null);
+    document.addEventListener("click", handler);
+    return () => document.removeEventListener("click", handler);
+  }, [addMenuFor]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
@@ -485,12 +569,13 @@ export default function PageTree({ collapsed }: { collapsed: boolean }) {
     router.push(`/admin/pages/${pageId}`);
   };
 
-  const handleAddChild = (parentSlug: string) => {
-    setNewPageParent(parentSlug);
+  const handleAddChild = (parentSlug: string, pageId: string) => {
+    setAddMenuFor({ slug: parentSlug, pageId });
   };
 
   const handlePageCreated = (pageId: string) => {
     setNewPageParent(null);
+    setNewPageSource(undefined);
     fetchPages();
     router.push(`/admin/pages/${pageId}`);
   };
@@ -618,6 +703,10 @@ export default function PageTree({ collapsed }: { collapsed: boolean }) {
           activePageId={activePageId}
           onSelect={handleSelect}
           onAddChild={handleAddChild}
+          addMenuFor={addMenuFor}
+          onNewPage={(slug) => { setNewPageParent(slug); setNewPageSource(undefined); }}
+          onDuplicatePage={(slug, sourceId) => { setNewPageParent(slug); setNewPageSource(sourceId); }}
+          onCloseMenu={() => setAddMenuFor(null)}
           activeDragId={activeDragId}
         />
         <DragOverlay>
@@ -636,7 +725,8 @@ export default function PageTree({ collapsed }: { collapsed: boolean }) {
       {newPageParent !== null && (
         <NewPageModal
           parentSlug={newPageParent}
-          onClose={() => setNewPageParent(null)}
+          sourcePageId={newPageSource}
+          onClose={() => { setNewPageParent(null); setNewPageSource(undefined); }}
           onCreated={handlePageCreated}
         />
       )}

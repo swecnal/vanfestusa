@@ -107,6 +107,9 @@ export interface BackgroundConfig {
   imageUrl?: string;
   imageSizing?: "cover" | "contain" | "stretch" | "tile" | "full";
   imageOpacity?: number;
+  // Overlay (color layer on top of image, behind content)
+  overlayColor?: string;
+  overlayOpacity?: number;
 }
 
 // ─── Section Settings (common to all) ───
