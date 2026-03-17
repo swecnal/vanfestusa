@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Toaster } from "sonner";
 import PageTree from "./PageTree";
 import { PageEditorProvider, usePageEditor } from "@/lib/page-editor-context";
@@ -115,7 +115,6 @@ function SidebarContent({
   user,
   onLogout,
   onClose,
-  onToggle,
 }: {
   showFull: boolean;
   pathname: string;
@@ -128,7 +127,6 @@ function SidebarContent({
   user: User | null;
   onLogout: () => void;
   onClose?: () => void;
-  onToggle?: () => void;
 }) {
   return (
     <>
@@ -249,7 +247,7 @@ function SidebarContent({
         {/* Desktop sidebar toggle (hidden on mobile) */}
         {!onClose && (
           <button
-            onClick={() => { onToggle?.(); }}
+            onClick={() => { setSidebarOpen(!sidebarOpen); setSidebarHover(false); }}
             className="mt-3 text-white/30 hover:text-white transition-colors"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -270,57 +268,6 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   const [elementsOpen, setElementsOpen] = useState(true);
   const [sidebarHover, setSidebarHover] = useState(false);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
-  const [sidebarWidth, setSidebarWidth] = useState(256); // default w-64 = 256px
-  const [isDragging, setIsDragging] = useState(false);
-  const isDraggingRef = useRef(false);
-  const dragStartXRef = useRef(0);
-  const dragStartWidthRef = useRef(256);
-
-  const DEFAULT_WIDTH = 256;
-  const MIN_WIDTH = 256;
-  const COLLAPSED_WIDTH = 64;
-
-  const handleDragStart = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    isDraggingRef.current = true;
-    dragStartXRef.current = e.clientX;
-    dragStartWidthRef.current = sidebarWidth;
-    let didDrag = false;
-    document.body.style.cursor = "col-resize";
-    document.body.style.userSelect = "none";
-
-    const handleDragMove = (ev: MouseEvent) => {
-      if (!isDraggingRef.current) return;
-      const delta = ev.clientX - dragStartXRef.current;
-      if (Math.abs(delta) > 3) { didDrag = true; setIsDragging(true); }
-      if (!didDrag) return;
-      const maxWidth = Math.floor(window.innerWidth * 0.5);
-      const newWidth = Math.min(maxWidth, Math.max(MIN_WIDTH, dragStartWidthRef.current + delta));
-      setSidebarWidth(newWidth);
-    };
-
-    const handleDragEnd = () => {
-      isDraggingRef.current = false;
-      setIsDragging(false);
-      document.body.style.cursor = "";
-      document.body.style.userSelect = "";
-      document.removeEventListener("mousemove", handleDragMove);
-      document.removeEventListener("mouseup", handleDragEnd);
-    };
-
-    document.addEventListener("mousemove", handleDragMove);
-    document.addEventListener("mouseup", handleDragEnd);
-  }, [sidebarWidth]);
-
-  const handleToggleSidebar = useCallback(() => {
-    if (sidebarOpen) {
-      setSidebarOpen(false);
-      setSidebarHover(false);
-    } else {
-      setSidebarOpen(true);
-      setSidebarWidth(DEFAULT_WIDTH);
-    }
-  }, [sidebarOpen]);
 
   const isLoginPage = pathname === "/admin/login" || pathname === "/admin/change-password";
 
@@ -385,7 +332,6 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
     setElementsOpen,
     user,
     onLogout: handleLogout,
-    onToggle: handleToggleSidebar,
   };
 
   return (
@@ -394,45 +340,41 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
       <Toaster position="top-right" richColors toastOptions={{ duration: 1500 }} />
 
       {/* Desktop sidebar (hidden on mobile) */}
-      <div
-        className={`hidden md:flex flex-shrink-0 relative ${isDragging ? "" : "transition-all duration-200"}`}
-        style={{ width: sidebarOpen ? `${sidebarWidth}px` : `${COLLAPSED_WIDTH}px` }}
-      >
+      <div className={`hidden md:flex flex-shrink-0 relative ${
+        sidebarOpen ? "w-64" : "w-16"
+      }`}>
         <aside
-          className={`bg-charcoal text-white flex flex-col h-full ${isDragging ? "" : "transition-all duration-200"} ${
+          className={`bg-charcoal text-white flex flex-col transition-all duration-200 ${
             sidebarOpen
-              ? "relative"
+              ? "w-64 relative"
               : sidebarHover
                 ? "w-64 fixed top-0 left-0 bottom-0 z-50 shadow-2xl"
-                : "relative"
+                : "w-16 relative"
           }`}
-          style={sidebarOpen ? { width: `${sidebarWidth}px` } : (!sidebarHover ? { width: `${COLLAPSED_WIDTH}px` } : undefined)}
           onMouseEnter={() => { if (!sidebarOpen) setSidebarHover(true); }}
           onMouseLeave={() => { if (!sidebarOpen) setSidebarHover(false); }}
         >
           <SidebarContent showFull={sidebarOpen || sidebarHover} {...sidebarContentProps} />
         </aside>
-        {/* Drag handle for resize + collapse toggle */}
-        {sidebarOpen && (
-          <div
+        {/* Edge handle for expand/collapse — hidden during hover-expand */}
+        {!sidebarHover && (
+          <button
+            onClick={() => { setSidebarOpen(!sidebarOpen); setSidebarHover(false); }}
             className="absolute top-0 right-0 w-3 h-full z-[51] group cursor-col-resize flex items-center justify-center"
-            onMouseDown={handleDragStart}
+            title={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
+            aria-label={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
           >
             {/* Visible edge line */}
             <div className="w-[3px] h-full bg-gray-200 group-hover:bg-teal transition-colors" />
             {/* Chevron indicator on hover */}
             <div className="absolute top-1/2 -translate-y-1/2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-              <button
-                onClick={(e) => { e.stopPropagation(); handleToggleSidebar(); }}
-                className="w-5 h-8 rounded-r-md bg-charcoal border border-l-0 border-gray-300 group-hover:border-teal flex items-center justify-center shadow-md"
-                title="Collapse sidebar"
-              >
+              <div className="w-5 h-8 rounded-r-md bg-charcoal border border-l-0 border-gray-300 group-hover:border-teal flex items-center justify-center shadow-md">
                 <svg className="w-3 h-3 text-white/80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d={sidebarOpen ? "M15 19l-7-7 7-7" : "M9 5l7 7-7 7"} />
                 </svg>
-              </button>
+              </div>
             </div>
-          </div>
+          </button>
         )}
       </div>
 

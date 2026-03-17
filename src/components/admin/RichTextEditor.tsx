@@ -193,17 +193,24 @@ const FONT_FAMILIES = [
   { label: "Orbitron", value: "Orbitron" },
 ];
 
-const TEXT_COLORS = [
-  { label: "Black", hex: "#1a1a1a" },
-  { label: "White", hex: "#ffffff" },
-  { label: "Teal", hex: "#1CA288" },
-  { label: "Dark Teal", hex: "#17806C" },
-  { label: "Cream", hex: "#F5F0E8" },
-  { label: "Red", hex: "#ef4444" },
-  { label: "Orange", hex: "#f97316" },
-  { label: "Yellow", hex: "#eab308" },
-  { label: "Blue", hex: "#3b82f6" },
-  { label: "Purple", hex: "#8b5cf6" },
+/* ─── Color grid (Google Docs style) ─── */
+const COLOR_GRID = [
+  // Row 1: grayscale
+  ["#000000","#434343","#666666","#999999","#b7b7b7","#cccccc","#d9d9d9","#efefef","#f3f3f3","#ffffff"],
+  // Row 2: saturated
+  ["#980000","#ff0000","#ff9900","#ffff00","#00ff00","#00ffff","#4a86e8","#0000ff","#9900ff","#ff00ff"],
+  // Row 3: light tints
+  ["#e6b8af","#f4cccc","#fce5cd","#fff2cc","#d9ead3","#d0e0e3","#c9daf8","#cfe2f3","#d9d2e9","#ead1dc"],
+  // Row 4
+  ["#dd7e6b","#ea9999","#f9cb9c","#ffe599","#b6d7a8","#a2c4c9","#a4c2f4","#9fc5e8","#b4a7d6","#d5a6bd"],
+  // Row 5
+  ["#cc4125","#e06666","#f6b26b","#ffd966","#93c47d","#76a5af","#6d9eeb","#6fa8dc","#8e7cc3","#c27ba0"],
+  // Row 6
+  ["#a61c00","#cc0000","#e69138","#f1c232","#6aa84f","#45818e","#3c78d8","#3d85c6","#674ea7","#a64d79"],
+  // Row 7: dark shades
+  ["#85200c","#990000","#b45f06","#bf9000","#38761d","#134f5c","#1155cc","#0b5394","#351c75","#741b47"],
+  // Row 8: darkest
+  ["#5b0f00","#660000","#783f04","#7f6011","#274e13","#0c343d","#1c4587","#073763","#20124d","#4c1130"],
 ];
 
 const FONT_OPTIONS = ["Poppins", "Gothic A1", "EB Garamond", "Orbitron", "inherit"];
@@ -607,32 +614,30 @@ export default function RichTextEditor({ content, onChange, siteStyles = EMPTY_S
             <svg className="w-2.5 h-2.5 ml-0.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
           </button>
           {colorOpen && (
-            <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-50 w-36 py-1">
-              {TEXT_COLORS.map((c) => (
-                <button
-                  key={c.hex}
-                  onClick={() => { editor.chain().focus().setColor(c.hex).run(); setColorOpen(false); }}
-                  className="flex items-center gap-2 w-full px-2.5 py-1 hover:bg-gray-50 text-left"
-                >
-                  <span className="w-3.5 h-3.5 rounded-full border border-gray-200 flex-shrink-0" style={{ backgroundColor: c.hex }} />
-                  <span className="text-[10px] text-gray-700">{c.label}</span>
-                </button>
+            <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-50 p-2.5">
+              {COLOR_GRID.map((row, ri) => (
+                <div key={ri} className="flex gap-0.5 mb-0.5">
+                  {row.map((hex) => (
+                    <button
+                      key={hex}
+                      onClick={() => { editor.chain().focus().setColor(hex).run(); setColorOpen(false); }}
+                      className="w-5 h-5 rounded-full border border-gray-200 hover:scale-125 transition-transform flex-shrink-0"
+                      style={{ backgroundColor: hex }}
+                      title={hex}
+                    />
+                  ))}
+                </div>
               ))}
-              <div className="border-t border-gray-100 mt-0.5 pt-0.5">
-                <button
-                  onClick={() => customColorRef.current?.click()}
-                  className="flex items-center gap-2 w-full px-2.5 py-1 hover:bg-gray-50 text-left"
-                >
-                  <span className="w-3.5 h-3.5 rounded-full border border-gray-200 flex-shrink-0" style={{ background: "conic-gradient(red, yellow, lime, aqua, blue, magenta, red)" }} />
-                  <span className="text-[10px] text-gray-700">Custom...</span>
-                </button>
+              <div className="flex items-center gap-1 mt-2 pt-1.5 border-t border-gray-100">
+                <span className="text-[9px] text-gray-400 font-semibold uppercase">Custom</span>
+                <input
+                  ref={customColorRef}
+                  type="color"
+                  value={editor.getAttributes("textStyle").color || "#000000"}
+                  onChange={(e) => { editor.chain().focus().setColor(e.target.value).run(); }}
+                  className="w-5 h-5 rounded-full border border-gray-200 cursor-pointer p-0"
+                />
               </div>
-              <input
-                ref={customColorRef}
-                type="color"
-                className="sr-only"
-                onChange={(e) => { editor.chain().focus().setColor(e.target.value).run(); setColorOpen(false); }}
-              />
             </div>
           )}
         </div>
@@ -1079,9 +1084,16 @@ export default function RichTextEditor({ content, onChange, siteStyles = EMPTY_S
         </div>
       )}
 
-      {/* Editor */}
+      {/* Editor — checkerboard bg so white/light text is always visible */}
       {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
-      <div onClick={(e) => { const a = (e.target as HTMLElement).closest("a"); if (a) { e.preventDefault(); e.stopPropagation(); } }}>
+      <div
+        onClick={(e) => { const a = (e.target as HTMLElement).closest("a"); if (a) { e.preventDefault(); e.stopPropagation(); } }}
+        style={{
+          backgroundImage: "linear-gradient(45deg, #f0f0f0 25%, transparent 25%), linear-gradient(-45deg, #f0f0f0 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #f0f0f0 75%), linear-gradient(-45deg, transparent 75%, #f0f0f0 75%)",
+          backgroundSize: "16px 16px",
+          backgroundPosition: "0 0, 0 8px, 8px -8px, -8px 0px",
+        }}
+      >
         <EditorContent
           editor={editor}
           className="site-html-content max-w-none p-3 min-h-[120px] focus:outline-none [&_.ProseMirror]:outline-none [&_.ProseMirror]:min-h-[100px] [&_.ProseMirror_a]:cursor-pointer"
