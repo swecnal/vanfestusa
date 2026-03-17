@@ -95,7 +95,7 @@ export default function SectionRenderer({ section, siteStyles = EMPTY_SITE_STYLE
         const navbarId = (data as Record<string, unknown>)?.navbarId as string;
         const navConfig = navbars?.find((n) => n.id === navbarId)?.config;
         if (!navConfig) return null;
-        return <Navbar builderConfig={navConfig} />;
+        return <Navbar builderConfig={navConfig} embedded />;
       }
       default:
         return null;

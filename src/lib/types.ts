@@ -803,6 +803,7 @@ export interface NavbarBuilderConfig {
     textColor?: string;
   };
   disabledZones?: ("logo" | "links" | "cta")[];
+  mobileDisabledZones?: ("logo" | "links" | "cta")[];
   style?: {
     bgColor: string;
     bgOpacity: number;

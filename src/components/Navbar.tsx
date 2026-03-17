@@ -96,7 +96,7 @@ const liftoffNavLinks: NavLink[] = [
 
 /* ─── V2 Navbar Renderer ─── */
 
-function NavbarV2({ config }: { config: NavbarBuilderConfig }) {
+function NavbarV2({ config, embedded }: { config: NavbarBuilderConfig; embedded?: boolean }) {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -347,13 +347,13 @@ function NavbarV2({ config }: { config: NavbarBuilderConfig }) {
 
   return (
     <nav
-      className="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
+      className={`${embedded ? "relative" : "fixed top-0 left-0 right-0"} z-50 transition-all duration-300`}
       style={{
-        backgroundColor: scrolled ? `${style.bgColor}${bgOpacity}` : "transparent",
-        backdropFilter: scrolled ? "blur(12px)" : undefined,
-        paddingTop: scrolled ? "0.75rem" : "1.25rem",
-        paddingBottom: scrolled ? "0.75rem" : "1.25rem",
-        boxShadow: scrolled ? "0 10px 15px -3px rgb(0 0 0 / 0.1)" : undefined,
+        backgroundColor: embedded ? `${style.bgColor}${bgOpacity}` : (scrolled ? `${style.bgColor}${bgOpacity}` : "transparent"),
+        backdropFilter: (embedded || scrolled) ? "blur(12px)" : undefined,
+        paddingTop: (embedded || scrolled) ? "0.75rem" : "1.25rem",
+        paddingBottom: (embedded || scrolled) ? "0.75rem" : "1.25rem",
+        boxShadow: scrolled && !embedded ? "0 10px 15px -3px rgb(0 0 0 / 0.1)" : undefined,
       }}
     >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex items-center">
@@ -371,15 +371,20 @@ function NavbarV2({ config }: { config: NavbarBuilderConfig }) {
       </div>
 
       {/* Mobile menu */}
-      {mobileOpen && (
+      {mobileOpen && (() => {
+        const mobileDisabled = config.mobileDisabledZones || [];
+        const showMobileLinks = !mobileDisabled.includes("links");
+        const showMobileCta = !mobileDisabled.includes("cta");
+        const showMobileLogo = !mobileDisabled.includes("logo");
+        return (
         <div
           className="lg:hidden backdrop-blur-md border-t mt-2"
           style={{ backgroundColor: `${style.bgColor}f2`, borderColor: `${style.textColor}1a` }}
         >
           <div className="px-4 py-4 space-y-1">
-            {(isEventPage || badge) && (
+            {(isEventPage || (badge && showMobileLogo)) && (
               <div className="mb-3 pb-3" style={{ borderBottomWidth: 1, borderBottomColor: `${style.textColor}1a` }}>
-                {isEventPage && (
+                {isEventPage && showMobileLogo && (
                 <Link
                   href="/"
                   className="flex items-center gap-2 px-3 py-2.5 rounded-lg font-semibold transition-colors"
@@ -392,7 +397,7 @@ function NavbarV2({ config }: { config: NavbarBuilderConfig }) {
                   Back to VanFest Home
                 </Link>
                 )}
-                {badge && (
+                {badge && showMobileLogo && (
                 <span
                   className="inline-block font-display font-bold px-4 py-1.5 rounded-xl text-sm mt-2"
                   style={badgeStyle}
@@ -402,7 +407,7 @@ function NavbarV2({ config }: { config: NavbarBuilderConfig }) {
                 )}
               </div>
             )}
-            {navLinks.map((link) => (
+            {showMobileLinks && navLinks.map((link) => (
               <div key={link.id}>
                 {link.external ? (
                   <a
@@ -482,9 +487,27 @@ function NavbarV2({ config }: { config: NavbarBuilderConfig }) {
                 )}
               </div>
             ))}
+            {showMobileCta && ctaButtons.length > 0 && (
+              <div className="pt-3 mt-3 flex flex-col gap-2" style={{ borderTopWidth: 1, borderTopColor: `${style.textColor}1a` }}>
+                {ctaButtons.map((cta, i) => (
+                  <a
+                    key={i}
+                    href={cta.href}
+                    target={cta.external !== false ? "_blank" : undefined}
+                    rel={cta.external !== false ? "noopener noreferrer" : undefined}
+                    className="block text-center font-bold rounded-xl px-5 py-2.5 text-sm transition-all"
+                    style={getCtaStyle(cta)}
+                    onClick={() => setMobileOpen(false)}
+                  >
+                    {cta.text}
+                  </a>
+                ))}
+              </div>
+            )}
           </div>
         </div>
-      )}
+        );
+      })()}
     </nav>
   );
 }
@@ -795,11 +818,12 @@ function NavbarV1({ config }: NavbarV1Props) {
 interface NavbarProps {
   config?: NavbarV1Props["config"];
   builderConfig?: NavbarBuilderConfig | null;
+  embedded?: boolean;
 }
 
-export default function Navbar({ config, builderConfig }: NavbarProps) {
+export default function Navbar({ config, builderConfig, embedded }: NavbarProps) {
   if (builderConfig?.version === 2) {
-    return <NavbarV2 config={builderConfig} />;
+    return <NavbarV2 config={builderConfig} embedded={embedded} />;
   }
   return <NavbarV1 config={config} />;
 }

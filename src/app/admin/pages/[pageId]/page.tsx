@@ -428,6 +428,32 @@ export default function PageEditorPage() {
       .catch(() => {});
   }, []);
 
+  // Listen for slug changes from PageTree drag-nesting
+  useEffect(() => {
+    const slugHandler = (e: Event) => {
+      const { pageId: changedId, newSlug } = (e as CustomEvent).detail;
+      if (changedId === pageId) {
+        setPage((prev) => prev ? { ...prev, slug: newSlug } : prev);
+      }
+    };
+    const navHandler = () => {
+      // Refetch navbars since slug-migrate may have updated link hrefs
+      fetch("/api/global-settings")
+        .then((r) => r.json())
+        .then((res) => {
+          const s = res.settings || {};
+          if (s.navbars) setSavedNavbars(s.navbars as SavedNavbar[]);
+        })
+        .catch(() => {});
+    };
+    window.addEventListener("page-slug-changed", slugHandler);
+    window.addEventListener("navbar-data-changed", navHandler);
+    return () => {
+      window.removeEventListener("page-slug-changed", slugHandler);
+      window.removeEventListener("navbar-data-changed", navHandler);
+    };
+  }, [pageId]);
+
   const selectedSection = sections.find((s) => s.id === selectedSectionId);
 
   const handleDragStart = (event: DragStartEvent) => {

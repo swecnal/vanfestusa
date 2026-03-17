@@ -620,6 +620,17 @@ export default function PageTree({ collapsed }: { collapsed: boolean }) {
         }
 
         toast.success(`Moved "${draggedPage.title}" under "${targetPage.title}"`);
+        // Notify open page editors that slugs changed
+        window.dispatchEvent(new CustomEvent("page-slug-changed", {
+          detail: { pageId: draggedPage.id, oldSlug: draggedPage.slug, newSlug },
+        }));
+        for (const child of childPages) {
+          window.dispatchEvent(new CustomEvent("page-slug-changed", {
+            detail: { pageId: child.id, oldSlug: child.slug, newSlug: child.slug.replace(draggedPage.slug, newSlug) },
+          }));
+        }
+        // Notify navbar manager to refetch if open
+        window.dispatchEvent(new CustomEvent("navbar-data-changed"));
         fetchPages();
       } else {
         const err = await res.json();

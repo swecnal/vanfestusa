@@ -402,6 +402,43 @@ function LayoutZoneDnd({ layout, onChange, disabledZones, onDisabledChange }: {
   );
 }
 
+function MobileZoneToggles({ disabledZones, onDisabledChange }: {
+  disabledZones: ("logo" | "links" | "cta")[];
+  onDisabledChange: (zones: ("logo" | "links" | "cta")[]) => void;
+}) {
+  const toggleZone = (id: "logo" | "links" | "cta") => {
+    if (disabledZones.includes(id)) {
+      onDisabledChange(disabledZones.filter((z) => z !== id));
+    } else {
+      onDisabledChange([...disabledZones, id]);
+    }
+  };
+  const elements: ("logo" | "links" | "cta")[] = ["logo", "links", "cta"];
+  return (
+    <div>
+      <div className="flex items-center gap-2 mt-1">
+        {elements.map((id) => {
+          const disabled = disabledZones.includes(id);
+          return (
+            <button
+              key={id}
+              onClick={() => toggleZone(id)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
+                disabled
+                  ? "border-gray-200 bg-gray-100 text-gray-300 line-through"
+                  : "border-gray-300 bg-white text-charcoal hover:border-gray-400"
+              }`}
+            >
+              {ZONE_ELEMENT_LABELS[id]}
+            </button>
+          );
+        })}
+      </div>
+      <p className="text-[10px] text-gray-400 mt-1">Click to show/hide in mobile menu</p>
+    </div>
+  );
+}
+
 // ── Props ─────────────────────────────────────────────────────────────────────
 
 interface Props {
@@ -706,12 +743,24 @@ export default function NavbarBuilder({ onSave, onDirtyChange, saveRef, onConfig
         <div className="bg-gray-50 rounded-lg p-3 space-y-2">
           <h4 className="text-xs font-semibold text-gray-700">Layout Zones</h4>
           <p className="text-[10px] text-gray-400">Drag to reorder: Left &middot; Center &middot; Right</p>
-          <LayoutZoneDnd
-            layout={config.layout}
-            onChange={(layout) => updateConfig(prev => ({ ...prev, layout }))}
-            disabledZones={config.disabledZones || []}
-            onDisabledChange={(disabledZones) => updateConfig(prev => ({ ...prev, disabledZones }))}
-          />
+          <div className="space-y-2">
+            <div>
+              <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Desktop</span>
+              <LayoutZoneDnd
+                layout={config.layout}
+                onChange={(layout) => updateConfig(prev => ({ ...prev, layout }))}
+                disabledZones={config.disabledZones || []}
+                onDisabledChange={(disabledZones) => updateConfig(prev => ({ ...prev, disabledZones }))}
+              />
+            </div>
+            <div className="border-t border-gray-200 pt-2">
+              <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Mobile</span>
+              <MobileZoneToggles
+                disabledZones={config.mobileDisabledZones || []}
+                onDisabledChange={(mobileDisabledZones) => updateConfig(prev => ({ ...prev, mobileDisabledZones }))}
+              />
+            </div>
+          </div>
         </div>
 
         {/* Logo */}

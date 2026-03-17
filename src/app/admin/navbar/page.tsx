@@ -176,6 +176,24 @@ export default function NavbarEditorPage() {
     return () => obs.disconnect();
   }, []);
 
+  // ── Listen for navbar data changes (e.g., from slug migration) ────────────
+  useEffect(() => {
+    const handler = () => {
+      // Refetch navbars from DB since slug-migrate may have updated links
+      fetch("/api/global-settings")
+        .then((r) => r.json())
+        .then((res) => {
+          const s = res.settings || {};
+          if (s.navbars) {
+            setNavbars(s.navbars as SavedNavbar[]);
+          }
+        })
+        .catch(() => {});
+    };
+    window.addEventListener("navbar-data-changed", handler);
+    return () => window.removeEventListener("navbar-data-changed", handler);
+  }, []);
+
   // ── beforeunload guard ────────────────────────────────────────────────────
   useEffect(() => {
     const handler = (e: BeforeUnloadEvent) => {
@@ -353,12 +371,24 @@ export default function NavbarEditorPage() {
     mobileIframeRef.current?.contentWindow?.postMessage(msg, "*");
   }, []);
 
+  // Re-send preview config when an iframe finishes loading
+  const handleIframeLoad = useCallback(() => {
+    if (!previewNavbarId) return;
+    const nav = navbars.find((n) => n.id === previewNavbarId);
+    if (nav) {
+      // Small delay to let PreviewShell mount its message listener
+      setTimeout(() => triggerPreviewRefresh(nav.config), 50);
+    }
+  }, [previewNavbarId, navbars, triggerPreviewRefresh]);
+
   // When preview navbar changes or its config updates, push to preview
   useEffect(() => {
     if (!previewNavbarId) return;
     const nav = navbars.find((n) => n.id === previewNavbarId);
     if (nav) {
-      const timer = setTimeout(() => triggerPreviewRefresh(nav.config), 100);
+      // Send immediately and with delay to cover both loaded and loading iframes
+      triggerPreviewRefresh(nav.config);
+      const timer = setTimeout(() => triggerPreviewRefresh(nav.config), 300);
       return () => clearTimeout(timer);
     }
   }, [previewNavbarId, navbars, triggerPreviewRefresh]);
@@ -456,6 +486,7 @@ export default function NavbarEditorPage() {
                       src={`/preview/${previewPageId}`}
                       style={{ width: DESKTOP_VIEWPORT_WIDTH, height: iframeIntrinsicHeight, border: "none", display: "block", background: "white" }}
                       title="Navbar preview (desktop)"
+                      onLoad={handleIframeLoad}
                     />
                   </div>
                 )}
@@ -468,7 +499,7 @@ export default function NavbarEditorPage() {
                     <div className="flex justify-center mb-1"><div className="w-20 h-4 bg-gray-800 rounded-full" /></div>
                     <div className="rounded-[2rem] overflow-hidden bg-white" style={{ width: 393, height: 852 }}>
                       {previewPageId && (
-                        <iframe ref={mobileIframeRef} key={`mobile-${iframeKey}`} src={`/preview/${previewPageId}`} className="border-0 w-full h-full" title="Navbar preview (mobile)" />
+                        <iframe ref={mobileIframeRef} key={`mobile-${iframeKey}`} src={`/preview/${previewPageId}`} className="border-0 w-full h-full" title="Navbar preview (mobile)" onLoad={handleIframeLoad} />
                       )}
                     </div>
                     <div className="flex justify-center mt-2"><div className="w-28 h-1 bg-gray-600 rounded-full" /></div>
