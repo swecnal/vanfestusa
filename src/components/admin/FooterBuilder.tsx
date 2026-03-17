@@ -30,6 +30,7 @@ import type {
   FooterContactInfoData,
 } from "@/lib/types";
 import RichTextEditor from "@/components/admin/RichTextEditor";
+import UrlInput from "@/components/admin/UrlInput";
 import { EMPTY_SITE_STYLES } from "@/lib/styles";
 
 function genId() {
@@ -285,7 +286,7 @@ function ElementEditor({ element, onChange }: { element: FooterElement; onChange
         {data.links.map((link, i) => (
           <div key={link.id} className="flex items-center gap-1.5">
             <input type="text" value={link.text} onChange={(e) => { const links = [...data.links]; links[i] = { ...links[i], text: e.target.value }; onChange({ ...data, links }); }} className="flex-1 min-w-0 px-2 py-1 border border-gray-200 rounded text-[10px]" placeholder="Label" />
-            <input type="text" value={link.href} onChange={(e) => { const links = [...data.links]; links[i] = { ...links[i], href: e.target.value }; onChange({ ...data, links }); }} className="flex-1 min-w-0 px-2 py-1 border border-gray-200 rounded text-[10px]" placeholder="/path" />
+            <UrlInput value={link.href} onChange={(val) => { const links = [...data.links]; links[i] = { ...links[i], href: val }; onChange({ ...data, links }); }} className="flex-1 min-w-0 px-2 py-1 border border-gray-200 rounded text-[10px]" placeholder="/path" />
             <label className="flex items-center gap-1 text-[10px] text-gray-500">
               <input type="checkbox" checked={link.newTab} onChange={(e) => { const links = [...data.links]; links[i] = { ...links[i], newTab: e.target.checked }; onChange({ ...data, links }); }} />
               New

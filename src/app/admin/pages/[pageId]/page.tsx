@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { usePageEditor } from "@/lib/page-editor-context";
 import {
@@ -26,7 +26,7 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import type { Section, SectionType, SectionSettings } from "@/lib/types";
+import type { Section, SectionType, SectionSettings, SavedNavbar } from "@/lib/types";
 import { SECTION_TYPE_LABELS } from "@/lib/types";
 import { SECTION_DEFAULTS } from "@/lib/section-defaults";
 import { type SiteStyles, EMPTY_SITE_STYLES } from "@/lib/styles";
@@ -335,9 +335,12 @@ function DropZone({
 /* ─── Main Page Editor ─── */
 export default function PageEditorPage() {
   const params = useParams();
+  const router = useRouter();
   const pageId = params.pageId as string;
 
   const [page, setPage] = useState<PageData | null>(null);
+  const [savedNavbars, setSavedNavbars] = useState<SavedNavbar[]>([]);
+  const [deletePageConfirm, setDeletePageConfirm] = useState(false);
   const [sections, setSections] = useState<Section[]>([]);
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
   const [globalEditTarget, setGlobalEditTarget] = useState<"navbar" | "footer" | null>(null);
@@ -418,6 +421,7 @@ export default function PageEditorPage() {
         });
         const mode = s.edit_pane_mode;
         if (mode === "floating" || mode === "static") setEditPaneMode(mode);
+        if (s.navbars) setSavedNavbars(s.navbars as SavedNavbar[]);
       })
       .catch(() => {});
   }, []);
@@ -811,6 +815,69 @@ export default function PageEditorPage() {
     }
   }, [selectedSectionId]);
 
+  // ── Delete page handler ──
+  const handleDeletePage = async () => {
+    try {
+      const res = await fetch(`/api/pages/${pageId}`, { method: "DELETE" });
+      if (res.ok) {
+        toast.success("Page deleted");
+        router.push("/admin/pages");
+      } else {
+        toast.error("Failed to delete page");
+      }
+    } catch {
+      toast.error("Failed to delete page");
+    }
+    setDeletePageConfirm(false);
+  };
+
+  // ── Per-page navbar selection ──
+  const currentNavbarSection = sections.find((s) => s.section_type === "navbar");
+  const currentNavbarId = (currentNavbarSection?.data as Record<string, unknown>)?.navbarId as string | undefined;
+  const defaultNavbar = savedNavbars.find((n) => n.isDefault);
+
+  const handleNavbarChange = async (navbarId: string) => {
+    if (navbarId === "default") {
+      // Remove navbar section if one exists
+      if (currentNavbarSection) {
+        await fetch(`/api/pages/${pageId}/sections/${currentNavbarSection.id}`, { method: "DELETE" });
+        setSections((prev) => prev.filter((s) => s.id !== currentNavbarSection.id));
+        toast.success("Using default navbar");
+      }
+    } else {
+      if (currentNavbarSection) {
+        // Update existing navbar section
+        const res = await fetch(`/api/pages/${pageId}/sections/${currentNavbarSection.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ data: { navbarId } }),
+        });
+        if (res.ok) {
+          setSections((prev) => prev.map((s) =>
+            s.id === currentNavbarSection.id ? { ...s, data: { navbarId } } : s
+          ));
+          toast.success("Navbar updated");
+        }
+      } else {
+        // Create a new navbar section at sort_order 0
+        const res = await fetch(`/api/pages/${pageId}/sections`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            section_type: "navbar",
+            sort_order: 0,
+            data: { navbarId },
+          }),
+        });
+        if (res.ok) {
+          const { section } = await res.json();
+          setSections((prev) => [section, ...prev]);
+          toast.success("Navbar assigned");
+        }
+      }
+    }
+  };
+
   if (loading) {
     return <div className="text-center text-gray-400 py-12">Loading...</div>;
   }
@@ -914,10 +981,37 @@ export default function PageEditorPage() {
                 >
                   {page.is_published ? "Published" : "Draft"}
                 </button>
+                {/* Per-page navbar selector */}
+                {savedNavbars.length > 0 && (
+                  <select
+                    value={currentNavbarId || "default"}
+                    onChange={(e) => handleNavbarChange(e.target.value)}
+                    className="hidden sm:inline text-[10px] border border-gray-200 rounded px-1.5 py-0.5 text-gray-600 bg-white"
+                    title="Navbar for this page"
+                  >
+                    <option value="default">
+                      Navbar: {defaultNavbar?.name || "Default"}
+                    </option>
+                    {savedNavbars.filter((n) => !n.isDefault).map((n) => (
+                      <option key={n.id} value={n.id}>Navbar: {n.name}</option>
+                    ))}
+                  </select>
+                )}
               </>
             )}
           </div>
           <div className="flex items-center gap-2">
+            {/* Delete page */}
+            <button
+              onClick={() => setDeletePageConfirm(true)}
+              className="text-gray-300 hover:text-red-500 transition-colors"
+              title="Delete this page"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+              </svg>
+            </button>
+            <div className="w-px h-4 bg-gray-200 hidden md:block" />
             {/* Desktop / Mobile preview toggle (hidden on phones) */}
             <div className="hidden md:flex rounded-lg border border-gray-200 overflow-hidden">
               <button
@@ -1260,6 +1354,16 @@ export default function PageEditorPage() {
         onCancel={confirmModal.onCancel || (() => setConfirmModal((prev) => ({ ...prev, open: false })))}
         altLabel={confirmModal.altLabel}
         onAlt={confirmModal.onAlt}
+      />
+      <ConfirmModal
+        open={deletePageConfirm}
+        title="Delete Page"
+        message={`Permanently delete "${page.title}"? This will delete all sections on this page. This cannot be undone.`}
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        destructive
+        onConfirm={handleDeletePage}
+        onCancel={() => setDeletePageConfirm(false)}
       />
     </div>
   );

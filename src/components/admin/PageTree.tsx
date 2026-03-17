@@ -9,9 +9,9 @@ import {
   useSensor,
   useSensors,
   DragOverlay,
-  useDroppable,
   type DragEndEvent,
   type DragStartEvent,
+  type DragOverEvent,
 } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -235,32 +235,6 @@ function buildTree(pages: PageItem[], orderMap: Record<string, string[]>): TreeN
   return root;
 }
 
-/* ─── Nest drop zone — uses @dnd-kit useDroppable so it works with DndContext ─── */
-function NestDropZone({
-  pageId,
-  label,
-}: {
-  pageId: string;
-  label: string;
-}) {
-  const { isOver, setNodeRef } = useDroppable({
-    id: `nest-${pageId}`,
-  });
-
-  return (
-    <div
-      ref={setNodeRef}
-      className={`ml-8 mr-2 my-0.5 h-6 rounded border-2 border-dashed flex items-center justify-center transition-colors ${
-        isOver ? "border-teal bg-teal/10" : "border-white/20 bg-white/5"
-      }`}
-    >
-      <span className={`text-[9px] font-semibold uppercase tracking-wider ${isOver ? "text-teal" : "text-white/30"}`}>
-        Nest under {label}
-      </span>
-    </div>
-  );
-}
-
 /* ─── Sortable tree item ─── */
 function SortableTreeItem({
   node,
@@ -273,6 +247,7 @@ function SortableTreeItem({
   onDuplicatePage,
   onCloseMenu,
   activeDragId,
+  nestTargetId,
 }: {
   node: TreeNode;
   depth: number;
@@ -284,12 +259,12 @@ function SortableTreeItem({
   onDuplicatePage: (parentSlug: string, sourcePageId: string) => void;
   onCloseMenu: () => void;
   activeDragId: string | null;
+  nestTargetId: string | null;
 }) {
   const [expanded, setExpanded] = useState(node.expanded);
   const hasChildren = node.children.length > 0;
   const isActive = node.page?.id === activePageId;
   const itemId = node.page?.id || `folder-${node.label}`;
-  const isDragged = activeDragId === itemId;
 
   const {
     attributes,
@@ -306,8 +281,8 @@ function SortableTreeItem({
     opacity: isDragging ? 0.4 : 1,
   };
 
-  // Show nest zone when something else is being dragged, this is a page, and it's not the dragged item
-  const showNestZone = activeDragId && node.page && !isDragged && activeDragId !== itemId;
+  // Show nest indicator when this item is the hover-to-nest target
+  const showNestIndicator = nestTargetId === node.page?.id;
 
   return (
     <div ref={setNodeRef} style={style}>
@@ -423,9 +398,9 @@ function SortableTreeItem({
         )}
       </div>
 
-      {/* Nest drop zone — appears when dragging another page over this one */}
-      {showNestZone && (
-        <NestDropZone pageId={node.page!.id} label={node.label} />
+      {/* Nest indicator line — shown when hovering over this item for 300ms during a drag */}
+      {showNestIndicator && (
+        <div className="ml-8 mr-2 h-0.5 bg-purple-400 rounded-full my-0.5" />
       )}
 
       {/* Children */}
@@ -441,6 +416,7 @@ function SortableTreeItem({
           onDuplicatePage={onDuplicatePage}
           onCloseMenu={onCloseMenu}
           activeDragId={activeDragId}
+          nestTargetId={nestTargetId}
         />
       )}
     </div>
@@ -458,6 +434,7 @@ function SortableChildren({
   onDuplicatePage,
   onCloseMenu,
   activeDragId,
+  nestTargetId,
 }: {
   nodes: TreeNode[];
   depth: number;
@@ -469,6 +446,7 @@ function SortableChildren({
   onDuplicatePage: (parentSlug: string, sourcePageId: string) => void;
   onCloseMenu: () => void;
   activeDragId: string | null;
+  nestTargetId: string | null;
 }) {
   const ids = nodes.map((n) => n.page?.id || `folder-${n.label}`);
 
@@ -488,6 +466,7 @@ function SortableChildren({
             onDuplicatePage={onDuplicatePage}
             onCloseMenu={onCloseMenu}
             activeDragId={activeDragId}
+            nestTargetId={nestTargetId}
           />
         ))}
       </div>
@@ -504,6 +483,8 @@ export default function PageTree({ collapsed }: { collapsed: boolean }) {
   const [newPageSource, setNewPageSource] = useState<string | undefined>(undefined);
   const [addMenuFor, setAddMenuFor] = useState<{ slug: string; pageId: string } | null>(null);
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
+  const [nestTargetId, setNestTargetId] = useState<string | null>(null);
+  const nestTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -580,7 +561,7 @@ export default function PageTree({ collapsed }: { collapsed: boolean }) {
     router.push(`/admin/pages/${pageId}`);
   };
 
-  // Nesting: move a page under another by updating its slug
+  // Nesting: move a page under another by updating its slug + slug migration
   const handleNestUnder = useCallback(async (draggedPageId: string, targetPageId: string) => {
     const draggedPage = pages.find((p) => p.id === draggedPageId);
     const targetPage = pages.find((p) => p.id === targetPageId);
@@ -596,6 +577,11 @@ export default function PageTree({ collapsed }: { collapsed: boolean }) {
     if (!lastPart) return;
     const newSlug = `${targetPage.slug}/${lastPart}`;
 
+    // Find all child pages whose slugs need updating (pages nested under dragged page)
+    const childPages = pages.filter(
+      (p) => p.id !== draggedPage.id && p.slug.startsWith(draggedPage.slug + "/")
+    );
+
     try {
       const res = await fetch(`/api/pages/${draggedPage.id}`, {
         method: "PUT",
@@ -603,6 +589,29 @@ export default function PageTree({ collapsed }: { collapsed: boolean }) {
         body: JSON.stringify({ slug: newSlug }),
       });
       if (res.ok) {
+        // Migrate sections referencing the old slug
+        await fetch("/api/slug-migrate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ oldSlug: draggedPage.slug, newSlug }),
+        });
+
+        // Recursively update child page slugs and migrate each
+        for (const child of childPages) {
+          const childOldSlug = child.slug;
+          const childNewSlug = child.slug.replace(draggedPage.slug, newSlug);
+          await fetch(`/api/pages/${child.id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ slug: childNewSlug }),
+          });
+          await fetch("/api/slug-migrate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ oldSlug: childOldSlug, newSlug: childNewSlug }),
+          });
+        }
+
         toast.success(`Moved "${draggedPage.title}" under "${targetPage.title}"`);
         fetchPages();
       } else {
@@ -618,22 +627,62 @@ export default function PageTree({ collapsed }: { collapsed: boolean }) {
     setActiveDragId(String(event.active.id));
   };
 
+  const handleDragOver = (event: DragOverEvent) => {
+    const overId = event.over?.id ? String(event.over.id) : null;
+
+    // Ignore folder items, the dragged item itself, and null
+    if (!overId || overId === activeDragId || overId.startsWith("folder-")) {
+      // Clear any pending timer and reset nest target
+      if (nestTimerRef.current) {
+        clearTimeout(nestTimerRef.current);
+        nestTimerRef.current = null;
+      }
+      setNestTargetId(null);
+      return;
+    }
+
+    // If already targeting this item, do nothing (timer is running or already fired)
+    if (nestTargetId === overId) return;
+
+    // Clear previous timer
+    if (nestTimerRef.current) {
+      clearTimeout(nestTimerRef.current);
+      nestTimerRef.current = null;
+    }
+    setNestTargetId(null);
+
+    // Start new 300ms timer for this target
+    nestTimerRef.current = setTimeout(() => {
+      setNestTargetId(overId);
+      nestTimerRef.current = null;
+    }, 300);
+  };
+
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
+
+    // Clear nest timer
+    if (nestTimerRef.current) {
+      clearTimeout(nestTimerRef.current);
+      nestTimerRef.current = null;
+    }
+
+    const currentNestTarget = nestTargetId;
     setActiveDragId(null);
+    setNestTargetId(null);
 
     if (!over || active.id === over.id) return;
 
     const activeId = String(active.id);
-    const overId = String(over.id);
 
-    // Check if dropped on a nest zone (id starts with "nest-")
-    if (overId.startsWith("nest-")) {
-      const targetPageId = overId.replace("nest-", "");
-      handleNestUnder(activeId, targetPageId);
+    // If nest target is set, perform nesting
+    if (currentNestTarget) {
+      handleNestUnder(activeId, currentNestTarget);
       return;
     }
 
+    // Otherwise, perform reorder among siblings
+    const overId = String(over.id);
     const activePage = pages.find((p) => p.id === activeId);
     const overPage = pages.find((p) => p.id === overId);
     if (!activePage || !overPage) return;
@@ -695,6 +744,7 @@ export default function PageTree({ collapsed }: { collapsed: boolean }) {
         sensors={sensors}
         collisionDetection={closestCenter}
         onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
       >
         <SortableTreeItem
@@ -708,6 +758,7 @@ export default function PageTree({ collapsed }: { collapsed: boolean }) {
           onDuplicatePage={(slug, sourceId) => { setNewPageParent(slug); setNewPageSource(sourceId); }}
           onCloseMenu={() => setAddMenuFor(null)}
           activeDragId={activeDragId}
+          nestTargetId={nestTargetId}
         />
         <DragOverlay>
           {activeDragId && (() => {

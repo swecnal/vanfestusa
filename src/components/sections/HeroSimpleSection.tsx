@@ -29,7 +29,7 @@ export default function HeroSimpleSection({ data, settings }: Props) {
           src={d.bgImage}
           alt=""
           intensity={parallax}
-          className="absolute inset-0 w-full h-full object-cover opacity-15"
+          className="absolute inset-0 w-full h-full object-cover"
         />
       )}
       <div className="relative mx-auto max-w-6xl">

@@ -796,6 +796,12 @@ export interface NavbarBuilderConfig {
     ctaButtons?: NavbarCtaConfig[];
     badgeText?: string;
   }>;
+  badge?: {
+    text: string;
+    bgColor: string;
+    bgColorEnd?: string;
+    textColor?: string;
+  };
   style?: {
     bgColor: string;
     bgOpacity: number;

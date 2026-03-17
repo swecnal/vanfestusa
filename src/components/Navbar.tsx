@@ -138,9 +138,14 @@ function NavbarV2({ config }: { config: NavbarBuilderConfig }) {
   const style = config.style || { bgColor: "#1a1a1a", bgOpacity: 95, textColor: "#ffffff", hoverColor: "#2dd4bf" };
   const bgOpacity = Math.round((style.bgOpacity / 100) * 255).toString(16).padStart(2, "0");
 
-  const eventAccent = eventMode === "liftoff"
-    ? "from-purple-600 to-pink-500"
-    : "from-blue-600 to-teal";
+  // Badge from config (replaces old hardcoded eventAccent logic)
+  const badge = config.badge;
+  const badgeStyle = badge ? {
+    background: badge.bgColorEnd
+      ? `linear-gradient(to right, ${badge.bgColor}, ${badge.bgColorEnd})`
+      : badge.bgColor,
+    color: badge.textColor || "#ffffff",
+  } : undefined;
 
   // Build zone content
   const renderLogo = () => (
@@ -172,11 +177,12 @@ function NavbarV2({ config }: { config: NavbarBuilderConfig }) {
           <span className="font-display font-bold text-xl" style={{ color: style.textColor }}>{config.logo.text}</span>
         )}
       </Link>
-      {isEventPage && (
+      {badge && (
         <span
-          className={`hidden lg:inline-block bg-gradient-to-r ${eventAccent} text-white font-display font-bold px-4 py-1.5 rounded-xl text-sm ml-2`}
+          className="hidden lg:inline-block font-display font-bold px-4 py-1.5 rounded-xl text-sm ml-2"
+          style={badgeStyle}
         >
-          {eventMode === "liftoff" ? "LIFTOFF!" : (eventOverride?.badgeText || "Escape to the Cape")}
+          {badge.text}
         </span>
       )}
     </div>
@@ -368,8 +374,9 @@ function NavbarV2({ config }: { config: NavbarBuilderConfig }) {
           style={{ backgroundColor: `${style.bgColor}f2`, borderColor: `${style.textColor}1a` }}
         >
           <div className="px-4 py-4 space-y-1">
-            {isEventPage && (
+            {(isEventPage || badge) && (
               <div className="mb-3 pb-3" style={{ borderBottomWidth: 1, borderBottomColor: `${style.textColor}1a` }}>
+                {isEventPage && (
                 <Link
                   href="/"
                   className="flex items-center gap-2 px-3 py-2.5 rounded-lg font-semibold transition-colors"
@@ -381,11 +388,15 @@ function NavbarV2({ config }: { config: NavbarBuilderConfig }) {
                   </svg>
                   Back to VanFest Home
                 </Link>
+                )}
+                {badge && (
                 <span
-                  className={`inline-block bg-gradient-to-r ${eventAccent} text-white font-display font-bold px-4 py-1.5 rounded-xl text-sm mt-2`}
+                  className="inline-block font-display font-bold px-4 py-1.5 rounded-xl text-sm mt-2"
+                  style={badgeStyle}
                 >
-                  {eventMode === "liftoff" ? "LIFTOFF!" : "Escape to the Cape"}
+                  {badge.text}
                 </span>
+                )}
               </div>
             )}
             {navLinks.map((link) => (

@@ -36,7 +36,7 @@ export default function ImageCarouselSection({ data, settings }: Props) {
           src={bgImage}
           alt=""
           className="absolute inset-0 w-full h-full object-cover"
-          style={{ opacity: settings.bgImageOpacity ?? 0.15 }}
+          style={{ opacity: settings.bgImageOpacity ?? 1 }}
         />
       )}
       <div className={`relative mx-auto ${settings.maxWidth || "max-w-6xl"}`}>

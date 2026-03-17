@@ -15,9 +15,12 @@ import {
   arrayMove,
   SortableContext,
   verticalListSortingStrategy,
+  horizontalListSortingStrategy,
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import MediaPickerModal from "./MediaPickerModal";
+import UrlInput from "./UrlInput";
 import type {
   NavbarBuilderConfig,
   NavbarLinkV2,
@@ -268,10 +271,9 @@ function FlatSortableRow({
         className={`flex-1 min-w-0 px-2 py-1 border border-gray-200 rounded ${item.depth === 0 ? "text-xs font-semibold" : "text-[11px]"}`}
         placeholder="Label"
       />
-      <input
-        type="text"
+      <UrlInput
         value={item.href}
-        onChange={(e) => onUpdate("href", e.target.value)}
+        onChange={(val) => onUpdate("href", val)}
         className={`flex-1 min-w-0 px-2 py-1 border border-gray-200 rounded ${item.depth === 0 ? "text-xs" : "text-[11px]"}`}
         placeholder="/path"
       />
@@ -309,6 +311,77 @@ function FlatSortableRow({
   );
 }
 
+// ── Layout zone draggable pills ───────────────────────────────────────────────
+
+const ZONE_POSITIONS: NavbarZone[] = ["left", "center", "right"];
+const ZONE_ELEMENT_LABELS: Record<string, string> = { logo: "Logo", links: "Links", cta: "CTA" };
+
+function LayoutZonePill({ id }: { id: string }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  return (
+    <div
+      ref={setNodeRef}
+      style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 }}
+      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-grab active:cursor-grabbing select-none border transition-colors ${
+        isDragging ? "border-teal bg-teal/10 text-teal shadow-md z-50" : "border-gray-300 bg-white text-charcoal hover:border-gray-400"
+      }`}
+      {...attributes}
+      {...listeners}
+    >
+      <svg className="w-3 h-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M4 8h16M4 16h16" />
+      </svg>
+      {ZONE_ELEMENT_LABELS[id] || id}
+    </div>
+  );
+}
+
+function LayoutZoneDnd({ layout, onChange }: { layout: NavbarBuilderConfig["layout"]; onChange: (layout: NavbarBuilderConfig["layout"]) => void }) {
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 3 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } })
+  );
+
+  // Derive order from current layout: sort elements by their zone position
+  const order = useMemo(() => {
+    const elements = ["logo", "links", "cta"] as const;
+    return [...elements].sort((a, b) => ZONE_POSITIONS.indexOf(layout[a]) - ZONE_POSITIONS.indexOf(layout[b]));
+  }, [layout]);
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIdx = order.indexOf(active.id as "logo" | "links" | "cta");
+    const newIdx = order.indexOf(over.id as "logo" | "links" | "cta");
+    const newOrder = arrayMove(order, oldIdx, newIdx);
+    onChange({
+      [newOrder[0]]: "left" as NavbarZone,
+      [newOrder[1]]: "center" as NavbarZone,
+      [newOrder[2]]: "right" as NavbarZone,
+    } as NavbarBuilderConfig["layout"]);
+  };
+
+  return (
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+      <SortableContext items={order} strategy={horizontalListSortingStrategy}>
+        <div className="flex items-center gap-2">
+          {order.map((id, i) => (
+            <div key={id} className="flex items-center gap-2">
+              {i > 0 && <span className="text-[10px] text-gray-300">&middot;</span>}
+              <LayoutZonePill id={id} />
+            </div>
+          ))}
+        </div>
+        <div className="flex justify-between mt-1">
+          <span className="text-[9px] text-gray-300">Left</span>
+          <span className="text-[9px] text-gray-300">Center</span>
+          <span className="text-[9px] text-gray-300">Right</span>
+        </div>
+      </SortableContext>
+    </DndContext>
+  );
+}
+
 // ── Props ─────────────────────────────────────────────────────────────────────
 
 interface Props {
@@ -332,6 +405,8 @@ export default function NavbarBuilder({ onSave, onDirtyChange, saveRef, onConfig
   const [loadedConfig, setLoadedConfig] = useState<NavbarBuilderConfig | null>(externalConfig || null);
   const [loading, setLoading] = useState(!isExternal);
   const [saving, setSaving] = useState(false);
+  const [mediaPickerOpen, setMediaPickerOpen] = useState(false);
+  const logoUploadRef = useRef<HTMLInputElement>(null);
   const [dirty, setDirty] = useState(false);
 
   const sensors = useSensors(
@@ -570,6 +645,25 @@ export default function NavbarBuilder({ onSave, onDirtyChange, saveRef, onConfig
     updateConfig(prev => ({ ...prev, ctaButtons: prev.ctaButtons.filter((_, i) => i !== index) }));
   };
 
+  // ── Logo upload handler ──────────────────────────────────────────────────
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const form = new FormData();
+    form.append("file", file);
+    try {
+      const res = await fetch("/api/media/upload", { method: "POST", body: form });
+      if (!res.ok) throw new Error();
+      const { asset } = await res.json();
+      if (asset?.public_url) {
+        updateConfig(prev => ({ ...prev, logo: { ...prev.logo, src: asset.public_url } }));
+      }
+    } catch {
+      toast.error("Failed to upload logo");
+    }
+    if (logoUploadRef.current) logoUploadRef.current.value = "";
+  };
+
   // ── Render ────────────────────────────────────────────────────────────────
 
   if (loading) {
@@ -588,43 +682,41 @@ export default function NavbarBuilder({ onSave, onDirtyChange, saveRef, onConfig
       {/* Scrollable content */}
       <div className="p-4 space-y-4">
 
-        {/* Layout Zones */}
+        {/* Layout Zones — draggable pills */}
         <div className="bg-gray-50 rounded-lg p-3 space-y-2">
           <h4 className="text-xs font-semibold text-gray-700">Layout Zones</h4>
-          <p className="text-[10px] text-gray-400">Position each element in the navbar</p>
-          <div className="grid grid-cols-3 gap-2">
-            {(["logo", "links", "cta"] as const).map((item) => (
-              <div key={item}>
-                <label className="block text-[10px] text-gray-500 mb-0.5 capitalize">
-                  {item === "cta" ? "CTA Buttons" : item}
-                </label>
-                <select
-                  value={config.layout[item]}
-                  onChange={(e) => updateConfig(prev => ({
-                    ...prev,
-                    layout: { ...prev.layout, [item]: e.target.value as NavbarZone },
-                  }))}
-                  className="w-full px-2 py-1.5 border border-gray-200 rounded text-xs"
-                >
-                  {(["left", "center", "right"] as NavbarZone[]).map(zone => (
-                    <option key={zone} value={zone}>{ZONE_LABELS[zone]}</option>
-                  ))}
-                </select>
-              </div>
-            ))}
-          </div>
+          <p className="text-[10px] text-gray-400">Drag to reorder: Left &middot; Center &middot; Right</p>
+          <LayoutZoneDnd layout={config.layout} onChange={(layout) => updateConfig(prev => ({ ...prev, layout }))} />
         </div>
 
         {/* Logo */}
         <div className="bg-gray-50 rounded-lg p-3 space-y-2">
           <h4 className="text-xs font-semibold text-gray-700">Logo</h4>
+          <div className="flex items-center gap-3">
+            {config.logo.src && (
+              <img src={config.logo.src} alt="Logo preview" className="h-10 w-auto rounded border border-gray-200 bg-white p-1" />
+            )}
+            <div className="flex gap-1.5">
+              <label className="text-[10px] font-semibold px-2.5 py-1 rounded-lg cursor-pointer bg-teal text-white hover:bg-teal-dark transition-colors">
+                Upload
+                <input ref={logoUploadRef} type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" />
+              </label>
+              <button
+                onClick={() => setMediaPickerOpen(true)}
+                className="text-[10px] font-semibold px-2.5 py-1 rounded-lg border border-gray-300 text-gray-600 hover:text-charcoal hover:border-gray-400 transition-colors"
+              >
+                Library
+              </button>
+            </div>
+          </div>
           <div>
-            <label className="block text-[10px] text-gray-500 mb-0.5">Image URL</label>
+            <label className="block text-[10px] text-gray-500 mb-0.5">Or enter URL</label>
             <input
               type="text"
               value={config.logo.src}
               onChange={(e) => updateConfig(prev => ({ ...prev, logo: { ...prev.logo, src: e.target.value } }))}
               className="w-full px-2 py-1.5 border border-gray-200 rounded text-xs"
+              placeholder="/images/logo.png"
             />
           </div>
           <div className="grid grid-cols-2 gap-2">
@@ -739,10 +831,9 @@ export default function NavbarBuilder({ onSave, onDirtyChange, saveRef, onConfig
                 </div>
                 <div>
                   <label className="block text-[10px] text-gray-500 mb-0.5">URL</label>
-                  <input
-                    type="text"
+                  <UrlInput
                     value={cta.href}
-                    onChange={(e) => updateCta(i, { href: e.target.value })}
+                    onChange={(val) => updateCta(i, { href: val })}
                     className="w-full px-2 py-1 border border-gray-200 rounded text-xs"
                   />
                 </div>
@@ -828,6 +919,79 @@ export default function NavbarBuilder({ onSave, onDirtyChange, saveRef, onConfig
           </div>
         </div>
 
+        {/* Badge / Indicator */}
+        <div className="bg-gray-50 rounded-lg p-3 space-y-2">
+          <div className="flex items-center justify-between">
+            <h4 className="text-xs font-semibold text-gray-700">Badge / Indicator</h4>
+            {!config.badge?.text && (
+              <button
+                onClick={() => updateConfig(prev => ({ ...prev, badge: { text: "Event Name", bgColor: "#f97316", bgColorEnd: "#eab308", textColor: "#ffffff" } }))}
+                className="text-teal hover:text-teal-dark text-[10px] font-semibold"
+              >
+                + Add Badge
+              </button>
+            )}
+          </div>
+          {config.badge?.text ? (
+            <>
+              <div>
+                <label className="block text-[10px] text-gray-500 mb-0.5">Badge Text</label>
+                <input
+                  type="text"
+                  value={config.badge.text}
+                  onChange={(e) => updateConfig(prev => ({ ...prev, badge: { ...prev.badge!, text: e.target.value } }))}
+                  className="w-full px-2 py-1.5 border border-gray-200 rounded text-xs"
+                />
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <label className="block text-[10px] text-gray-500 mb-0.5">BG Start</label>
+                  <div className="flex gap-1">
+                    <input type="color" value={config.badge.bgColor} onChange={(e) => updateConfig(prev => ({ ...prev, badge: { ...prev.badge!, bgColor: e.target.value } }))} className="w-7 h-7 rounded border border-gray-200 cursor-pointer p-0.5" />
+                    <input type="text" value={config.badge.bgColor} onChange={(e) => updateConfig(prev => ({ ...prev, badge: { ...prev.badge!, bgColor: e.target.value } }))} className="flex-1 min-w-0 px-1 py-1 border border-gray-200 rounded text-[10px]" />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-[10px] text-gray-500 mb-0.5">BG End</label>
+                  <div className="flex gap-1">
+                    <input type="color" value={config.badge.bgColorEnd || config.badge.bgColor} onChange={(e) => updateConfig(prev => ({ ...prev, badge: { ...prev.badge!, bgColorEnd: e.target.value } }))} className="w-7 h-7 rounded border border-gray-200 cursor-pointer p-0.5" />
+                    <input type="text" value={config.badge.bgColorEnd || ""} onChange={(e) => updateConfig(prev => ({ ...prev, badge: { ...prev.badge!, bgColorEnd: e.target.value || undefined } }))} className="flex-1 min-w-0 px-1 py-1 border border-gray-200 rounded text-[10px]" placeholder="none" />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-[10px] text-gray-500 mb-0.5">Text</label>
+                  <div className="flex gap-1">
+                    <input type="color" value={config.badge.textColor || "#ffffff"} onChange={(e) => updateConfig(prev => ({ ...prev, badge: { ...prev.badge!, textColor: e.target.value } }))} className="w-7 h-7 rounded border border-gray-200 cursor-pointer p-0.5" />
+                    <input type="text" value={config.badge.textColor || "#ffffff"} onChange={(e) => updateConfig(prev => ({ ...prev, badge: { ...prev.badge!, textColor: e.target.value } }))} className="flex-1 min-w-0 px-1 py-1 border border-gray-200 rounded text-[10px]" />
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] text-gray-400">Preview:</span>
+                <span
+                  className="font-display font-bold px-4 py-1.5 rounded-xl text-sm"
+                  style={{
+                    background: config.badge.bgColorEnd
+                      ? `linear-gradient(to right, ${config.badge.bgColor}, ${config.badge.bgColorEnd})`
+                      : config.badge.bgColor,
+                    color: config.badge.textColor || "#ffffff",
+                  }}
+                >
+                  {config.badge.text}
+                </span>
+              </div>
+              <button
+                onClick={() => updateConfig(prev => ({ ...prev, badge: undefined }))}
+                className="text-[10px] text-red-500 hover:text-red-700"
+              >
+                Remove Badge
+              </button>
+            </>
+          ) : (
+            <p className="text-[10px] text-gray-400">No badge configured. Add one to display an event indicator.</p>
+          )}
+        </div>
+
         {/* Event overrides */}
         <details className="bg-gray-50 rounded-lg">
           <summary className="px-3 py-2 text-xs font-semibold text-gray-700 cursor-pointer hover:bg-gray-100 rounded-lg">
@@ -872,6 +1036,13 @@ export default function NavbarBuilder({ onSave, onDirtyChange, saveRef, onConfig
           </button>
         </div>
       )}
+
+      {/* Media picker modal for logo */}
+      <MediaPickerModal
+        open={mediaPickerOpen}
+        onClose={() => setMediaPickerOpen(false)}
+        onSelect={(url) => updateConfig(prev => ({ ...prev, logo: { ...prev.logo, src: url } }))}
+      />
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import type { Section, SectionType, BackgroundConfig, SavedNavbar } from "@/lib/types";
 import { SECTION_TYPE_LABELS, SPACING_PRESETS } from "@/lib/types";
 import RichTextEditor from "./RichTextEditor";
+import UrlInput from "./UrlInput";
 import ImagePicker from "./ImagePicker";
 import BackgroundEditor from "./BackgroundEditor";
 import TextStyleEditor from "./TextStyleEditor";
@@ -1762,11 +1763,19 @@ function ArrayEditor({
             </svg>
           </button>
           {fields.map((field) => {
-            const isUrlField = /^(href|url|src|image|link|logo|icon)$/i.test(field) || field.toLowerCase().includes("url") || field.toLowerCase().includes("src") || field.toLowerCase().includes("logo");
+            const isHrefField = /^href$/i.test(field);
+            const isUrlField = !isHrefField && (/^(url|src|image|link|logo|icon)$/i.test(field) || field.toLowerCase().includes("url") || field.toLowerCase().includes("src") || field.toLowerCase().includes("logo"));
             return (
               <div key={field}>
                 <label className="text-[10px] text-gray-400 uppercase">{field}</label>
-                {isUrlField ? (
+                {isHrefField ? (
+                  <UrlInput
+                    value={item[field] || ""}
+                    onChange={(val) => updateItem(i, field, val)}
+                    className="w-full p-1.5 border border-gray-200 rounded text-xs"
+                    placeholder="/path"
+                  />
+                ) : isUrlField ? (
                   <input
                     type="text"
                     value={item[field] || ""}
@@ -2257,7 +2266,7 @@ function EventCardsEditor({
               <RichTextEditor content={(ev.tag as string) || ""} onChange={(html) => updateEvent(i, "tag", html)} siteStyles={siteStyles} />
             </Field>
             <Field label="Link (href)">
-              <input type="text" value={(ev.href as string) || ""} onChange={(e) => updateEvent(i, "href", e.target.value)} className="input-sm" />
+              <UrlInput value={(ev.href as string) || ""} onChange={(val) => updateEvent(i, "href", val)} className="input-sm" />
             </Field>
             <details className="border border-gray-100 rounded-lg">
               <summary className="px-2 py-1.5 text-[10px] font-semibold text-gray-400 uppercase cursor-pointer hover:bg-gray-50">Ticket Button</summary>
@@ -2860,7 +2869,7 @@ function ButtonFieldEditor({
 
       <div>
         <label className="text-[9px] uppercase text-gray-400 font-semibold block mb-0.5">URL</label>
-        <input type="text" value={value.href || ""} onChange={(e) => update("href", e.target.value)} className="w-full h-7 px-2 text-xs border border-gray-300 rounded bg-white" placeholder="https://..." />
+        <UrlInput value={value.href || ""} onChange={(val) => update("href", val)} className="w-full h-7 px-2 text-xs border border-gray-300 rounded bg-white" placeholder="/path or https://..." />
       </div>
 
       {showExternal && (

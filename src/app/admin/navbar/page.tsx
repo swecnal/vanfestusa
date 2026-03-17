@@ -10,6 +10,56 @@ function genNavbarId() {
   return `nb-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
 }
 
+function buildEventNavbars(): SavedNavbar[] {
+  const escapeLinks = [
+    { id: "esc-1", label: "About", href: "/events/escape" },
+    { id: "esc-2", label: "Schedule", href: "/events/escape/schedule" },
+    { id: "esc-3", label: "Map", href: "/events/escape/map" },
+    { id: "esc-4", label: "Get Involved", href: "/events/escape/sponsors-vendors", children: [
+      { id: "esc-4a", label: "Jobs & Volunteers", href: "/events/escape/jobs" },
+      { id: "esc-4b", label: "Sponsors & Vendors", href: "/events/escape/sponsors-vendors" },
+      { id: "esc-4c", label: "Exhibit Your Rig", href: "/events/escape/exhibit-your-rig" },
+    ]},
+    { id: "esc-5", label: "FAQ", href: "/events/escape/faq" },
+    { id: "esc-6", label: "Contact", href: "/contact" },
+  ];
+
+  const liftoffLinks = [
+    { id: "lft-1", label: "About", href: "/events/liftoff" },
+    { id: "lft-2", label: "Schedule", href: "/events/liftoff/schedule" },
+    { id: "lft-3", label: "Map", href: "/events/liftoff/map" },
+    { id: "lft-4", label: "Get Involved", href: "/events/liftoff/sponsors-vendors", children: [
+      { id: "lft-4a", label: "Jobs & Volunteers", href: "/events/liftoff/jobs" },
+      { id: "lft-4b", label: "Sponsors & Vendors", href: "/events/liftoff/sponsors-vendors" },
+      { id: "lft-4c", label: "Exhibit Your Rig", href: "/events/liftoff/exhibit-your-rig" },
+    ]},
+    { id: "lft-5", label: "FAQ", href: "/events/liftoff/faq" },
+    { id: "lft-6", label: "Contact", href: "/contact" },
+  ];
+
+  const baseConfig: NavbarBuilderConfig = {
+    ...EMPTY_CONFIG,
+    ctaButtons: [
+      { text: "Get Tickets", href: "https://vanfest.ticketspice.com/escape2026", external: true, variant: "primary", bounce: true },
+    ],
+  };
+
+  return [
+    {
+      id: genNavbarId(),
+      name: "Escape to the Cape",
+      config: { ...baseConfig, links: escapeLinks, badge: { text: "Escape to the Cape", bgColor: "#f97316", bgColorEnd: "#eab308", textColor: "#ffffff" } },
+      isDefault: false,
+    },
+    {
+      id: genNavbarId(),
+      name: "LIFTOFF!",
+      config: { ...baseConfig, links: liftoffLinks, badge: { text: "LIFTOFF!", bgColor: "#6366f1", bgColorEnd: "#a855f7", textColor: "#ffffff" }, ctaButtons: [{ text: "Get Tickets", href: "https://tickets.vanfestusa.com", external: true, variant: "primary", bounce: true }] },
+      isDefault: false,
+    },
+  ];
+}
+
 interface PageOption {
   id: string;
   slug: string;
@@ -60,25 +110,41 @@ export default function NavbarEditorPage() {
 
         if (s.navbars) {
           loaded = s.navbars as SavedNavbar[];
-        } else if (s.navbar_builder_config) {
-          // Auto-migrate single navbar
-          const config = s.navbar_builder_config as NavbarBuilderConfig;
-          loaded = [{ id: genNavbarId(), name: "Main Navigation", config, isDefault: true }];
-          fetch("/api/global-settings", {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ navbars: loaded }),
-          });
-        } else if (s.navbar_config) {
-          const config = convertLegacyToV2(s.navbar_config as Record<string, unknown>);
-          loaded = [{ id: genNavbarId(), name: "Main Navigation", config, isDefault: true }];
+          // Ensure event navbars exist — add them if missing
+          const eventNavbars = buildEventNavbars();
+          let added = false;
+          for (const en of eventNavbars) {
+            if (!loaded.some((n) => n.name === en.name)) {
+              loaded.push(en);
+              added = true;
+            }
+          }
+          if (added) {
+            fetch("/api/global-settings", {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ navbars: loaded }),
+            });
+          }
+        } else if (s.navbar_builder_config || s.navbar_config) {
+          // Auto-migrate: create Main + event navbars
+          const mainConfig = s.navbar_builder_config
+            ? (s.navbar_builder_config as NavbarBuilderConfig)
+            : convertLegacyToV2(s.navbar_config as Record<string, unknown>);
+          loaded = [
+            { id: genNavbarId(), name: "Main Navigation", config: mainConfig, isDefault: true },
+            ...buildEventNavbars(),
+          ];
           fetch("/api/global-settings", {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ navbars: loaded }),
           });
         } else {
-          loaded = [{ id: genNavbarId(), name: "Main Navigation", config: EMPTY_CONFIG, isDefault: true }];
+          loaded = [
+            { id: genNavbarId(), name: "Main Navigation", config: EMPTY_CONFIG, isDefault: true },
+            ...buildEventNavbars(),
+          ];
         }
 
         setNavbars(loaded);
@@ -286,6 +352,17 @@ export default function NavbarEditorPage() {
     desktopIframeRef.current?.contentWindow?.postMessage(msg, "*");
     mobileIframeRef.current?.contentWindow?.postMessage(msg, "*");
   }, []);
+
+  // When accordion expands, push that navbar's config to preview
+  useEffect(() => {
+    if (!expandedId) return;
+    const nav = navbars.find((n) => n.id === expandedId);
+    if (nav) {
+      // Small delay to let iframe load if it just mounted
+      const timer = setTimeout(() => triggerPreviewRefresh(nav.config), 100);
+      return () => clearTimeout(timer);
+    }
+  }, [expandedId, navbars, triggerPreviewRefresh]);
 
   const handlePageChange = (id: string) => {
     setPreviewPageId(id);
