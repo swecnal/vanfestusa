@@ -638,6 +638,33 @@ export default function RichTextEditor({ content, onChange, siteStyles = EMPTY_S
           title="Font size (px)"
         />
 
+        <select
+          value={editor.getAttributes("paragraph").lineHeight || editor.getAttributes("heading").lineHeight || ""}
+          onChange={(e) => {
+            const val = e.target.value;
+            if (val) {
+              editor.chain().focus().updateAttributes("paragraph", { lineHeight: val }).run();
+              editor.chain().focus().updateAttributes("heading", { lineHeight: val }).run();
+            } else {
+              editor.chain().focus().updateAttributes("paragraph", { lineHeight: null }).run();
+              editor.chain().focus().updateAttributes("heading", { lineHeight: null }).run();
+            }
+          }}
+          className="text-[10px] px-0.5 py-0.5 border border-gray-300 rounded bg-white h-6"
+          style={{ maxWidth: "52px" }}
+          title="Line spacing"
+        >
+          <option value="">LH</option>
+          <option value="1">1.0</option>
+          <option value="1.2">1.2</option>
+          <option value="1.4">1.4</option>
+          <option value="1.5">1.5</option>
+          <option value="1.75">1.75</option>
+          <option value="2">2.0</option>
+          <option value="2.5">2.5</option>
+          <option value="3">3.0</option>
+        </select>
+
         {!minimal && (
           <>
         <div className="w-px h-5 bg-gray-200 mx-0.5" />

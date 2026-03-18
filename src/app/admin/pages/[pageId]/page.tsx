@@ -47,11 +47,12 @@ interface PageData {
 
 /* ─── Custom collision detection: prefer nest- droppables when intersecting ─── */
 const nestAwareCollision: CollisionDetection = (args) => {
-  // First check rect intersection for nest- droppables
   const rectCollisions = rectIntersection(args);
+  // Prefer column drop zones, then nest- zones, then normal reorder
+  const columnCollision = rectCollisions.find((c) => String(c.id).startsWith("column-"));
+  if (columnCollision) return [columnCollision];
   const nestCollision = rectCollisions.find((c) => String(c.id).startsWith("nest-"));
   if (nestCollision) return [nestCollision];
-  // Fall back to closestCenter for normal sortable reorder
   return closestCenter(args);
 };
 
@@ -243,6 +244,18 @@ function SortableLiveSection({
         activeDragType !== "accordion_parent" && (
           <NestDropZone accordionId={section.id} title={(section.data.title as string) || "Accordion Group"} />
         )}
+
+      {/* Column drop zones — appears on custom_columns sections when dragging */}
+      {section.section_type === "custom_columns" &&
+        activeDragId &&
+        activeDragId !== section.id &&
+        activeDragType !== "custom_columns" &&
+        activeDragType !== "accordion_parent" && (
+          <ColumnDropZones
+            sectionId={section.id}
+            columnCount={(section.data.columnCount as number) || 2}
+          />
+        )}
     </div>
   );
 }
@@ -265,6 +278,36 @@ function NestDropZone({ accordionId, title }: { accordionId: string; title: stri
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 3.75H6.912a2.25 2.25 0 00-2.15 1.588L2.35 13.177a2.25 2.25 0 00-.1.661V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18v-4.162c0-.224-.034-.447-.1-.661L19.24 5.338a2.25 2.25 0 00-2.15-1.588H15M2.25 13.5h3.86a2.25 2.25 0 012.012 1.244l.256.512a2.25 2.25 0 002.013 1.244h3.218a2.25 2.25 0 002.013-1.244l.256-.512a2.25 2.25 0 012.013-1.244h3.859" />
         </svg>
         {isOver ? `Drop to nest into "${title}"` : `Drop here to nest into "${title}"`}
+      </div>
+    </div>
+  );
+}
+
+/* ─── Column Drop Zones (drop into custom_columns) ─── */
+function ColumnDropZones({ sectionId, columnCount }: { sectionId: string; columnCount: number }) {
+  return (
+    <div className="mx-4 mb-2 grid gap-2" style={{ gridTemplateColumns: `repeat(${columnCount}, 1fr)` }}>
+      {Array.from({ length: columnCount }, (_, colIdx) => (
+        <ColumnDropZone key={colIdx} sectionId={sectionId} colIdx={colIdx} />
+      ))}
+    </div>
+  );
+}
+
+function ColumnDropZone({ sectionId, colIdx }: { sectionId: string; colIdx: number }) {
+  const { isOver, setNodeRef } = useDroppable({ id: `column-${sectionId}-${colIdx}` });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={`rounded-lg border-2 border-dashed transition-all ${
+        isOver
+          ? "border-teal bg-teal/10 py-4"
+          : "border-teal/40 bg-teal/5 py-3"
+      }`}
+    >
+      <div className="flex items-center justify-center gap-1 text-teal text-[10px] font-semibold">
+        {isOver ? "Drop here" : `Column ${colIdx + 1}`}
       </div>
     </div>
   );
@@ -478,8 +521,17 @@ export default function PageEditorPage() {
     setActiveDragId(null);
     if (!over || active.id === over.id) return;
 
-    // Check if dropped on a nest-{accordionId} droppable
+    // Check if dropped on a column-{sectionId}-{colIdx} droppable
     const overId = over.id as string;
+    if (overId.startsWith("column-")) {
+      const parts = overId.split("-");
+      const colIdx = parseInt(parts[parts.length - 1], 10);
+      const columnSectionId = parts.slice(1, -1).join("-");
+      handleMoveToColumn(active.id as string, columnSectionId, colIdx);
+      return;
+    }
+
+    // Check if dropped on a nest-{accordionId} droppable
     if (overId.startsWith("nest-")) {
       const accordionId = overId.replace("nest-", "");
       handleMoveToAccordion(active.id as string, accordionId);
@@ -784,6 +836,128 @@ export default function PageEditorPage() {
         setEditingSettings(null);
         setIsDirty(false);
         toast.success(`Ungrouped ${label}`);
+      },
+    });
+  };
+
+  // Move a section into a custom_columns column
+  const handleMoveToColumn = (sectionId: string, columnSectionId: string, colIdx: number) => {
+    const section = sections.find((s) => s.id === sectionId);
+    const columnSection = sections.find((s) => s.id === columnSectionId);
+    if (!section || !columnSection) return;
+
+    const label = SECTION_TYPE_LABELS[section.section_type as SectionType] || section.section_type;
+
+    setConfirmModal({
+      open: true,
+      title: "Move to Column",
+      message: `Move "${label}" into Column ${colIdx + 1}?`,
+      confirmLabel: "Move",
+      onConfirm: async () => {
+        setConfirmModal((prev) => ({ ...prev, open: false }));
+
+        const columns = (columnSection.data.columns as Array<{ children: Array<Record<string, unknown>> }>) || [];
+        const newChild = {
+          sectionType: section.section_type,
+          sectionData: section.data,
+          sectionSettings: section.settings,
+        };
+
+        const updatedColumns = columns.map((col, i) => {
+          if (i === colIdx) {
+            return { children: [...(col.children || []), newChild] };
+          }
+          return col;
+        });
+
+        const updatedData = { ...columnSection.data, columns: updatedColumns };
+
+        await fetch(`/api/pages/${pageId}/sections/${columnSectionId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ data: updatedData }),
+        });
+
+        await fetch(`/api/pages/${pageId}/sections/${sectionId}`, { method: "DELETE" });
+
+        setSections((prev) =>
+          prev
+            .map((s) => (s.id === columnSectionId ? { ...s, data: updatedData } : s))
+            .filter((s) => s.id !== sectionId)
+        );
+
+        if (selectedSectionId === sectionId) {
+          setSelectedSectionId(columnSectionId);
+          setEditingData(null);
+          setEditingSettings(null);
+          setIsDirty(false);
+        }
+
+        toast.success(`Moved ${label} into column ${colIdx + 1}`);
+      },
+    });
+  };
+
+  // Extract a child from a custom_columns section back to standalone
+  const handleUngroupFromColumn = (columnSectionId: string, colIdx: number, childIdx: number) => {
+    const columnSection = sections.find((s) => s.id === columnSectionId);
+    if (!columnSection) return;
+
+    const columns = (columnSection.data.columns as Array<{ children: Array<Record<string, unknown>> }>) || [];
+    const child = columns[colIdx]?.children?.[childIdx];
+    if (!child || !child.sectionType) return;
+
+    const label = SECTION_TYPE_LABELS[child.sectionType as SectionType] || (child.sectionType as string);
+
+    setConfirmModal({
+      open: true,
+      title: "Extract from Column",
+      message: `Extract "${label}" as a standalone section?`,
+      confirmLabel: "Extract",
+      onConfirm: async () => {
+        setConfirmModal((prev) => ({ ...prev, open: false }));
+
+        const res = await fetch(`/api/pages/${pageId}/sections`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            section_type: child.sectionType,
+            data: child.sectionData || {},
+            settings: child.sectionSettings || {},
+          }),
+        });
+
+        if (!res.ok) {
+          toast.error("Failed to extract");
+          return;
+        }
+
+        const { section: newSection } = await res.json();
+
+        const updatedColumns = columns.map((col, i) =>
+          i === colIdx ? { children: col.children.filter((_: unknown, j: number) => j !== childIdx) } : col
+        );
+
+        const updatedData = { ...columnSection.data, columns: updatedColumns };
+
+        await fetch(`/api/pages/${pageId}/sections/${columnSectionId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ data: updatedData }),
+        });
+
+        setSections((prev) => {
+          const colSectionIdx = prev.findIndex((s) => s.id === columnSectionId);
+          const updated = prev.map((s) => (s.id === columnSectionId ? { ...s, data: updatedData } : s));
+          updated.splice(colSectionIdx + 1, 0, newSection);
+          return updated;
+        });
+
+        setSelectedSectionId(newSection.id);
+        setEditingData(null);
+        setEditingSettings(null);
+        setIsDirty(false);
+        toast.success(`Extracted ${label} from column`);
       },
     });
   };
@@ -1304,6 +1478,7 @@ export default function PageEditorPage() {
               onChange={handleEditorChange}
               stickyButtons
               onUngroupChild={handleUngroupChild}
+              onUngroupColumnChild={handleUngroupFromColumn}
               previewMode={previewMode}
             />
           </div>
@@ -1335,6 +1510,7 @@ export default function PageEditorPage() {
               onChange={handleEditorChange}
               stickyButtons
               onUngroupChild={handleUngroupChild}
+              onUngroupColumnChild={handleUngroupFromColumn}
               previewMode={previewMode}
             />
           </div>

@@ -90,6 +90,7 @@ export type SectionType =
   | "vehicle_convoy"
   | "vehicle_stream"
   | "accordion_parent"
+  | "custom_columns"
   | "contact_form"
   | "html_block"
   | "navbar";
@@ -635,6 +636,22 @@ export interface AccordionParentData {
   }>;
 }
 
+export interface CustomColumnsChild {
+  sectionType: string;
+  sectionData: Record<string, unknown>;
+  sectionSettings: Record<string, unknown>;
+}
+
+export interface CustomColumnsData {
+  columnCount: number;
+  columnWidths: string[];
+  gap: string;
+  stackOnMobile: boolean;
+  columns: Array<{
+    children: CustomColumnsChild[];
+  }>;
+}
+
 export interface ContactFormData {
   introText?: string;
   formHeadingStyle?: import("@/lib/styles").TextStyleConfig;
@@ -853,6 +870,7 @@ export const SECTION_TYPE_LABELS: Record<SectionType, string> = {
   photo_strip: "Photo Strip",
   image_gallery: "Image Gallery",
   accordion_parent: "Accordion Group",
+  custom_columns: "Custom Columns",
   wave_divider: "Divider",
   vehicle_convoy: "Vehicle Convoy",
   vehicle_stream: "Vehicle Stream",

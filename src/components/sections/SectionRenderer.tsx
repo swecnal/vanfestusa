@@ -22,6 +22,7 @@ import WaveDividerSection from "./WaveDividerSection";
 import VehicleConvoySection from "./VehicleConvoySection";
 import VehicleStreamSection from "./VehicleStreamSection";
 import AccordionParentSection from "./AccordionParentSection";
+import CustomColumnsSection from "./CustomColumnsSection";
 import ContactFormSection from "./ContactFormSection";
 import HtmlBlockSection from "./HtmlBlockSection";
 
@@ -87,6 +88,8 @@ export default function SectionRenderer({ section, siteStyles = EMPTY_SITE_STYLE
         return <VehicleStreamSection data={data} settings={settings} />;
       case "accordion_parent":
         return <AccordionParentSection data={data} settings={settings} siteStyles={siteStyles} />;
+      case "custom_columns":
+        return <CustomColumnsSection data={data} settings={settings} siteStyles={siteStyles} />;
       case "contact_form":
         return <ContactFormSection data={data} settings={settings} />;
       case "html_block":

@@ -17,7 +17,7 @@ export default function PhotoStripSection({ data, settings }: Props) {
         style={{ gridTemplateColumns: `repeat(${Math.min(cols, 6)}, 1fr)` }}
       >
         {d.images.map((img, i) => (
-          <div key={i} className={`overflow-hidden ${d.height || "h-48"} sm:h-56 md:h-64`}>
+          <div key={i} className="overflow-hidden" style={{ height: d.height || "200px" }}>
             <img
               src={img.src}
               alt={img.alt || ""}

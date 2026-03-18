@@ -112,6 +112,16 @@ export const SECTION_DEFAULTS: Record<SectionType, Record<string, unknown>> = {
       { title: "Item 1", body: "<p>Content for item 1</p>" },
     ],
   },
+  custom_columns: {
+    columnCount: 2,
+    columnWidths: ["50%", "50%"],
+    gap: "24px",
+    stackOnMobile: true,
+    columns: [
+      { children: [] },
+      { children: [] },
+    ],
+  },
   contact_form: {
     recipientEmail: "hello@vanfestusa.com",
     contactCards: [

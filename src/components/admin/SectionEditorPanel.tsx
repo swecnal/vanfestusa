@@ -25,10 +25,11 @@ interface Props {
   onChange?: (data: Record<string, unknown>, settings: Record<string, unknown>) => void;
   stickyButtons?: boolean;
   onUngroupChild?: (accordionId: string, childIndex: number) => void;
+  onUngroupColumnChild?: (columnSectionId: string, colIdx: number, childIdx: number) => void;
   previewMode?: "desktop" | "mobile";
 }
 
-export default function SectionEditorPanel({ section, onSave, saving, isDirty, onChange, stickyButtons, onUngroupChild, previewMode }: Props) {
+export default function SectionEditorPanel({ section, onSave, saving, isDirty, onChange, stickyButtons, onUngroupChild, onUngroupColumnChild, previewMode }: Props) {
   const [data, setData] = useState<Record<string, unknown>>(section.data);
   const [settings, setSettings] = useState<Record<string, unknown>>(section.settings as unknown as Record<string, unknown>);
   const [siteStyles, setSiteStyles] = useState<SiteStyles>(EMPTY_SITE_STYLES);
@@ -436,6 +437,7 @@ export default function SectionEditorPanel({ section, onSave, saving, isDirty, o
         siteStyles={siteStyles}
         sectionId={section.id}
         onUngroupChild={onUngroupChild}
+        onUngroupColumnChild={onUngroupColumnChild}
         savedNavbars={savedNavbars}
       />
 
@@ -486,6 +488,7 @@ function SectionFields({
   siteStyles,
   sectionId,
   onUngroupChild,
+  onUngroupColumnChild,
   savedNavbars,
 }: {
   type: string;
@@ -494,6 +497,7 @@ function SectionFields({
   siteStyles: SiteStyles;
   sectionId?: string;
   onUngroupChild?: (accordionId: string, childIndex: number) => void;
+  onUngroupColumnChild?: (columnSectionId: string, colIdx: number, childIdx: number) => void;
   savedNavbars?: SavedNavbar[];
 }) {
   switch (type) {
@@ -701,6 +705,206 @@ function SectionFields({
                 </details>
               ))}
             </div>
+          </div>
+        </div>
+      );
+    }
+
+    case "custom_columns": {
+      const columnCount = (data.columnCount as number) || 2;
+      const columnWidths = (data.columnWidths as string[]) || Array(columnCount).fill(`${(100 / columnCount).toFixed(0)}%`);
+      const columns = (data.columns as Array<{ children: Array<Record<string, unknown>> }>) || [];
+
+      const WIDTH_PRESETS: Record<number, Array<{ label: string; widths: string[] }>> = {
+        1: [{ label: "Full", widths: ["100%"] }],
+        2: [
+          { label: "50 / 50", widths: ["50%", "50%"] },
+          { label: "33 / 67", widths: ["33%", "67%"] },
+          { label: "67 / 33", widths: ["67%", "33%"] },
+          { label: "25 / 75", widths: ["25%", "75%"] },
+          { label: "75 / 25", widths: ["75%", "25%"] },
+        ],
+        3: [
+          { label: "Equal", widths: ["33.33%", "33.33%", "33.33%"] },
+          { label: "25 / 50 / 25", widths: ["25%", "50%", "25%"] },
+          { label: "50 / 25 / 25", widths: ["50%", "25%", "25%"] },
+        ],
+        4: [
+          { label: "Equal", widths: ["25%", "25%", "25%", "25%"] },
+        ],
+      };
+
+      const handleColumnCountChange = (newCount: number) => {
+        const newColumns = [...columns];
+        while (newColumns.length < newCount) newColumns.push({ children: [] });
+        if (newCount < columns.length) {
+          for (let i = newCount; i < columns.length; i++) {
+            if (columns[i]?.children?.length) {
+              newColumns[newCount - 1] = {
+                children: [...(newColumns[newCount - 1]?.children || []), ...columns[i].children],
+              };
+            }
+          }
+          newColumns.length = newCount;
+        }
+        const defaultWidths = Array(newCount).fill(`${(100 / newCount).toFixed(newCount === 3 ? 2 : 0)}%`);
+        updateData("columnCount", newCount);
+        updateData("columns", newColumns);
+        updateData("columnWidths", defaultWidths);
+      };
+
+      const moveColumnChild = (colIdx: number, from: number, to: number) => {
+        const col = columns[colIdx];
+        if (!col) return;
+        const next = [...col.children];
+        const [moved] = next.splice(from, 1);
+        next.splice(to, 0, moved);
+        const updatedColumns = columns.map((c, i) => (i === colIdx ? { children: next } : c));
+        updateData("columns", updatedColumns);
+      };
+
+      const removeColumnChild = (colIdx: number, childIdx: number) => {
+        const updatedColumns = columns.map((c, i) =>
+          i === colIdx ? { children: c.children.filter((_, j) => j !== childIdx) } : c
+        );
+        updateData("columns", updatedColumns);
+      };
+
+      return (
+        <div className="space-y-3">
+          <Field label="Columns">
+            <div className="flex gap-1">
+              {[1, 2, 3, 4].map((n) => (
+                <button
+                  key={n}
+                  onClick={() => handleColumnCountChange(n)}
+                  className={`flex-1 px-3 py-1.5 rounded text-xs font-semibold transition-colors ${
+                    columnCount === n
+                      ? "bg-teal text-white"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
+                >
+                  {n}
+                </button>
+              ))}
+            </div>
+          </Field>
+
+          <Field label="Column Widths">
+            <div className="flex flex-wrap gap-1 mb-2">
+              {(WIDTH_PRESETS[columnCount] || []).map((preset) => (
+                <button
+                  key={preset.label}
+                  onClick={() => updateData("columnWidths", preset.widths)}
+                  className={`px-2 py-1 rounded text-[10px] font-semibold transition-colors ${
+                    JSON.stringify(columnWidths) === JSON.stringify(preset.widths)
+                      ? "bg-teal/20 text-teal border border-teal/30"
+                      : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                  }`}
+                >
+                  {preset.label}
+                </button>
+              ))}
+            </div>
+            <div className="flex gap-1">
+              {columnWidths.slice(0, columnCount).map((w, i) => (
+                <input
+                  key={i}
+                  type="text"
+                  value={w}
+                  onChange={(e) => {
+                    const next = [...columnWidths];
+                    next[i] = e.target.value;
+                    updateData("columnWidths", next);
+                  }}
+                  className="flex-1 text-[10px] px-1.5 py-1 border border-gray-200 rounded text-center"
+                  title={`Column ${i + 1} width`}
+                />
+              ))}
+            </div>
+          </Field>
+
+          <Field label="Gap">
+            <input
+              type="text"
+              value={(data.gap as string) || "24px"}
+              onChange={(e) => updateData("gap", e.target.value)}
+              className="w-20 text-xs px-2 py-1 border border-gray-200 rounded"
+              placeholder="24px"
+            />
+          </Field>
+
+          <label className="flex items-center gap-2 text-xs cursor-pointer">
+            <input
+              type="checkbox"
+              checked={(data.stackOnMobile as boolean) !== false}
+              onChange={(e) => updateData("stackOnMobile", e.target.checked)}
+              className="accent-teal"
+            />
+            <span className="text-gray-600">Stack on mobile</span>
+          </label>
+
+          <div className="border-t border-gray-200 pt-3 mt-3 space-y-2">
+            <p className="text-[10px] text-gray-400">Drag sections from the page into columns, or use the drop zones that appear when dragging.</p>
+            {columns.slice(0, columnCount).map((column, colIdx) => (
+              <details key={colIdx} className="border border-gray-200 rounded-lg" open>
+                <summary className="px-3 py-2 text-xs font-semibold text-gray-600 cursor-pointer hover:bg-gray-50 select-none">
+                  Column {colIdx + 1}
+                  <span className="text-gray-400 font-normal ml-1">
+                    ({column.children?.length || 0} items)
+                  </span>
+                </summary>
+                <div className="p-2 space-y-1 border-t border-gray-100">
+                  {(column.children || []).map((child, childIdx) => (
+                    <div key={childIdx} className="flex items-center gap-1.5 px-2 py-1.5 bg-gray-50 rounded">
+                      <span className="text-[9px] uppercase tracking-wider font-semibold px-1.5 py-0.5 rounded bg-teal/10 text-teal">
+                        {SECTION_TYPE_LABELS[(child.sectionType as string) as SectionType] || (child.sectionType as string)}
+                      </span>
+                      <span className="flex-1" />
+                      <button
+                        disabled={childIdx === 0}
+                        onClick={() => moveColumnChild(colIdx, childIdx, childIdx - 1)}
+                        className="text-gray-400 hover:text-gray-600 disabled:opacity-20 p-0.5"
+                        title="Move up"
+                      >
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" /></svg>
+                      </button>
+                      <button
+                        disabled={childIdx === (column.children?.length || 1) - 1}
+                        onClick={() => moveColumnChild(colIdx, childIdx, childIdx + 1)}
+                        className="text-gray-400 hover:text-gray-600 disabled:opacity-20 p-0.5"
+                        title="Move down"
+                      >
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                      </button>
+                      {onUngroupColumnChild && sectionId && (
+                        <button
+                          onClick={() => onUngroupColumnChild(sectionId, colIdx, childIdx)}
+                          className="text-orange-500 hover:text-orange-700 p-0.5"
+                          title="Extract to standalone section"
+                        >
+                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5l5.25 5.25" />
+                          </svg>
+                        </button>
+                      )}
+                      <button
+                        onClick={() => removeColumnChild(colIdx, childIdx)}
+                        className="text-gray-300 hover:text-red-500 p-0.5"
+                        title="Remove from column"
+                      >
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                      </button>
+                    </div>
+                  ))}
+                  {(!column.children || column.children.length === 0) && (
+                    <p className="text-[10px] text-gray-400 italic px-2 py-1">
+                      Drag a section here from the page
+                    </p>
+                  )}
+                </div>
+              </details>
+            ))}
           </div>
         </div>
       );
@@ -1502,13 +1706,14 @@ function SectionFields({
     case "photo_strip":
       return (
         <div className="space-y-3">
-          <Field label="Height">
+          <Field label={`Height: ${parseInt((data.height as string) || "200", 10)}px`}>
             <input
-              type="text"
-              value={(data.height as string) || ""}
-              onChange={(e) => updateData("height", e.target.value)}
-              className="input-sm"
-              placeholder="e.g. 200px"
+              type="range"
+              min={60}
+              max={600}
+              value={parseInt((data.height as string) || "200", 10)}
+              onChange={(e) => updateData("height", `${e.target.value}px`)}
+              className="w-full accent-teal"
             />
           </Field>
           <Field label="Columns">
