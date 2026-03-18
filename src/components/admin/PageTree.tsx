@@ -531,15 +531,44 @@ export default function PageTree({ collapsed }: { collapsed: boolean }) {
     fetchOrder();
   }, [fetchPages, fetchOrder]);
 
-  // Track pointer position during drag for zone detection
+  // Track pointer position during drag AND run zone detection on every move
+  // (onDragOver only fires when closestCenter detects a new "over" target,
+  //  so moving within the same item never triggers zone changes)
   useEffect(() => {
     if (!activeDragId) return;
+    let rafId: number;
     const handler = (e: PointerEvent) => {
-      pointerRef.current = { x: e.clientX, y: e.clientY };
+      const x = e.clientX;
+      const y = e.clientY;
+      pointerRef.current = { x, y };
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        const els = document.elementsFromPoint(x, y);
+        const rowEl = els.find((el) => {
+          const pid = el.getAttribute("data-page-id");
+          return pid && pid !== activeDragId;
+        });
+        if (!rowEl) {
+          setNestTargetId(null);
+          setDropIntent(null);
+          return;
+        }
+        const pageId = rowEl.getAttribute("data-page-id")!;
+        const rect = rowEl.getBoundingClientRect();
+        const relativeY = (y - rect.top) / rect.height;
+        if (relativeY > 0.25 && relativeY < 0.75) {
+          const tp = pages.find((p) => p.id === pageId);
+          setNestTargetId(pageId);
+          setDropIntent({ type: "nest", targetTitle: tp?.title || "page" });
+        } else {
+          setNestTargetId(null);
+          setDropIntent({ type: "reorder" });
+        }
+      });
     };
     window.addEventListener("pointermove", handler);
-    return () => window.removeEventListener("pointermove", handler);
-  }, [activeDragId]);
+    return () => { window.removeEventListener("pointermove", handler); cancelAnimationFrame(rafId); };
+  }, [activeDragId, pages]);
 
   // Listen for page-tree-refresh events (e.g. after page deletion)
   useEffect(() => {
@@ -741,38 +770,8 @@ export default function PageTree({ collapsed }: { collapsed: boolean }) {
     setActiveDragId(String(event.active.id));
   };
 
-  const handleDragOver = () => {
-    const { x, y } = pointerRef.current;
-    if (!x && !y) { setNestTargetId(null); setDropIntent(null); return; }
-
-    // Find which page row the cursor is physically over (ignores sortable animation shifts)
-    const els = document.elementsFromPoint(x, y);
-    const rowEl = els.find((el) => {
-      const pid = el.getAttribute("data-page-id");
-      return pid && pid !== activeDragId;
-    });
-
-    if (!rowEl) {
-      setNestTargetId(null);
-      setDropIntent(null);
-      return;
-    }
-
-    const pageId = rowEl.getAttribute("data-page-id")!;
-    const rect = rowEl.getBoundingClientRect();
-    const relativeY = (y - rect.top) / rect.height;
-
-    if (relativeY > 0.25 && relativeY < 0.75) {
-      // Center zone → nest
-      const targetPage = pages.find((p) => p.id === pageId);
-      setNestTargetId(pageId);
-      setDropIntent({ type: "nest", targetTitle: targetPage?.title || "page" });
-    } else {
-      // Edge zone → reorder
-      setNestTargetId(null);
-      setDropIntent({ type: "reorder" });
-    }
-  };
+  // Zone detection now runs in the pointermove handler above — no-op here
+  const handleDragOver = () => {};
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
