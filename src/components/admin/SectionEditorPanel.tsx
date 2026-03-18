@@ -868,24 +868,89 @@ function SectionFields({
       return (
         <div className="space-y-3">
           <Field label="Divider Type">
-            <select
-              value={dividerType}
-              onChange={(e) => updateData("dividerType", e.target.value)}
-              className="input-sm"
-            >
-              <option value="wave">Wave</option>
-              <option value="zigzag">Zigzag</option>
-              <option value="curve">Curve</option>
-              <option value="straight">Straight</option>
-              <option value="convoy">Scroll Convoy</option>
-              <option value="stream">Auto Stream</option>
-              <option value="festival">Festival Scene</option>
-              <option value="gradient">Gradient</option>
-              <option value="clouds">Clouds</option>
-              <option value="bubbles">Bubbles</option>
-              <option value="paint_spill">Paint Spill</option>
-              <option value="digital_fade">Digital Fade</option>
-            </select>
+            <div className="grid grid-cols-3 gap-1.5">
+              {([
+                { value: "wave", label: "Wave", path: "M0,0 L0,20 Q15,35 30,20 T60,20 T90,20 T120,20 L120,0Z" },
+                { value: "zigzag", label: "Zigzag", path: "M0,0 L0,20 L15,32 L30,18 L45,32 L60,18 L75,32 L90,18 L105,32 L120,20 L120,0Z" },
+                { value: "curve", label: "Curve", path: "M0,0 L0,15 Q60,45 120,15 L120,0Z" },
+                { value: "straight", label: "Straight", path: "M0,0 L0,20 L120,20 L120,0Z" },
+                { value: "gradient", label: "Gradient", gradient: true },
+                { value: "clouds", label: "Clouds", path: "M0,0 L0,22 Q10,12 20,22 Q30,8 40,22 Q55,10 65,22 Q75,14 85,22 Q95,10 105,22 Q112,16 120,22 L120,0Z" },
+                { value: "bubbles", label: "Bubbles", bubbles: true },
+                { value: "paint_spill", label: "Paint Spill", path: "M0,0 L0,16 L20,16 C20,34 40,34 40,16 L55,16 C55,28 70,28 70,16 L85,16 C85,38 105,38 105,16 L120,16 L120,0Z" },
+                { value: "digital_fade", label: "Digital", pixels: true },
+                { value: "convoy", label: "Convoy", icon: "truck" },
+                { value: "stream", label: "Stream", icon: "stream" },
+                { value: "festival", label: "Festival", icon: "tent" },
+              ] as const).map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => updateData("dividerType", opt.value)}
+                  className={`flex flex-col items-center rounded-lg border p-1.5 transition-all ${
+                    dividerType === opt.value
+                      ? "border-teal bg-teal/10 ring-1 ring-teal/30"
+                      : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                  }`}
+                >
+                  <svg viewBox="0 0 120 40" className="w-full h-7 rounded" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="120" height="40" fill="#f3f4f6" />
+                    {"path" in opt && opt.path && <path d={opt.path} fill="#2dd4bf" />}
+                    {"gradient" in opt && (
+                      <>
+                        <defs><linearGradient id="gp" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#2dd4bf" /><stop offset="100%" stopColor="#f3f4f6" /></linearGradient></defs>
+                        <rect width="120" height="40" fill="url(#gp)" />
+                      </>
+                    )}
+                    {"bubbles" in opt && (
+                      <>
+                        {[{x:15,y:12,r:6},{x:40,y:20,r:4},{x:60,y:8,r:8},{x:85,y:18,r:5},{x:105,y:10,r:7},{x:30,y:30,r:3},{x:75,y:28,r:4},{x:95,y:32,r:3}].map((c,i) => (
+                          <circle key={i} cx={c.x} cy={c.y} r={c.r} fill="#2dd4bf" opacity={0.5 + i * 0.05} />
+                        ))}
+                      </>
+                    )}
+                    {"pixels" in opt && (
+                      <>
+                        {Array.from({length: 40}, (_, i) => {
+                          const col = i % 10; const row = Math.floor(i / 10);
+                          const show = Math.random() > (row * 0.25);
+                          return show ? <rect key={i} x={col * 12} y={row * 10} width={12} height={10} fill="#2dd4bf" opacity={1 - row * 0.25} /> : null;
+                        })}
+                      </>
+                    )}
+                    {"icon" in opt && opt.icon === "truck" && (
+                      <g transform="translate(20,8)">
+                        {[0, 30, 60].map((x, i) => (
+                          <g key={i} transform={`translate(${x},0)`}>
+                            <rect x="0" y="4" width="18" height="12" rx="2" fill="#2dd4bf" />
+                            <rect x="12" y="8" width="8" height="8" rx="1" fill="#0d9488" />
+                            <circle cx="5" cy="18" r="3" fill="#555" /><circle cx="16" cy="18" r="3" fill="#555" />
+                          </g>
+                        ))}
+                      </g>
+                    )}
+                    {"icon" in opt && opt.icon === "stream" && (
+                      <g>
+                        {[8, 20, 32].map((y, i) => (
+                          <path key={i} d={`M${5 + i * 10},${y} Q40,${y - 4 + i * 2} 60,${y} T120,${y}`} stroke="#2dd4bf" strokeWidth="2.5" fill="none" opacity={0.5 + i * 0.2} />
+                        ))}
+                      </g>
+                    )}
+                    {"icon" in opt && opt.icon === "tent" && (
+                      <g transform="translate(25,5)">
+                        <polygon points="35,30 0,30 10,5 25,5" fill="#2dd4bf" />
+                        <polygon points="35,30 70,30 60,5 45,5" fill="#0d9488" />
+                        <rect x="28" y="18" width="14" height="12" fill="#f3f4f6" rx="1" />
+                        <circle cx="10" cy="22" r="4" fill="#fbbf24" opacity="0.6" />
+                        <circle cx="60" cy="22" r="4" fill="#fbbf24" opacity="0.6" />
+                      </g>
+                    )}
+                  </svg>
+                  <span className={`text-[9px] mt-0.5 leading-tight ${dividerType === opt.value ? "text-teal font-semibold" : "text-gray-500"}`}>
+                    {opt.label}
+                  </span>
+                </button>
+              ))}
+            </div>
           </Field>
 
           {showShapeColors && (
