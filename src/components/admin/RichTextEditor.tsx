@@ -618,6 +618,26 @@ export default function RichTextEditor({ content, onChange, siteStyles = EMPTY_S
           <s>S</s>
         </ToolbarButton>
 
+        <div className="w-px h-5 bg-gray-200 mx-0.5" />
+
+        <input
+          type="number"
+          min={8}
+          max={120}
+          value={parseInt(editor.getAttributes("textStyle").fontSize || "0", 10) || ""}
+          onChange={(e) => {
+            const val = e.target.value;
+            if (val && Number(val) > 0) {
+              editor.chain().focus().setMark("textStyle", { fontSize: `${val}px` }).run();
+            } else {
+              editor.chain().focus().setMark("textStyle", { fontSize: null }).run();
+            }
+          }}
+          className="w-10 text-[10px] px-1 py-0.5 border border-gray-300 rounded bg-white h-6 text-center tabular-nums"
+          placeholder="px"
+          title="Font size (px)"
+        />
+
         {!minimal && (
           <>
         <div className="w-px h-5 bg-gray-200 mx-0.5" />
