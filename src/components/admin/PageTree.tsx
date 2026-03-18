@@ -11,7 +11,6 @@ import {
   DragOverlay,
   type DragEndEvent,
   type DragStartEvent,
-  type DragOverEvent,
 } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -742,31 +741,36 @@ export default function PageTree({ collapsed }: { collapsed: boolean }) {
     setActiveDragId(String(event.active.id));
   };
 
-  const handleDragOver = (event: DragOverEvent) => {
-    const overId = event.over?.id ? String(event.over.id) : null;
+  const handleDragOver = () => {
+    const { x, y } = pointerRef.current;
+    if (!x && !y) { setNestTargetId(null); setDropIntent(null); return; }
 
-    if (!overId || overId === activeDragId || overId.startsWith("folder-")) {
+    // Find which page row the cursor is physically over (ignores sortable animation shifts)
+    const els = document.elementsFromPoint(x, y);
+    const rowEl = els.find((el) => {
+      const pid = el.getAttribute("data-page-id");
+      return pid && pid !== activeDragId;
+    });
+
+    if (!rowEl) {
       setNestTargetId(null);
       setDropIntent(null);
       return;
     }
 
-    // Use pointer position relative to the item's ROW to detect zone
-    const rowEl = document.querySelector(`[data-page-id="${overId}"]`);
-    if (rowEl) {
-      const rect = rowEl.getBoundingClientRect();
-      const relativeY = (pointerRef.current.y - rect.top) / rect.height;
+    const pageId = rowEl.getAttribute("data-page-id")!;
+    const rect = rowEl.getBoundingClientRect();
+    const relativeY = (y - rect.top) / rect.height;
 
-      if (relativeY > 0.3 && relativeY < 0.7) {
-        // Center zone → nest
-        const targetPage = pages.find((p) => p.id === overId);
-        setNestTargetId(overId);
-        setDropIntent({ type: "nest", targetTitle: targetPage?.title || "page" });
-      } else {
-        // Edge zone → reorder
-        setNestTargetId(null);
-        setDropIntent({ type: "reorder" });
-      }
+    if (relativeY > 0.25 && relativeY < 0.75) {
+      // Center zone → nest
+      const targetPage = pages.find((p) => p.id === pageId);
+      setNestTargetId(pageId);
+      setDropIntent({ type: "nest", targetTitle: targetPage?.title || "page" });
+    } else {
+      // Edge zone → reorder
+      setNestTargetId(null);
+      setDropIntent({ type: "reorder" });
     }
   };
 
