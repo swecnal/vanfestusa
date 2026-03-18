@@ -234,8 +234,10 @@ export default function WaveDividerSection({ data, settings }: Props) {
   // ─── Straight ───
   if (dividerType === "straight") {
     return (
-      <div className="relative -mt-1" style={{ backgroundColor: toColor, ...spacingStyle }}>
-        <div style={{ height, backgroundColor: fromColor }} />
+      <div style={spacingStyle}>
+        <div className="relative -mt-1" style={{ backgroundColor: toColor }}>
+          <div style={{ height, backgroundColor: fromColor }} />
+        </div>
       </div>
     );
   }
@@ -266,7 +268,8 @@ export default function WaveDividerSection({ data, settings }: Props) {
   // ─── Bubbles ───
   if (dividerType === "bubbles") {
     return (
-      <div className="relative -mt-1" style={{ backgroundColor: toColor, ...spacingStyle }}>
+      <div style={spacingStyle}>
+      <div className="relative -mt-1" style={{ backgroundColor: toColor }}>
         <svg
           viewBox={`0 0 1440 ${height}`}
           preserveAspectRatio="none"
@@ -277,22 +280,25 @@ export default function WaveDividerSection({ data, settings }: Props) {
           {generateBubblesElements(1440, height, intensity, fromColor)}
         </svg>
       </div>
+      </div>
     );
   }
 
   // ─── Digital Fade ───
   if (dividerType === "digital_fade") {
     return (
-      <div className="relative -mt-1" style={{ backgroundColor: toColor, ...spacingStyle }}>
-        <svg
-          viewBox={`0 0 1440 ${height}`}
-          preserveAspectRatio="none"
-          className="block w-full"
-          style={{ height, transform: d.flip ? "scaleY(-1)" : undefined }}
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          {generateDigitalFadeElements(1440, height, intensity, fromColor)}
-        </svg>
+      <div style={spacingStyle}>
+        <div className="relative -mt-1" style={{ backgroundColor: toColor }}>
+          <svg
+            viewBox={`0 0 1440 ${height}`}
+            preserveAspectRatio="none"
+            className="block w-full"
+            style={{ height, transform: d.flip ? "scaleY(-1)" : undefined }}
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            {generateDigitalFadeElements(1440, height, intensity, fromColor)}
+          </svg>
+        </div>
       </div>
     );
   }
@@ -314,16 +320,18 @@ export default function WaveDividerSection({ data, settings }: Props) {
   }
 
   return (
-    <div className="relative -mt-1" style={{ backgroundColor: toColor, ...spacingStyle }}>
-      <svg
-        viewBox={`0 0 1440 ${height}`}
-        preserveAspectRatio="none"
-        className="block w-full"
-        style={{ height, transform: d.flip ? "scaleY(-1)" : undefined }}
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path d={svgPath} fill={fromColor} />
-      </svg>
+    <div style={spacingStyle}>
+      <div className="relative -mt-1" style={{ backgroundColor: toColor }}>
+        <svg
+          viewBox={`0 0 1440 ${height}`}
+          preserveAspectRatio="none"
+          className="block w-full"
+          style={{ height, transform: d.flip ? "scaleY(-1)" : undefined }}
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path d={svgPath} fill={fromColor} />
+        </svg>
+      </div>
     </div>
   );
 }
