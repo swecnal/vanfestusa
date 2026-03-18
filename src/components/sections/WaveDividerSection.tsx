@@ -74,8 +74,11 @@ function generateZigzagPath(width: number, height: number, frequency: number, in
 }
 
 function generateCurvePath(width: number, height: number, intensity: number): string {
-  const depth = height * (intensity / 100);
-  return `M0,0 L0,${height - depth} Q${width / 2},${height + depth * 0.5} ${width},${height - depth} L${width},0 Z`;
+  const absDepth = height * (Math.abs(intensity) / 100);
+  const sign = intensity >= 0 ? 1 : -1;
+  const edgeY = height - absDepth;
+  const controlY = height + absDepth * 0.5 * sign;
+  return `M0,0 L0,${edgeY} Q${width / 2},${controlY} ${width},${edgeY} L${width},0 Z`;
 }
 
 // ─── New SVG divider generators ───

@@ -359,6 +359,7 @@ export default function PageEditorPage() {
   const dragCounter = useRef(0);
   // Dirty tracking for unsaved changes
   const [isDirty, setIsDirty] = useState(false);
+  const isDirtyRef = useRef(false);
   // Confirm modal state
   const [confirmModal, setConfirmModal] = useState<{
     open: boolean;
@@ -617,6 +618,7 @@ export default function PageEditorPage() {
   const handleSaveSection = async (sectionId: string, data: Record<string, unknown>, settings?: Record<string, unknown>) => {
     setSaving(true);
     setIsDirty(false); // Clear immediately so user can switch sections while save is in flight
+    isDirtyRef.current = false;
     const body: Record<string, unknown> = { data };
     if (settings) body.settings = settings;
 
@@ -633,6 +635,7 @@ export default function PageEditorPage() {
       toast.success("Saved");
     } else {
       setIsDirty(true); // Restore dirty flag on failure
+      isDirtyRef.current = true;
       toast.error("Failed to save");
     }
     setSaving(false);
@@ -643,6 +646,7 @@ export default function PageEditorPage() {
     setEditingData(data);
     setEditingSettings(settings);
     setIsDirty(true);
+    isDirtyRef.current = true;
     // Push live update to mobile preview iframe
     if (selectedSectionId && mobileIframeRef.current?.contentWindow) {
       mobileIframeRef.current.contentWindow.postMessage({
@@ -782,13 +786,14 @@ export default function PageEditorPage() {
     setEditingData(null);
     setEditingSettings(null);
     setIsDirty(false);
+    isDirtyRef.current = false;
     setGlobalEditTarget(null);
   }, [selectedSectionId]);
 
   // Click-to-toggle with unsaved changes guard
   const handleSelectSection = useCallback((id: string | null) => {
     // If switching away from a dirty section, prompt
-    if (isDirty && selectedSectionId && id !== selectedSectionId) {
+    if ((isDirty || isDirtyRef.current) && selectedSectionId && id !== selectedSectionId) {
       pendingSelectRef.current = id;
       setConfirmModal({
         open: true,
@@ -944,6 +949,7 @@ export default function PageEditorPage() {
                     setPage((prev) => prev ? { ...prev, title: updated.title, slug: updated.slug } : prev);
                     setEditingPageMeta(null);
                     toast.success("Page updated");
+                    window.dispatchEvent(new CustomEvent("page-tree-refresh"));
                   } else {
                     toast.error("Failed to update page");
                   }

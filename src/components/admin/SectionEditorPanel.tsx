@@ -100,10 +100,16 @@ export default function SectionEditorPanel({ section, onSave, saving, isDirty, o
                 <button
                   key={preset}
                   onClick={() => {
-                    const vals = SPACING_PRESETS.padding[preset];
-                    const next = { ...settings, paddingTop: vals.top, paddingBottom: vals.bottom, paddingLeft: vals.left, paddingRight: vals.right, paddingPreset: preset, paddingY: undefined };
-                    setSettings(next);
-                    onChange?.(data, next);
+                    if ((settings.paddingPreset as string) === preset) {
+                      const next = { ...settings, paddingTop: undefined, paddingBottom: undefined, paddingLeft: undefined, paddingRight: undefined, paddingPreset: null, paddingY: undefined };
+                      setSettings(next);
+                      onChange?.(data, next);
+                    } else {
+                      const vals = SPACING_PRESETS.padding[preset];
+                      const next = { ...settings, paddingTop: vals.top, paddingBottom: vals.bottom, paddingLeft: vals.left, paddingRight: vals.right, paddingPreset: preset, paddingY: undefined };
+                      setSettings(next);
+                      onChange?.(data, next);
+                    }
                   }}
                   className={`flex-1 text-[10px] py-1 rounded border transition-colors capitalize ${
                     (settings.paddingPreset as string) === preset
@@ -146,10 +152,16 @@ export default function SectionEditorPanel({ section, onSave, saving, isDirty, o
                 <button
                   key={preset}
                   onClick={() => {
-                    const vals = SPACING_PRESETS.margin[preset];
-                    const next = { ...settings, marginTop: vals.top, marginBottom: vals.bottom, marginLeft: vals.left, marginRight: vals.right, marginPreset: preset };
-                    setSettings(next);
-                    onChange?.(data, next);
+                    if ((settings.marginPreset as string) === preset) {
+                      const next = { ...settings, marginTop: undefined, marginBottom: undefined, marginLeft: undefined, marginRight: undefined, marginPreset: null };
+                      setSettings(next);
+                      onChange?.(data, next);
+                    } else {
+                      const vals = SPACING_PRESETS.margin[preset];
+                      const next = { ...settings, marginTop: vals.top, marginBottom: vals.bottom, marginLeft: vals.left, marginRight: vals.right, marginPreset: preset };
+                      setSettings(next);
+                      onChange?.(data, next);
+                    }
                   }}
                   className={`flex-1 text-[10px] py-1 rounded border transition-colors capitalize ${
                     (settings.marginPreset as string) === preset
@@ -286,10 +298,16 @@ export default function SectionEditorPanel({ section, onSave, saving, isDirty, o
                     <button
                       key={preset}
                       onClick={() => {
-                        const vals = SPACING_PRESETS.padding[preset];
-                        const next = { ...settings, mobilePaddingTop: vals.top, mobilePaddingBottom: vals.bottom, mobilePaddingLeft: vals.left, mobilePaddingRight: vals.right, mobilePaddingPreset: preset };
-                        setSettings(next);
-                        onChange?.(data, next);
+                        if ((settings.mobilePaddingPreset as string) === preset) {
+                          const next = { ...settings, mobilePaddingTop: undefined, mobilePaddingBottom: undefined, mobilePaddingLeft: undefined, mobilePaddingRight: undefined, mobilePaddingPreset: null };
+                          setSettings(next);
+                          onChange?.(data, next);
+                        } else {
+                          const vals = SPACING_PRESETS.padding[preset];
+                          const next = { ...settings, mobilePaddingTop: vals.top, mobilePaddingBottom: vals.bottom, mobilePaddingLeft: vals.left, mobilePaddingRight: vals.right, mobilePaddingPreset: preset };
+                          setSettings(next);
+                          onChange?.(data, next);
+                        }
                       }}
                       className={`flex-1 text-[10px] py-1 rounded border transition-colors capitalize ${
                         (settings.mobilePaddingPreset as string) === preset
@@ -332,10 +350,16 @@ export default function SectionEditorPanel({ section, onSave, saving, isDirty, o
                     <button
                       key={preset}
                       onClick={() => {
-                        const vals = SPACING_PRESETS.margin[preset];
-                        const next = { ...settings, mobileMarginTop: vals.top, mobileMarginBottom: vals.bottom, mobileMarginLeft: vals.left, mobileMarginRight: vals.right, mobileMarginPreset: preset };
-                        setSettings(next);
-                        onChange?.(data, next);
+                        if ((settings.mobileMarginPreset as string) === preset) {
+                          const next = { ...settings, mobileMarginTop: undefined, mobileMarginBottom: undefined, mobileMarginLeft: undefined, mobileMarginRight: undefined, mobileMarginPreset: null };
+                          setSettings(next);
+                          onChange?.(data, next);
+                        } else {
+                          const vals = SPACING_PRESETS.margin[preset];
+                          const next = { ...settings, mobileMarginTop: vals.top, mobileMarginBottom: vals.bottom, mobileMarginLeft: vals.left, mobileMarginRight: vals.right, mobileMarginPreset: preset };
+                          setSettings(next);
+                          onChange?.(data, next);
+                        }
                       }}
                       className={`flex-1 text-[10px] py-1 rounded border transition-colors capitalize ${
                         (settings.mobileMarginPreset as string) === preset
@@ -956,12 +980,12 @@ function SectionFields({
           )}
 
           {showIntensity && (
-            <Field label={`Intensity: ${(data.intensity as number) || 50}%`}>
+            <Field label={`Intensity: ${(data.intensity as number) ?? 50}%`}>
               <input
                 type="range"
-                min={1}
+                min={dividerType === "curve" ? -100 : 1}
                 max={100}
-                value={(data.intensity as number) || 50}
+                value={(data.intensity as number) ?? 50}
                 onChange={(e) => updateData("intensity", Number(e.target.value))}
                 className="w-full"
               />

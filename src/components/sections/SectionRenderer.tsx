@@ -134,7 +134,7 @@ export default function SectionRenderer({ section, siteStyles = EMPTY_SITE_STYLE
           style={{ backgroundColor: bgConfig.overlayColor, opacity: (bgConfig.overlayOpacity ?? 0) / 100 }}
         />
       )}
-      <div className={[hasBg ? "relative z-[1]" : "", "section-content"].filter(Boolean).join(" ")}>
+      <div className={`relative z-[1] section-content`}>
         {content}
       </div>
       {/* Anchor ID for scroll-to */}

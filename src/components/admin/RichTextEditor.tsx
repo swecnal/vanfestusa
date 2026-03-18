@@ -626,7 +626,13 @@ export default function RichTextEditor({ content, onChange, siteStyles = EMPTY_S
           <ToolbarButton
             key={level}
             active={editor.isActive("heading", { level })}
-            onClick={() => editor.chain().focus().toggleHeading({ level: level as 1 | 2 | 3 }).run()}
+            onClick={() => {
+              const currentAlign = editor.getAttributes("paragraph").textAlign || editor.getAttributes("heading").textAlign;
+              editor.chain().focus().toggleHeading({ level: level as 1 | 2 | 3 }).run();
+              if (currentAlign && currentAlign !== "left") {
+                editor.chain().setTextAlign(currentAlign).run();
+              }
+            }}
             title={`Heading ${level}`}
           >
             H{level}
