@@ -377,7 +377,19 @@ export default function PageEditorPage() {
   const pendingSelectRef = useRef<string | null | undefined>(undefined);
 
   const { registerHandler, unregisterHandler } = usePageEditor();
-  const [editPaneMode, setEditPaneMode] = useState<"floating" | "static">("floating");
+  const [editPaneMode, setEditPaneMode] = useState<"floating" | "static">(() => {
+    if (typeof window !== "undefined") {
+      return (localStorage.getItem("vf_editPaneMode") as "floating" | "static") || "floating";
+    }
+    return "floating";
+  });
+  const toggleEditPaneMode = () => {
+    setEditPaneMode((prev) => {
+      const next = prev === "floating" ? "static" : "floating";
+      localStorage.setItem("vf_editPaneMode", next);
+      return next;
+    });
+  };
   const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">(() => {
     if (typeof window !== "undefined") {
       return (sessionStorage.getItem("vf_previewMode") as "desktop" | "mobile") || "desktop";
@@ -1257,14 +1269,31 @@ export default function PageEditorPage() {
             <h3 className="font-display font-semibold text-sm text-charcoal">
               {SECTION_TYPE_LABELS[selectedSection.section_type as SectionType]}
             </h3>
-            <button
-              onClick={() => handleSelectSection(null)}
-              className="text-gray-400 hover:text-gray-600"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={toggleEditPaneMode}
+                className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-100 transition-colors"
+                title={editPaneMode === "floating" ? "Dock panel" : "Float panel"}
+              >
+                {editPaneMode === "floating" ? (
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 3H5a2 2 0 00-2 2v4m0 6v4a2 2 0 002 2h4m6-18h4a2 2 0 012 2v4m0 6v4a2 2 0 01-2 2h-4" />
+                  </svg>
+                ) : (
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0 0l-5-5M4 16v4m0 0h4m-4 0l5-5m11 5h-4m4 0v-4m0 0l-5 5" />
+                  </svg>
+                )}
+              </button>
+              <button
+                onClick={() => handleSelectSection(null)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
           </div>
           <div className="flex-1 overflow-y-auto admin-scrollbar">
             <SectionEditorPanel
@@ -1323,14 +1352,31 @@ export default function PageEditorPage() {
             <h3 className="font-display font-semibold text-sm text-charcoal">
               {globalEditTarget === "navbar" ? "Navbar Builder" : "Footer Builder"}
             </h3>
-            <button
-              onClick={() => setGlobalEditTarget(null)}
-              className="text-gray-400 hover:text-gray-600"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={toggleEditPaneMode}
+                className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-100 transition-colors"
+                title={editPaneMode === "floating" ? "Dock panel" : "Float panel"}
+              >
+                {editPaneMode === "floating" ? (
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 3H5a2 2 0 00-2 2v4m0 6v4a2 2 0 002 2h4m6-18h4a2 2 0 012 2v4m0 6v4a2 2 0 01-2 2h-4" />
+                  </svg>
+                ) : (
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0 0l-5-5M4 16v4m0 0h4m-4 0l5-5m11 5h-4m4 0v-4m0 0l-5 5" />
+                  </svg>
+                )}
+              </button>
+              <button
+                onClick={() => setGlobalEditTarget(null)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
           </div>
           <div className="flex-1 overflow-y-auto admin-scrollbar">
             {globalEditTarget === "navbar" ? (
