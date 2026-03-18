@@ -11,7 +11,7 @@ export async function GET(request: Request) {
   const supabase = getSupabaseServer();
   const { data: users, error } = await supabase
     .from("cms_users")
-    .select("id, email, display_name, role, must_change_password, last_login, created_at")
+    .select("id, email, display_name, role, must_change_password, last_login, last_login_ip, created_at")
     .order("created_at");
 
   if (error) {

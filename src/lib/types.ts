@@ -10,6 +10,7 @@ export interface CmsUser {
   role: "owner" | "admin" | "editor";
   must_change_password: boolean;
   last_login: string | null;
+  last_login_ip: string | null;
   created_at: string;
   updated_at: string;
 }

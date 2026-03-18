@@ -41,6 +41,14 @@ export async function POST(request: Request) {
 
     const { token, expiresAt } = await createSession(user.id);
 
+    // Record login timestamp and IP
+    const forwarded = request.headers.get("x-forwarded-for");
+    const ip = forwarded ? forwarded.split(",")[0].trim() : request.headers.get("x-real-ip") || "unknown";
+    await supabase
+      .from("cms_users")
+      .update({ last_login: new Date().toISOString(), last_login_ip: ip })
+      .eq("id", user.id);
+
     const response = NextResponse.json({
       user: {
         id: user.id,

@@ -77,12 +77,6 @@ export async function getSessionUser(
 
   if (!session?.user) return null;
 
-  // Update last_login
-  await supabase
-    .from("cms_users")
-    .update({ last_login: new Date().toISOString() })
-    .eq("id", session.user.id);
-
   return session.user as CmsUser;
 }
 

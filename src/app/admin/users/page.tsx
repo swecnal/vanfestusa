@@ -10,6 +10,7 @@ interface User {
   role: string;
   must_change_password: boolean;
   last_login: string | null;
+  last_login_ip: string | null;
   created_at: string;
 }
 
@@ -177,9 +178,18 @@ export default function UsersPage() {
               key={user.id}
               className="flex flex-col sm:flex-row sm:items-center justify-between px-3 sm:px-6 py-4 gap-2"
             >
-              <div>
+              <div className="min-w-0">
                 <p className="font-medium text-charcoal">{user.display_name}</p>
                 <p className="text-xs text-gray-400">{user.email}</p>
+                {user.last_login ? (
+                  <p className="text-[10px] text-gray-400 mt-0.5">
+                    Last login: {new Date(user.last_login).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}{" "}
+                    {new Date(user.last_login).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}
+                    {user.last_login_ip && <span className="ml-1 text-gray-300">from {user.last_login_ip}</span>}
+                  </p>
+                ) : (
+                  <p className="text-[10px] text-gray-300 mt-0.5">Never logged in</p>
+                )}
               </div>
               <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
                 <span
