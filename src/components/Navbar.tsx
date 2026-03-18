@@ -296,7 +296,7 @@ function NavbarV2({ config, embedded }: { config: NavbarBuilderConfig; embedded?
   };
 
   const renderCtaButtons = () => (
-    <div className="flex items-center gap-3">
+    <div className="hidden lg:flex items-center gap-3">
       {ctaButtons.map((cta, i) => (
         <a
           key={i}
@@ -310,21 +310,6 @@ function NavbarV2({ config, embedded }: { config: NavbarBuilderConfig; embedded?
           {cta.text}
         </a>
       ))}
-      {/* Mobile hamburger */}
-      <button
-        className="lg:hidden p-2"
-        style={{ color: style.textColor }}
-        onClick={() => setMobileOpen(!mobileOpen)}
-        aria-label="Toggle menu"
-      >
-        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          {mobileOpen ? (
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          ) : (
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-          )}
-        </svg>
-      </button>
     </div>
   );
 
@@ -345,14 +330,17 @@ function NavbarV2({ config, embedded }: { config: NavbarBuilderConfig; embedded?
     right: "justify-end",
   };
 
+  // Show opaque background when embedded (admin preview) or scrolled
+  const showOpaque = embedded || scrolled;
+
   return (
     <nav
       className={`${embedded ? "relative" : "fixed top-0 left-0 right-0"} z-50 transition-all duration-300`}
       style={{
-        backgroundColor: embedded ? `${style.bgColor}${bgOpacity}` : (scrolled ? `${style.bgColor}${bgOpacity}` : "transparent"),
-        backdropFilter: (embedded || scrolled) ? "blur(12px)" : undefined,
-        paddingTop: (embedded || scrolled) ? "0.75rem" : "1.25rem",
-        paddingBottom: (embedded || scrolled) ? "0.75rem" : "1.25rem",
+        backgroundColor: showOpaque ? `${style.bgColor}${bgOpacity}` : "transparent",
+        backdropFilter: showOpaque ? "blur(12px)" : undefined,
+        paddingTop: showOpaque ? "0.75rem" : "1.25rem",
+        paddingBottom: showOpaque ? "0.75rem" : "1.25rem",
         boxShadow: scrolled && !embedded ? "0 10px 15px -3px rgb(0 0 0 / 0.1)" : undefined,
       }}
     >
@@ -368,23 +356,34 @@ function NavbarV2({ config, embedded }: { config: NavbarBuilderConfig; embedded?
             {zoneContent[zone]}
           </div>
         ))}
+        {/* Mobile hamburger — always visible, outside zone system */}
+        <button
+          className="lg:hidden p-2 ml-2 flex-shrink-0"
+          style={{ color: style.textColor }}
+          onClick={() => setMobileOpen(!mobileOpen)}
+          aria-label="Toggle menu"
+        >
+          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            {mobileOpen ? (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            ) : (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            )}
+          </svg>
+        </button>
       </div>
 
       {/* Mobile menu */}
       {mobileOpen && (() => {
         const mobileDisabled = config.mobileDisabledZones || [];
-        const showMobileLinks = !mobileDisabled.includes("links");
-        const showMobileCta = !mobileDisabled.includes("cta");
-        const showMobileLogo = !mobileDisabled.includes("logo");
-        return (
-        <div
-          className="lg:hidden backdrop-blur-md border-t mt-2"
-          style={{ backgroundColor: `${style.bgColor}f2`, borderColor: `${style.textColor}1a` }}
-        >
-          <div className="px-4 py-4 space-y-1">
-            {(isEventPage || (badge && showMobileLogo)) && (
-              <div className="mb-3 pb-3" style={{ borderBottomWidth: 1, borderBottomColor: `${style.textColor}1a` }}>
-                {isEventPage && showMobileLogo && (
+        const mobileOrder = config.mobileLayout || ["logo", "links", "cta"];
+
+        const renderMobileLogo = () => {
+          if (mobileDisabled.includes("logo")) return null;
+          if (!isEventPage && !badge) return null;
+          return (
+            <div key="mobile-logo" className="mb-3 pb-3" style={{ borderBottomWidth: 1, borderBottomColor: `${style.textColor}1a` }}>
+              {isEventPage && (
                 <Link
                   href="/"
                   className="flex items-center gap-2 px-3 py-2.5 rounded-lg font-semibold transition-colors"
@@ -396,114 +395,141 @@ function NavbarV2({ config, embedded }: { config: NavbarBuilderConfig; embedded?
                   </svg>
                   Back to VanFest Home
                 </Link>
-                )}
-                {badge && showMobileLogo && (
+              )}
+              {badge && (
                 <span
                   className="inline-block font-display font-bold px-4 py-1.5 rounded-xl text-sm mt-2"
                   style={badgeStyle}
                 >
                   {badge.text}
                 </span>
-                )}
-              </div>
-            )}
-            {showMobileLinks && navLinks.map((link) => (
-              <div key={link.id}>
-                {link.external ? (
-                  <a
-                    href={link.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block px-3 py-2.5 rounded-lg font-semibold"
-                    style={{ color: `${style.textColor}e6` }}
-                    onClick={() => setMobileOpen(false)}
-                  >
-                    {link.label}
-                  </a>
-                ) : link.children ? (
-                  <>
-                    <button
-                      onClick={() => setMobileExpanded(mobileExpanded === link.id ? null : link.id)}
-                      className="flex items-center justify-between w-full px-3 py-2.5 rounded-lg font-semibold transition-colors"
+              )}
+            </div>
+          );
+        };
+
+        const renderMobileLinks = () => {
+          if (mobileDisabled.includes("links")) return null;
+          return (
+            <div key="mobile-links">
+              {navLinks.map((link) => (
+                <div key={link.id}>
+                  {link.external ? (
+                    <a
+                      href={link.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block px-3 py-2.5 rounded-lg font-semibold"
                       style={{ color: `${style.textColor}e6` }}
+                      onClick={() => setMobileOpen(false)}
                     >
                       {link.label}
-                      <svg
-                        className={`w-4 h-4 transition-transform duration-200 ${mobileExpanded === link.id ? "rotate-180" : ""}`}
-                        style={{ color: `${style.textColor}80` }}
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
+                    </a>
+                  ) : link.children ? (
+                    <>
+                      <button
+                        onClick={() => setMobileExpanded(mobileExpanded === link.id ? null : link.id)}
+                        className="flex items-center justify-between w-full px-3 py-2.5 rounded-lg font-semibold transition-colors"
+                        style={{ color: `${style.textColor}e6` }}
                       >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </button>
-                    {mobileExpanded === link.id && (
-                      <div className="ml-4 space-y-1 mt-1">
-                        {link.children.map((child) =>
-                          child.href.includes("#") ? (
-                          <a
-                            key={child.id}
-                            href={child.href}
-                            className="block px-3 py-2 text-sm font-medium rounded-lg"
-                            style={{ color: `${style.textColor}99` }}
-                            onClick={() => setMobileOpen(false)}
-                          >
-                            {child.label}
-                          </a>
-                          ) : (
-                          <Link
-                            key={child.id}
-                            href={child.href}
-                            className="block px-3 py-2 text-sm font-medium rounded-lg"
-                            style={{ color: `${style.textColor}99` }}
-                            onClick={() => setMobileOpen(false)}
-                          >
-                            {child.label}
-                          </Link>
-                          )
-                        )}
-                      </div>
-                    )}
-                  </>
-                ) : link.href.includes("#") ? (
-                  <a
-                    href={link.href}
-                    className="block px-3 py-2.5 rounded-lg font-semibold"
-                    style={{ color: `${style.textColor}e6` }}
-                    onClick={() => setMobileOpen(false)}
-                  >
-                    {link.label}
-                  </a>
-                ) : (
-                  <Link
-                    href={link.href}
-                    className="block px-3 py-2.5 rounded-lg font-semibold"
-                    style={{ color: `${style.textColor}e6` }}
-                    onClick={() => setMobileOpen(false)}
-                  >
-                    {link.label}
-                  </Link>
-                )}
-              </div>
-            ))}
-            {showMobileCta && ctaButtons.length > 0 && (
-              <div className="pt-3 mt-3 flex flex-col gap-2" style={{ borderTopWidth: 1, borderTopColor: `${style.textColor}1a` }}>
-                {ctaButtons.map((cta, i) => (
-                  <a
-                    key={i}
-                    href={cta.href}
-                    target={cta.external !== false ? "_blank" : undefined}
-                    rel={cta.external !== false ? "noopener noreferrer" : undefined}
-                    className="block text-center font-bold rounded-xl px-5 py-2.5 text-sm transition-all"
-                    style={getCtaStyle(cta)}
-                    onClick={() => setMobileOpen(false)}
-                  >
-                    {cta.text}
-                  </a>
-                ))}
-              </div>
-            )}
+                        {link.label}
+                        <svg
+                          className={`w-4 h-4 transition-transform duration-200 ${mobileExpanded === link.id ? "rotate-180" : ""}`}
+                          style={{ color: `${style.textColor}80` }}
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+                      {mobileExpanded === link.id && (
+                        <div className="ml-4 space-y-1 mt-1">
+                          {link.children.map((child) =>
+                            child.href.includes("#") ? (
+                            <a
+                              key={child.id}
+                              href={child.href}
+                              className="block px-3 py-2 text-sm font-medium rounded-lg"
+                              style={{ color: `${style.textColor}99` }}
+                              onClick={() => setMobileOpen(false)}
+                            >
+                              {child.label}
+                            </a>
+                            ) : (
+                            <Link
+                              key={child.id}
+                              href={child.href}
+                              className="block px-3 py-2 text-sm font-medium rounded-lg"
+                              style={{ color: `${style.textColor}99` }}
+                              onClick={() => setMobileOpen(false)}
+                            >
+                              {child.label}
+                            </Link>
+                            )
+                          )}
+                        </div>
+                      )}
+                    </>
+                  ) : link.href.includes("#") ? (
+                    <a
+                      href={link.href}
+                      className="block px-3 py-2.5 rounded-lg font-semibold"
+                      style={{ color: `${style.textColor}e6` }}
+                      onClick={() => setMobileOpen(false)}
+                    >
+                      {link.label}
+                    </a>
+                  ) : (
+                    <Link
+                      href={link.href}
+                      className="block px-3 py-2.5 rounded-lg font-semibold"
+                      style={{ color: `${style.textColor}e6` }}
+                      onClick={() => setMobileOpen(false)}
+                    >
+                      {link.label}
+                    </Link>
+                  )}
+                </div>
+              ))}
+            </div>
+          );
+        };
+
+        const renderMobileCta = () => {
+          if (mobileDisabled.includes("cta") || ctaButtons.length === 0) return null;
+          return (
+            <div key="mobile-cta" className="pt-3 mt-3 flex flex-col gap-2" style={{ borderTopWidth: 1, borderTopColor: `${style.textColor}1a` }}>
+              {ctaButtons.map((cta, i) => (
+                <a
+                  key={i}
+                  href={cta.href}
+                  target={cta.external !== false ? "_blank" : undefined}
+                  rel={cta.external !== false ? "noopener noreferrer" : undefined}
+                  className="block text-center font-bold rounded-xl px-5 py-2.5 text-sm transition-all"
+                  style={getCtaStyle(cta)}
+                  onClick={() => setMobileOpen(false)}
+                >
+                  {cta.text}
+                </a>
+              ))}
+            </div>
+          );
+        };
+
+        const mobileRenderers: Record<string, () => React.ReactNode> = {
+          logo: renderMobileLogo,
+          links: renderMobileLinks,
+          cta: renderMobileCta,
+        };
+
+        return (
+        <div
+          className="lg:hidden backdrop-blur-md border-t mt-2"
+          style={{ backgroundColor: `${style.bgColor}f2`, borderColor: `${style.textColor}1a` }}
+        >
+          <div className="px-4 py-4 space-y-1">
+            {mobileOrder.map((key) => mobileRenderers[key]?.())}
           </div>
         </div>
         );

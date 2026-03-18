@@ -804,6 +804,7 @@ export interface NavbarBuilderConfig {
   };
   disabledZones?: ("logo" | "links" | "cta")[];
   mobileDisabledZones?: ("logo" | "links" | "cta")[];
+  mobileLayout?: ("logo" | "links" | "cta")[];
   style?: {
     bgColor: string;
     bgOpacity: number;

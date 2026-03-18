@@ -536,7 +536,12 @@ export default function NavbarEditorPage() {
                   <div key={nav.id} className={`border rounded-lg overflow-hidden ${isPreviewing ? "border-teal" : "border-gray-200"}`}>
                     <div className="flex items-center justify-between gap-2 hover:bg-gray-50 transition-colors">
                       <button
-                        onClick={() => setExpandedId(isExpanded ? null : nav.id)}
+                        onClick={() => {
+                          const nextExpanded = isExpanded ? null : nav.id;
+                          setExpandedId(nextExpanded);
+                          // Auto-preview when expanding
+                          if (nextExpanded) setPreviewNavbarId(nextExpanded);
+                        }}
                         className="flex-1 text-left px-3 py-2.5 flex items-center gap-2 min-w-0"
                       >
                         <svg
@@ -625,7 +630,7 @@ export default function NavbarEditorPage() {
                           externalConfig={nav.config}
                           onExternalConfigChange={(config) => updateNavbarConfig(nav.id, config)}
                           hideSaveButton
-                          onConfigChange={isPreviewing ? triggerPreviewRefresh : undefined}
+                          onConfigChange={triggerPreviewRefresh}
                         />
                       </div>
                     )}

@@ -402,39 +402,74 @@ function LayoutZoneDnd({ layout, onChange, disabledZones, onDisabledChange }: {
   );
 }
 
-function MobileZoneToggles({ disabledZones, onDisabledChange }: {
-  disabledZones: ("logo" | "links" | "cta")[];
-  onDisabledChange: (zones: ("logo" | "links" | "cta")[]) => void;
+type MobileZoneId = "logo" | "links" | "cta";
+
+function MobileZonePill({ id, disabled, onToggle }: { id: string; disabled: boolean; onToggle: () => void }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: `mobile-${id}` });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+  return (
+    <div ref={setNodeRef} style={style} className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
+      disabled
+        ? "border-gray-200 bg-gray-100 text-gray-300 line-through"
+        : "border-gray-300 bg-white text-charcoal hover:border-gray-400"
+    }`}>
+      <span className="cursor-grab active:cursor-grabbing text-gray-400" {...attributes} {...listeners}>
+        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M4 8h16M4 16h16" />
+        </svg>
+      </span>
+      <span className="cursor-pointer select-none" onClick={onToggle}>
+        {ZONE_ELEMENT_LABELS[id] || id}
+      </span>
+    </div>
+  );
+}
+
+function MobileZoneLayout({ layout, disabledZones, onLayoutChange, onDisabledChange }: {
+  layout: MobileZoneId[];
+  disabledZones: MobileZoneId[];
+  onLayoutChange: (layout: MobileZoneId[]) => void;
+  onDisabledChange: (zones: MobileZoneId[]) => void;
 }) {
-  const toggleZone = (id: "logo" | "links" | "cta") => {
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 3 } }));
+
+  const toggleZone = (id: MobileZoneId) => {
     if (disabledZones.includes(id)) {
       onDisabledChange(disabledZones.filter((z) => z !== id));
     } else {
       onDisabledChange([...disabledZones, id]);
     }
   };
-  const elements: ("logo" | "links" | "cta")[] = ["logo", "links", "cta"];
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const activeId = String(active.id).replace("mobile-", "") as MobileZoneId;
+    const overId = String(over.id).replace("mobile-", "") as MobileZoneId;
+    const oldIdx = layout.indexOf(activeId);
+    const newIdx = layout.indexOf(overId);
+    if (oldIdx === -1 || newIdx === -1) return;
+    onLayoutChange(arrayMove(layout, oldIdx, newIdx));
+  };
+
+  const sortableIds = layout.map((id) => `mobile-${id}`);
+
   return (
     <div>
-      <div className="flex items-center gap-2 mt-1">
-        {elements.map((id) => {
-          const disabled = disabledZones.includes(id);
-          return (
-            <button
-              key={id}
-              onClick={() => toggleZone(id)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${
-                disabled
-                  ? "border-gray-200 bg-gray-100 text-gray-300 line-through"
-                  : "border-gray-300 bg-white text-charcoal hover:border-gray-400"
-              }`}
-            >
-              {ZONE_ELEMENT_LABELS[id]}
-            </button>
-          );
-        })}
-      </div>
-      <p className="text-[10px] text-gray-400 mt-1">Click to show/hide in mobile menu</p>
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <SortableContext items={sortableIds} strategy={horizontalListSortingStrategy}>
+          <div className="flex items-center gap-2 mt-1">
+            {layout.map((id) => (
+              <MobileZonePill key={id} id={id} disabled={disabledZones.includes(id)} onToggle={() => toggleZone(id)} />
+            ))}
+          </div>
+        </SortableContext>
+      </DndContext>
+      <p className="text-[10px] text-gray-400 mt-1">Drag to reorder, click to show/hide in mobile menu</p>
     </div>
   );
 }
@@ -755,8 +790,10 @@ export default function NavbarBuilder({ onSave, onDirtyChange, saveRef, onConfig
             </div>
             <div className="border-t border-gray-200 pt-2">
               <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">Mobile</span>
-              <MobileZoneToggles
+              <MobileZoneLayout
+                layout={config.mobileLayout || ["logo", "links", "cta"]}
                 disabledZones={config.mobileDisabledZones || []}
+                onLayoutChange={(mobileLayout) => updateConfig(prev => ({ ...prev, mobileLayout }))}
                 onDisabledChange={(mobileDisabledZones) => updateConfig(prev => ({ ...prev, mobileDisabledZones }))}
               />
             </div>
