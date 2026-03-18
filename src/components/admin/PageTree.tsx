@@ -287,10 +287,13 @@ function SortableTreeItem({
   return (
     <div ref={setNodeRef} style={style}>
       <div
+        data-page-id={node.page?.id || ""}
         className={`flex items-center gap-1 py-1 px-2 rounded-md cursor-pointer transition-colors group relative ${
-          isActive
-            ? "bg-teal/20 text-white"
-            : "text-white/70 hover:bg-white/5 hover:text-white"
+          showNestIndicator
+            ? "bg-teal/20 text-white ring-1 ring-teal/40"
+            : isActive
+              ? "bg-teal/20 text-white"
+              : "text-white/70 hover:bg-white/5 hover:text-white"
         }`}
         style={{ paddingLeft: `${depth * 16 + 8}px` }}
         onClick={() => {
@@ -484,7 +487,8 @@ export default function PageTree({ collapsed }: { collapsed: boolean }) {
   const [addMenuFor, setAddMenuFor] = useState<{ slug: string; pageId: string } | null>(null);
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const [nestTargetId, setNestTargetId] = useState<string | null>(null);
-  const nestTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [dropIntent, setDropIntent] = useState<{ type: "reorder" | "nest"; targetTitle?: string } | null>(null);
+  const pointerRef = useRef({ x: 0, y: 0 });
   const router = useRouter();
   const pathname = usePathname();
 
@@ -527,6 +531,16 @@ export default function PageTree({ collapsed }: { collapsed: boolean }) {
     fetchPages();
     fetchOrder();
   }, [fetchPages, fetchOrder]);
+
+  // Track pointer position during drag for zone detection
+  useEffect(() => {
+    if (!activeDragId) return;
+    const handler = (e: PointerEvent) => {
+      pointerRef.current = { x: e.clientX, y: e.clientY };
+    };
+    window.addEventListener("pointermove", handler);
+    return () => window.removeEventListener("pointermove", handler);
+  }, [activeDragId]);
 
   // Listen for page-tree-refresh events (e.g. after page deletion)
   useEffect(() => {
@@ -648,46 +662,38 @@ export default function PageTree({ collapsed }: { collapsed: boolean }) {
   const handleDragOver = (event: DragOverEvent) => {
     const overId = event.over?.id ? String(event.over.id) : null;
 
-    // Ignore folder items, the dragged item itself, and null
     if (!overId || overId === activeDragId || overId.startsWith("folder-")) {
-      // Clear any pending timer and reset nest target
-      if (nestTimerRef.current) {
-        clearTimeout(nestTimerRef.current);
-        nestTimerRef.current = null;
-      }
       setNestTargetId(null);
+      setDropIntent(null);
       return;
     }
 
-    // If already targeting this item, do nothing (timer is running or already fired)
-    if (nestTargetId === overId) return;
+    // Use pointer position relative to the item's ROW to detect zone
+    const rowEl = document.querySelector(`[data-page-id="${overId}"]`);
+    if (rowEl) {
+      const rect = rowEl.getBoundingClientRect();
+      const relativeY = (pointerRef.current.y - rect.top) / rect.height;
 
-    // Clear previous timer
-    if (nestTimerRef.current) {
-      clearTimeout(nestTimerRef.current);
-      nestTimerRef.current = null;
+      if (relativeY > 0.3 && relativeY < 0.7) {
+        // Center zone → nest
+        const targetPage = pages.find((p) => p.id === overId);
+        setNestTargetId(overId);
+        setDropIntent({ type: "nest", targetTitle: targetPage?.title || "page" });
+      } else {
+        // Edge zone → reorder
+        setNestTargetId(null);
+        setDropIntent({ type: "reorder" });
+      }
     }
-    setNestTargetId(null);
-
-    // Start new 300ms timer for this target
-    nestTimerRef.current = setTimeout(() => {
-      setNestTargetId(overId);
-      nestTimerRef.current = null;
-    }, 300);
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
 
-    // Clear nest timer
-    if (nestTimerRef.current) {
-      clearTimeout(nestTimerRef.current);
-      nestTimerRef.current = null;
-    }
-
     const currentNestTarget = nestTargetId;
     setActiveDragId(null);
     setNestTargetId(null);
+    setDropIntent(null);
 
     if (!over || active.id === over.id) return;
 
@@ -778,12 +784,25 @@ export default function PageTree({ collapsed }: { collapsed: boolean }) {
           activeDragId={activeDragId}
           nestTargetId={nestTargetId}
         />
-        <DragOverlay>
+        <DragOverlay dropAnimation={null}>
           {activeDragId && (() => {
             const p = pages.find((pg) => pg.id === activeDragId);
             return p ? (
-              <div className="bg-charcoal text-white text-xs px-3 py-1.5 rounded-md shadow-xl border border-teal/40">
-                {p.title}
+              <div className="opacity-80 pointer-events-none">
+                <div className="bg-charcoal text-white text-xs px-3 py-1.5 rounded-md shadow-xl border border-teal/40">
+                  {p.title}
+                </div>
+                {dropIntent && (
+                  <div className={`mt-1 text-[10px] font-medium px-2 py-0.5 rounded whitespace-nowrap ${
+                    dropIntent.type === "reorder"
+                      ? "text-teal bg-teal/10"
+                      : "text-orange-300 bg-orange-400/10"
+                  }`}>
+                    {dropIntent.type === "reorder"
+                      ? "↕ Reorder"
+                      : `↳ Nest under ${dropIntent.targetTitle}`}
+                  </div>
+                )}
               </div>
             ) : null;
           })()}
