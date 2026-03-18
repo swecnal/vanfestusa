@@ -162,6 +162,8 @@ export default function NavbarEditorPage() {
   }, []);
 
   // ── Container measurement ─────────────────────────────────────────────────
+  // Must depend on `loading` so it re-runs after the loading state clears
+  // and the container div is actually rendered in the DOM.
   useEffect(() => {
     const el = previewContainerRef.current;
     if (!el) return;
@@ -174,7 +176,7 @@ export default function NavbarEditorPage() {
     const rect = el.getBoundingClientRect();
     setContainerSize({ width: rect.width, height: rect.height });
     return () => obs.disconnect();
-  }, []);
+  }, [loading, previewMode]);
 
   // ── Listen for navbar data changes (e.g., from slug migration) ────────────
   useEffect(() => {
