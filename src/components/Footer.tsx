@@ -402,7 +402,7 @@ function FooterV1({ config }: { config?: FooterConfig | null }) {
 
         <div className="mt-12 pt-8 border-t border-white/10 flex flex-col sm:flex-row justify-between items-center gap-4">
           <p className="text-white/40 text-xs">
-            &copy;2020 - {new Date().getFullYear()} VanFest - All Rights Reserved.
+            &copy;2020 - 2026 VanFest - All Rights Reserved.
           </p>
           <p className="text-white/30 text-xs">
             VanFest is a nomadic event series brand run by Ever Onward LLC, a Massachusetts-based Limited Liability Company
