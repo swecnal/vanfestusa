@@ -186,7 +186,7 @@ export default function PreviewShell({
       {!sections.some((s) => s.section_type === "navbar") && (
       <div id="preview-navbar" className="relative cursor-pointer">
         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-        <Navbar config={navbarConfig as any} builderConfig={liveNavbarConfig} />
+        <Navbar config={navbarConfig as any} builderConfig={liveNavbarConfig} embedded />
         {hoveredGlobal === "navbar" && globalSelected !== "navbar" && (
           <div className="absolute inset-0 z-[60] pointer-events-none ring-1 ring-gray-400 ring-inset">
             <span className="absolute bottom-1 left-1 text-[8px] uppercase tracking-wider font-semibold px-1.5 py-0.5 rounded bg-charcoal/70 text-white">
