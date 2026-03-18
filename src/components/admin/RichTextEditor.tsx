@@ -102,6 +102,27 @@ const StylePreserver = Extension.create({
   },
 });
 
+/* ─── Tab key handling for list indent/outdent ─── */
+const TabHandler = Extension.create({
+  name: "tabHandler",
+  addKeyboardShortcuts() {
+    return {
+      Tab: ({ editor: ed }) => {
+        if (ed.isActive("listItem")) {
+          return ed.commands.sinkListItem("listItem");
+        }
+        return true; // prevent Tab from leaving editor
+      },
+      "Shift-Tab": ({ editor: ed }) => {
+        if (ed.isActive("listItem")) {
+          return ed.commands.liftListItem("listItem");
+        }
+        return true;
+      },
+    };
+  },
+});
+
 /* ─── Extended Link with data-button-style + class preservation ─── */
 const CustomLink = Link.extend({
   addAttributes() {
@@ -309,6 +330,7 @@ export default function RichTextEditor({ content, onChange, siteStyles = EMPTY_S
         HTMLAttributes: { rel: null, target: null },
       }),
       Highlight.configure({ multicolor: true }),
+      TabHandler,
     ],
     content,
     editorProps: {

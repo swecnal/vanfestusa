@@ -306,6 +306,8 @@ function NavbarV2({ config, embedded }: { config: NavbarBuilderConfig; embedded?
           rel={cta.external !== false ? "noopener noreferrer" : undefined}
           className={getCtaClasses(cta)}
           style={getCtaStyle(cta)}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.filter = "brightness(1.2)"; (e.currentTarget as HTMLElement).style.transform = "scale(1.05)"; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.filter = ""; (e.currentTarget as HTMLElement).style.transform = ""; }}
         >
           {cta.text}
         </a>

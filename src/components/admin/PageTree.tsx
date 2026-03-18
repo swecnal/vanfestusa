@@ -297,7 +297,6 @@ function SortableTreeItem({
         style={{ paddingLeft: `${depth * 16 + 8}px` }}
         onClick={() => {
           if (node.page) onSelect(node.page.id);
-          if (hasChildren && depth > 0) setExpanded(!expanded);
         }}
       >
         {/* Drag handle */}

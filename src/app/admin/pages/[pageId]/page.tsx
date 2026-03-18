@@ -616,6 +616,7 @@ export default function PageEditorPage() {
 
   const handleSaveSection = async (sectionId: string, data: Record<string, unknown>, settings?: Record<string, unknown>) => {
     setSaving(true);
+    setIsDirty(false); // Clear immediately so user can switch sections while save is in flight
     const body: Record<string, unknown> = { data };
     if (settings) body.settings = settings;
 
@@ -628,10 +629,10 @@ export default function PageEditorPage() {
     if (res.ok) {
       const { section } = await res.json();
       setSections((prev) => prev.map((s) => (s.id === section.id ? section : s)));
-      setIsDirty(false);
       setMobileIframeKey((k) => k + 1);
       toast.success("Saved");
     } else {
+      setIsDirty(true); // Restore dirty flag on failure
       toast.error("Failed to save");
     }
     setSaving(false);
