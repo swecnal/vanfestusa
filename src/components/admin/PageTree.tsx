@@ -582,6 +582,89 @@ export default function PageTree({ collapsed }: { collapsed: boolean }) {
     router.push(`/admin/pages/${pageId}`);
   };
 
+  // Cross-parent move: move a page (and its children) to a different parent level
+  const handleMoveToLevel = useCallback(async (draggedPageId: string, newParentSlug: string, insertNearId?: string) => {
+    const draggedPage = pages.find((p) => p.id === draggedPageId);
+    if (!draggedPage) return;
+
+    const currentParent = getParentSlug(draggedPage.slug);
+    if (currentParent === newParentSlug) return;
+
+    const lastPart = draggedPage.slug.split("/").filter(Boolean).pop();
+    if (!lastPart) return;
+
+    const newSlug = newParentSlug === "/" ? `/${lastPart}` : `${newParentSlug}/${lastPart}`;
+    const childPages = pages.filter(
+      (p) => p.id !== draggedPage.id && p.slug.startsWith(draggedPage.slug + "/")
+    );
+
+    try {
+      const res = await fetch(`/api/pages/${draggedPage.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slug: newSlug }),
+      });
+      if (res.ok) {
+        await fetch("/api/slug-migrate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ oldSlug: draggedPage.slug, newSlug }),
+        });
+
+        for (const child of childPages) {
+          const childNewSlug = child.slug.replace(draggedPage.slug, newSlug);
+          await fetch(`/api/pages/${child.id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ slug: childNewSlug }),
+          });
+          await fetch("/api/slug-migrate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ oldSlug: child.slug, newSlug: childNewSlug }),
+          });
+        }
+
+        // Update order: insert near the target in the new parent
+        const parentKey = newParentSlug === "/" ? "/" : newParentSlug;
+        const newSiblingIds = pages
+          .filter((p) => getParentSlug(p.slug) === newParentSlug && p.slug !== "/" && p.id !== draggedPage.id)
+          .map((p) => p.id);
+        if (insertNearId) {
+          const targetIdx = newSiblingIds.indexOf(insertNearId);
+          if (targetIdx !== -1) {
+            newSiblingIds.splice(targetIdx + 1, 0, draggedPage.id);
+          } else {
+            newSiblingIds.push(draggedPage.id);
+          }
+        } else {
+          newSiblingIds.push(draggedPage.id);
+        }
+        const oldParentKey = currentParent === "/" ? "/" : currentParent;
+        const oldOrder = (orderMap[oldParentKey] || []).filter((id) => id !== draggedPage.id);
+        saveOrder({ ...orderMap, [parentKey]: newSiblingIds, [oldParentKey]: oldOrder });
+
+        const parentPage = pages.find((p) => p.slug === newParentSlug);
+        toast.success(`Moved "${draggedPage.title}" to ${newParentSlug === "/" ? "top level" : `under "${parentPage?.title}"`}`);
+        window.dispatchEvent(new CustomEvent("page-slug-changed", {
+          detail: { pageId: draggedPage.id, oldSlug: draggedPage.slug, newSlug },
+        }));
+        for (const child of childPages) {
+          window.dispatchEvent(new CustomEvent("page-slug-changed", {
+            detail: { pageId: child.id, oldSlug: child.slug, newSlug: child.slug.replace(draggedPage.slug, newSlug) },
+          }));
+        }
+        window.dispatchEvent(new CustomEvent("navbar-data-changed"));
+        fetchPages();
+      } else {
+        const err = await res.json();
+        toast.error(err.error || "Failed to move page");
+      }
+    } catch {
+      toast.error("Failed to move page");
+    }
+  }, [pages, orderMap, saveOrder, fetchPages]);
+
   // Nesting: move a page under another by updating its slug + slug migration
   const handleNestUnder = useCallback(async (draggedPageId: string, targetPageId: string) => {
     const draggedPage = pages.find((p) => p.id === draggedPageId);
@@ -711,10 +794,14 @@ export default function PageTree({ collapsed }: { collapsed: boolean }) {
     const overPage = pages.find((p) => p.id === overId);
     if (!activePage || !overPage) return;
 
-    // Only reorder among siblings
     const activeParent = getParentSlug(activePage.slug);
     const overParent = getParentSlug(overPage.slug);
-    if (activeParent !== overParent) return;
+
+    // Cross-parent: move page to the over page's level (un-nest or re-parent)
+    if (activeParent !== overParent) {
+      handleMoveToLevel(activeId, overParent, overId);
+      return;
+    }
 
     const siblings = pages
       .filter((p) => getParentSlug(p.slug) === activeParent)
