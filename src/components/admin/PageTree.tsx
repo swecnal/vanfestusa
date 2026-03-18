@@ -707,7 +707,7 @@ export default function PageTree({ collapsed }: { collapsed: boolean }) {
     // Build new slug: targetSlug + last part of dragged slug
     const lastPart = draggedPage.slug.split("/").filter(Boolean).pop();
     if (!lastPart) return;
-    const newSlug = `${targetPage.slug}/${lastPart}`;
+    const newSlug = targetPage.slug === "/" ? `/${lastPart}` : `${targetPage.slug}/${lastPart}`;
 
     // Find all child pages whose slugs need updating (pages nested under dragged page)
     const childPages = pages.filter(
