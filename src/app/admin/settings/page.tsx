@@ -7,6 +7,13 @@ export default function SettingsPage() {
   const [settings, setSettings] = useState<Record<string, unknown>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [editPaneMode, setEditPaneMode] = useState<"floating" | "static">("floating");
+
+  useEffect(() => {
+    // Read editor pane mode from localStorage
+    const stored = localStorage.getItem("vf_editPaneMode") as "floating" | "static" | null;
+    if (stored) setEditPaneMode(stored);
+  }, []);
 
   useEffect(() => {
     fetch("/api/global-settings")
@@ -155,7 +162,7 @@ export default function SettingsPage() {
                 <label
                   key={mode}
                   className={`flex-1 flex items-center gap-2 p-3 rounded-lg border-2 cursor-pointer transition-all ${
-                    (settings.edit_pane_mode as string || "floating") === mode
+                    editPaneMode === mode
                       ? "border-teal bg-teal/5"
                       : "border-gray-200 hover:border-gray-300"
                   }`}
@@ -164,12 +171,15 @@ export default function SettingsPage() {
                     type="radio"
                     name="edit_pane_mode"
                     value={mode}
-                    checked={(settings.edit_pane_mode as string || "floating") === mode}
-                    onChange={() => updateSetting("edit_pane_mode", mode)}
+                    checked={editPaneMode === mode}
+                    onChange={() => {
+                      setEditPaneMode(mode);
+                      localStorage.setItem("vf_editPaneMode", mode);
+                    }}
                     className="accent-teal"
                   />
                   <div>
-                    <p className="text-sm font-semibold text-charcoal capitalize">{mode}</p>
+                    <p className="text-sm font-semibold text-charcoal capitalize">{mode === "static" ? "Docked" : "Floating"}</p>
                     <p className="text-xs text-gray-400">
                       {mode === "floating"
                         ? "Editor overlays page content"

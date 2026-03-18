@@ -1,4 +1,13 @@
-import type { SectionType } from "./types";
+import type { SectionType, SectionSettings } from "./types";
+import { SPACING_PRESETS } from "./types";
+
+export const DEFAULT_SECTION_SETTINGS: SectionSettings = {
+  paddingPreset: "comfortable",
+  paddingTop: SPACING_PRESETS.padding.comfortable.top,
+  paddingBottom: SPACING_PRESETS.padding.comfortable.bottom,
+  paddingLeft: SPACING_PRESETS.padding.comfortable.left,
+  paddingRight: SPACING_PRESETS.padding.comfortable.right,
+};
 
 export const SECTION_DEFAULTS: Record<SectionType, Record<string, unknown>> = {
   hero_carousel: {

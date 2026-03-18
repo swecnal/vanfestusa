@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import { toast } from "sonner";
+import MediaPickerModal from "./MediaPickerModal";
 
 interface Props {
   value: string;
@@ -10,6 +11,7 @@ interface Props {
 
 export default function ImagePicker({ value, onChange }: Props) {
   const [uploading, setUploading] = useState(false);
+  const [libraryOpen, setLibraryOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const handleUpload = async (file: File) => {
@@ -85,6 +87,12 @@ export default function ImagePicker({ value, onChange }: Props) {
         >
           {uploading ? "..." : "Upload"}
         </button>
+        <button
+          onClick={() => setLibraryOpen(true)}
+          className="px-3 py-1.5 bg-teal/10 hover:bg-teal/20 text-teal rounded-lg text-xs font-medium transition-colors"
+        >
+          Library
+        </button>
       </div>
 
       <input
@@ -96,6 +104,15 @@ export default function ImagePicker({ value, onChange }: Props) {
           const file = e.target.files?.[0];
           if (file) handleUpload(file);
           e.target.value = "";
+        }}
+      />
+
+      <MediaPickerModal
+        open={libraryOpen}
+        onClose={() => setLibraryOpen(false)}
+        onSelect={(url) => {
+          onChange(url);
+          toast.success("Image selected — remember to Save");
         }}
       />
     </div>

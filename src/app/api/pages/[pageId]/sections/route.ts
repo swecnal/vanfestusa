@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSupabaseServer } from "@/lib/supabase/server";
 import { getSessionUser } from "@/lib/auth";
-import { SECTION_DEFAULTS } from "@/lib/section-defaults";
+import { SECTION_DEFAULTS, DEFAULT_SECTION_SETTINGS } from "@/lib/section-defaults";
 import type { SectionType } from "@/lib/types";
 
 export async function GET(
@@ -68,7 +68,7 @@ export async function POST(
       section_type,
       sort_order: order,
       data: data || defaultData,
-      settings: settings || {},
+      settings: settings || { ...DEFAULT_SECTION_SETTINGS },
     })
     .select()
     .single();
