@@ -570,10 +570,10 @@ export default function VehicleStream({ config, speedMultiplier = 1, randomness:
           to { transform: translateX(calc(100vw + 200px)); }
         }
         @media (max-width: 640px) {
-          .vs-section { height: 65px !important; }
+          .vs-section { height: 80px !important; }
           .vs-sign-hide-mobile { display: none !important; }
-          .vs-sign { transform: translateX(-50%) scale(0.75); transform-origin: bottom center; }
-          .vs-vehicle-inner { transform: scale(0.6); transform-origin: bottom center; }
+          .vs-sign { transform: translateX(-50%) scale(0.7); transform-origin: bottom center; }
+          .vs-vehicle-inner { transform: scale(0.55); transform-origin: bottom center; }
         }
       `}</style>
     </section>

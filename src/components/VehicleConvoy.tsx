@@ -477,8 +477,8 @@ export default function VehicleConvoy({
 
       <style>{`
         @media (max-width: 640px) {
-          .vc-section { height: 70px !important; }
-          .vc-vehicle-inner { transform: scale(0.6); transform-origin: bottom center; }
+          .vc-section { height: 80px !important; }
+          .vc-vehicle-inner { transform: scale(0.55); transform-origin: bottom center; }
         }
       `}</style>
     </section>
