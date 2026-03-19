@@ -377,6 +377,169 @@ function DropZone({
   );
 }
 
+/* ─── Clone to Page modal with nested page tree ─── */
+interface CloneTreeNode {
+  label: string;
+  page?: { id: string; title: string; slug: string };
+  children: CloneTreeNode[];
+}
+
+function buildCloneTree(pages: Array<{ id: string; title: string; slug: string }>, orderMap: Record<string, string[]>): CloneTreeNode {
+  const root: CloneTreeNode = { label: "vanfestusa.com", children: [] };
+  const sorted = [...pages].sort((a, b) => a.slug.localeCompare(b.slug));
+
+  for (const page of sorted) {
+    const parts = page.slug.split("/").filter(Boolean);
+    if (parts.length === 0) {
+      root.page = page;
+      continue;
+    }
+    let current = root;
+    for (let i = 0; i < parts.length; i++) {
+      const part = parts[i];
+      let child = current.children.find(
+        (c) => c.label.toLowerCase().replace(/\s+/g, "-") === part || c.page?.slug === "/" + parts.slice(0, i + 1).join("/")
+      );
+      if (!child) {
+        child = { label: part.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()), children: [] };
+        current.children.push(child);
+      }
+      if (i === parts.length - 1) {
+        child.page = page;
+        child.label = page.title;
+      }
+      current = child;
+    }
+  }
+
+  // Apply stored order
+  function applyOrder(node: CloneTreeNode) {
+    const key = node.page?.slug || "/";
+    const parentKey = key === "/" ? "/" : "/" + key.split("/").filter(Boolean).slice(0, -1).join("/") || "/";
+    const order = orderMap[parentKey];
+    if (order && order.length > 0) {
+      node.children.sort((a, b) => {
+        const aIdx = order.indexOf(a.page?.id || "");
+        const bIdx = order.indexOf(b.page?.id || "");
+        if (aIdx === -1 && bIdx === -1) return 0;
+        if (aIdx === -1) return 1;
+        if (bIdx === -1) return -1;
+        return aIdx - bIdx;
+      });
+    }
+    node.children.forEach(applyOrder);
+  }
+  applyOrder(root);
+  return root;
+}
+
+function CloneTreeOptions({ node, depth }: { node: CloneTreeNode; depth: number }) {
+  const indent = "\u00A0\u00A0\u00A0\u00A0".repeat(depth);
+  return (
+    <>
+      {node.page && (
+        <option key={node.page.id} value={node.page.id}>
+          {indent}{depth > 0 ? "└ " : ""}{node.label}
+        </option>
+      )}
+      {node.children.map((child, i) => (
+        <CloneTreeOptions key={child.page?.id || `g-${i}`} node={child} depth={depth + (node.page ? 1 : 0)} />
+      ))}
+    </>
+  );
+}
+
+function CloneToPageModal({
+  sectionType,
+  data,
+  settings,
+  onClose,
+}: {
+  sectionType: string;
+  data: Record<string, unknown>;
+  settings: Record<string, unknown>;
+  onClose: () => void;
+}) {
+  const [pages, setPages] = useState<Array<{ id: string; title: string; slug: string }>>([]);
+  const [orderMap, setOrderMap] = useState<Record<string, string[]>>({});
+  const [targetPageId, setTargetPageId] = useState("");
+  const [cloning, setCloning] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    Promise.all([
+      fetch("/api/pages").then((r) => r.json()),
+      fetch("/api/global-settings").then((r) => r.json()),
+    ])
+      .then(([pagesRes, settingsRes]) => {
+        setPages(pagesRes.pages || []);
+        setOrderMap((settingsRes.settings?.page_order as Record<string, string[]>) || {});
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  const tree = buildCloneTree(pages, orderMap);
+
+  const handleClone = async () => {
+    if (!targetPageId) return;
+    setCloning(true);
+    try {
+      const res = await fetch(`/api/pages/${targetPageId}/sections`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ section_type: sectionType, data, settings }),
+      });
+      if (res.ok) {
+        const targetPage = pages.find((p) => p.id === targetPageId);
+        toast.success(`Cloned to "${targetPage?.title || "page"}"`);
+        onClose();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        toast.error(err.error || "Failed to clone");
+      }
+    } catch {
+      toast.error("Clone failed");
+    }
+    setCloning(false);
+  };
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40" onClick={onClose}>
+      <div className="bg-white rounded-xl shadow-2xl w-80 p-5 space-y-4" onClick={(e) => e.stopPropagation()}>
+        <h3 className="font-display font-bold text-base text-charcoal">Clone to Page</h3>
+        <p className="text-xs text-gray-500">
+          Clone this {SECTION_TYPE_LABELS[sectionType as SectionType] || sectionType} element to another page.
+        </p>
+        {loading ? (
+          <p className="text-xs text-gray-400">Loading pages...</p>
+        ) : (
+          <select
+            value={targetPageId}
+            onChange={(e) => setTargetPageId(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+          >
+            <option value="">Select a page...</option>
+            <CloneTreeOptions node={tree} depth={0} />
+          </select>
+        )}
+        <div className="flex gap-2 justify-end">
+          <button onClick={onClose} className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors">
+            Cancel
+          </button>
+          <button
+            onClick={handleClone}
+            disabled={!targetPageId || cloning}
+            className="px-4 py-2 bg-teal hover:bg-teal-dark text-white text-sm font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {cloning ? "Cloning..." : "Clone"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ─── Main Page Editor ─── */
 export default function PageEditorPage() {
   const params = useParams();
@@ -388,6 +551,7 @@ export default function PageEditorPage() {
   const [deletePageConfirm, setDeletePageConfirm] = useState(false);
   const [sections, setSections] = useState<Section[]>([]);
   const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
+  const [cloneOpen, setCloneOpen] = useState(false);
   const [globalEditTarget, setGlobalEditTarget] = useState<"navbar" | "footer" | null>(null);
   const [editingPageMeta, setEditingPageMeta] = useState<{ title: string; slug: string } | null>(null);
   const [loading, setLoading] = useState(true);
@@ -1456,6 +1620,15 @@ export default function PageEditorPage() {
             </h3>
             <div className="flex items-center gap-1">
               <button
+                onClick={() => setCloneOpen(true)}
+                className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-100 transition-colors"
+                title="Clone to another page"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+              </button>
+              <button
                 onClick={toggleEditPaneMode}
                 className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-100 transition-colors"
                 title={editPaneMode === "floating" ? "Dock panel" : "Float panel"}
@@ -1503,14 +1676,25 @@ export default function PageEditorPage() {
             <h3 className="font-display font-semibold text-sm text-charcoal">
               {SECTION_TYPE_LABELS[selectedSection.section_type as SectionType]}
             </h3>
-            <button
-              onClick={() => handleSelectSection(null)}
-              className="text-gray-400 hover:text-gray-600 p-1"
-            >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setCloneOpen(true)}
+                className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-100 transition-colors"
+                title="Clone to another page"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+              </button>
+              <button
+                onClick={() => handleSelectSection(null)}
+                className="text-gray-400 hover:text-gray-600 p-1"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
           </div>
           <div className="flex-1 overflow-y-auto overflow-x-hidden admin-scrollbar" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
             <SectionEditorPanel
@@ -1611,6 +1795,16 @@ export default function PageEditorPage() {
             )}
           </div>
         </div>
+      )}
+
+      {/* Clone to page modal */}
+      {cloneOpen && selectedSection && (
+        <CloneToPageModal
+          sectionType={selectedSection.section_type}
+          data={editingData || selectedSection.data}
+          settings={(editingSettings || selectedSection.settings) as Record<string, unknown>}
+          onClose={() => setCloneOpen(false)}
+        />
       )}
 
       {/* Confirm modal */}
