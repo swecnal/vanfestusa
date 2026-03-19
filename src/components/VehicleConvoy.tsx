@@ -448,7 +448,7 @@ export default function VehicleConvoy({
   return (
     <section
       ref={sectionRef}
-      className="relative overflow-hidden bg-sand"
+      className="relative overflow-hidden bg-sand vc-section"
       style={{ height: "100px", marginTop }}
     >
       {/* Dashed road line */}
@@ -468,10 +468,19 @@ export default function VehicleConvoy({
             className="absolute bottom-5"
             style={{ willChange: "transform" }}
           >
-            {renderVehicle(v.def.type, v.color, vRng, reverse)}
+            <div className="vc-vehicle-inner">
+              {renderVehicle(v.def.type, v.color, vRng, reverse)}
+            </div>
           </div>
         );
       })}
+
+      <style>{`
+        @media (max-width: 640px) {
+          .vc-section { height: 70px !important; }
+          .vc-vehicle-inner { transform: scale(0.6); transform-origin: bottom center; }
+        }
+      `}</style>
     </section>
   );
 }

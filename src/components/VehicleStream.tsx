@@ -486,7 +486,7 @@ export default function VehicleStream({ config, speedMultiplier = 1, randomness:
             willChange: "transform",
           }}
         >
-          <div className="relative">
+          <div className="relative vs-vehicle-inner">
             {renderVehicle(v.type, v.color, vRng)}
             {renderDriverPassenger(v)}
           </div>
@@ -496,7 +496,7 @@ export default function VehicleStream({ config, speedMultiplier = 1, randomness:
 
   return (
     <section
-      className="relative bg-sand overflow-hidden"
+      className="relative bg-sand overflow-hidden vs-section"
       style={{ height: sectionHeight }}
     >
       {/* Vehicles behind signs */}
@@ -514,10 +514,12 @@ export default function VehicleStream({ config, speedMultiplier = 1, randomness:
         const arrowH = Math.round(8 * s);
         const poleH = Math.round(12 * s);
         const poleW = Math.max(1, Math.round(s));
+        // On mobile, hide odd-indexed signs when there are more than 2
+        const hideOnMobile = normalizedSigns.length > 2 && i % 2 !== 0;
         return (
           <div
             key={`${sign.text}-${i}`}
-            className="absolute bottom-3 flex flex-col items-center z-10"
+            className={`absolute bottom-3 flex flex-col items-center z-10 vs-sign${hideOnMobile ? " vs-sign-hide-mobile" : ""}`}
             style={{ left: `${leftPct}%`, transform: "translateX(-50%)" }}
           >
             <div
@@ -566,6 +568,12 @@ export default function VehicleStream({ config, speedMultiplier = 1, randomness:
         @keyframes vehicle-stream {
           from { transform: translateX(-200px); }
           to { transform: translateX(calc(100vw + 200px)); }
+        }
+        @media (max-width: 640px) {
+          .vs-section { height: 65px !important; }
+          .vs-sign-hide-mobile { display: none !important; }
+          .vs-sign { transform: translateX(-50%) scale(0.75); transform-origin: bottom center; }
+          .vs-vehicle-inner { transform: scale(0.6); transform-origin: bottom center; }
         }
       `}</style>
     </section>
