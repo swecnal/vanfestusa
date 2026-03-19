@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import type { ImageCrop } from "@/lib/types";
+import CroppedImage from "@/components/CroppedImage";
 
 interface BuildsCarouselProps {
-  images: Array<{ src: string; alt: string }>;
+  images: Array<{ src: string; alt: string; crop?: ImageCrop }>;
   autoplayInterval?: number;
 }
 
@@ -81,12 +83,12 @@ export default function BuildsCarousel({ images, autoplayInterval = 4000 }: Buil
             key={`${idx}-${i}`}
             className={`rounded-xl overflow-hidden ${i >= 2 ? "hidden md:block" : ""} ${i >= 1 ? "hidden sm:block" : ""}`}
           >
-            <img
+            <CroppedImage
               src={images[idx].src}
               alt={images[idx].alt}
+              crop={images[idx].crop}
               className="w-full h-48 object-cover hover:scale-105 transition-transform duration-300"
               loading="lazy"
-              decoding="async"
             />
           </div>
         ))}

@@ -95,6 +95,15 @@ export type SectionType =
   | "html_block"
   | "navbar";
 
+// ─── Image Crop ───
+
+export interface ImageCrop {
+  x: number;      // left edge as percentage 0–100
+  y: number;      // top edge as percentage 0–100
+  width: number;  // crop width as percentage 0–100
+  height: number; // crop height as percentage 0–100
+}
+
 // ─── Background Config ───
 
 export interface BackgroundConfig {
@@ -110,6 +119,7 @@ export interface BackgroundConfig {
   imageUrl?: string;
   imageSizing?: "cover" | "contain" | "stretch" | "tile" | "full";
   imageOpacity?: number;
+  imageCrop?: ImageCrop;
   // Overlay (color layer on top of image, behind content)
   overlayColor?: string;
   overlayOpacity?: number;
@@ -232,6 +242,19 @@ export function backgroundConfigStyles(config?: BackgroundConfig): React.CSSProp
 
   if (config.type === "image" && config.imageUrl) {
     const sizing = config.imageSizing || "cover";
+    const crop = config.imageCrop;
+    const hasCrop = crop && !(crop.x === 0 && crop.y === 0 && crop.width === 100 && crop.height === 100);
+
+    if (hasCrop && crop) {
+      // Crop overrides sizing — compute background-size/position from crop region
+      return {
+        backgroundImage: `url(${config.imageUrl})`,
+        backgroundSize: `${10000 / crop.width}% ${10000 / crop.height}%`,
+        backgroundPosition: `${crop.width < 100 ? (crop.x * 100) / (100 - crop.width) : 0}% ${crop.height < 100 ? (crop.y * 100) / (100 - crop.height) : 0}%`,
+        backgroundRepeat: "no-repeat",
+      };
+    }
+
     const base: React.CSSProperties = {
       backgroundImage: `url(${config.imageUrl})`,
       backgroundPosition: "center",
@@ -320,7 +343,7 @@ export function buildMobileStyleBlock(sectionCssId: string, settings: SectionSet
 // ─── Section Data Shapes ───
 
 export interface HeroCarouselData {
-  slides: Array<{ image: string; alt: string }>;
+  slides: Array<{ image: string; alt: string; crop?: ImageCrop }>;
   overlay: {
     label?: string;
     eventName: string;
@@ -344,6 +367,7 @@ export interface HeroSimpleData {
   subtitle?: string;
   light?: boolean;
   bgImage?: string;
+  bgImageCrop?: ImageCrop;
   titleStyle?: import("@/lib/styles").TextStyleConfig;
   subtitleStyle?: import("@/lib/styles").TextStyleConfig;
 }
@@ -368,6 +392,7 @@ export interface TwoColumnCardsData {
     bgColor?: string;
     icon?: string;
     image?: string;
+    imageCrop?: ImageCrop;
     imagePosition?: "small-left" | "small-right" | "small-center" | "full-width" | "background";
     titleStyle?: import("@/lib/styles").TextStyleConfig;
     subtitleStyle?: import("@/lib/styles").TextStyleConfig;
@@ -421,6 +446,7 @@ export interface EventCardsData {
     gradient: string;
     tag: string;
     image: string;
+    imageCrop?: ImageCrop;
     href: string;
     ticketUrl: string;
     fontOverride?: string;
@@ -537,7 +563,8 @@ export interface ImageCarouselData {
   heading?: { title: string; subtitle?: string; light?: boolean };
   headingStyle?: import("@/lib/styles").TextStyleConfig;
   subheadingStyle?: import("@/lib/styles").TextStyleConfig;
-  images: Array<{ src: string; alt: string }>;
+  images: Array<{ src: string; alt: string; crop?: ImageCrop }>;
+  bgImageCrop?: ImageCrop;
   autoplayInterval?: number;
   ctaButtons?: Array<{
     text: string;
@@ -548,7 +575,7 @@ export interface ImageCarouselData {
 }
 
 export interface PhotoStripData {
-  images: Array<{ src: string; alt: string; position?: string }>;
+  images: Array<{ src: string; alt: string; position?: string; crop?: ImageCrop }>;
   height?: string;
   columns?: number;
 }
@@ -556,7 +583,7 @@ export interface PhotoStripData {
 export interface ImageGalleryData {
   heading?: string;
   headingStyle?: import("@/lib/styles").TextStyleConfig;
-  images: Array<{ src: string; alt: string }>;
+  images: Array<{ src: string; alt: string; crop?: ImageCrop }>;
   columns?: 1 | 2 | 3 | 4;
   enableLightbox?: boolean;
 }
@@ -620,6 +647,7 @@ export interface VehicleStreamData {
 export interface AccordionParentData {
   title?: string;
   image?: string;
+  imageCrop?: ImageCrop;
   imagePosition?: "small-left" | "small-right" | "full-width" | "background";
   description?: string;
   titleStyle?: import("@/lib/styles").TextStyleConfig;

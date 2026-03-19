@@ -6,6 +6,7 @@ import BounceCTA from "@/components/BounceCTA";
 import type { EventCardsData, SectionSettings } from "@/lib/types";
 import { sectionSpacingStyles, sectionBgClass } from "@/lib/types";
 import { textStyleConfigToCSS, type TextStyleConfig } from "@/lib/styles";
+import CroppedImage from "@/components/CroppedImage";
 
 interface Props {
   data: Record<string, unknown>;
@@ -51,9 +52,10 @@ export default function EventCardsSection({ data, settings }: Props) {
                   className={`relative bg-gradient-to-r ${ev.gradient} ${isFeatureCard ? "p-14" : "p-10"} text-white overflow-hidden block ${isFeatureCard ? "" : "min-h-[220px]"} flex flex-col justify-end`}
                 >
                   {ev.image && (
-                    <img
+                    <CroppedImage
                       src={ev.image}
                       alt=""
+                      crop={ev.imageCrop}
                       className="absolute inset-0 w-full h-full object-cover opacity-20 mix-blend-overlay"
                     />
                   )}

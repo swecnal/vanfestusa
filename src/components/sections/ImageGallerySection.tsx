@@ -5,6 +5,7 @@ import Lightbox from "@/components/Lightbox";
 import type { ImageGalleryData, SectionSettings } from "@/lib/types";
 import { sectionSpacingStyles, sectionBgClass } from "@/lib/types";
 import { textStyleConfigToCSS, type TextStyleConfig } from "@/lib/styles";
+import CroppedImage from "@/components/CroppedImage";
 
 interface Props {
   data: Record<string, unknown>;
@@ -39,9 +40,10 @@ export default function ImageGallerySection({ data, settings }: Props) {
               className="break-inside-avoid mb-4 rounded-xl overflow-hidden cursor-pointer group"
               onClick={() => d.enableLightbox !== false && setLightboxIndex(i)}
             >
-              <img
+              <CroppedImage
                 src={img.src}
                 alt={img.alt || ""}
+                crop={img.crop}
                 className="w-full object-cover group-hover:scale-105 transition-transform duration-300"
                 loading="lazy"
               />

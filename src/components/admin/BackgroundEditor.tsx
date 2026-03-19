@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import type { BackgroundConfig } from "@/lib/types";
+import type { BackgroundConfig, ImageCrop } from "@/lib/types";
 import ImagePicker from "./ImagePicker";
 
 const BG_TYPES = [
@@ -199,7 +199,9 @@ export default function BackgroundEditor({ value, onChange }: Props) {
           <p className="text-[10px] text-gray-400">Ideal: 1920x800px or wider. Use &quot;Fit to Section&quot; for full-bleed hero backgrounds.</p>
           <ImagePicker
             value={config.imageUrl || ""}
-            onChange={(url) => update({ imageUrl: url })}
+            onChange={(url) => update({ imageUrl: url, imageCrop: undefined })}
+            cropValue={(config.imageCrop as ImageCrop) || null}
+            onCropChange={(crop) => update({ imageCrop: crop || undefined })}
           />
           <div>
             <label className="text-[9px] text-gray-400">Sizing</label>

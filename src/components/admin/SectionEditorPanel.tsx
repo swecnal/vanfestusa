@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import type { Section, SectionType, BackgroundConfig, SavedNavbar } from "@/lib/types";
+import type { Section, SectionType, BackgroundConfig, SavedNavbar, ImageCrop } from "@/lib/types";
+import ImageCropModal from "./ImageCropModal";
 import { SECTION_TYPE_LABELS, SPACING_PRESETS } from "@/lib/types";
 import RichTextEditor from "./RichTextEditor";
 import UrlInput from "./UrlInput";
@@ -523,6 +524,14 @@ function SectionFields({
             />
             Light text (dark background)
           </label>
+          <Field label="Background Image">
+            <ImagePicker
+              value={(data.bgImage as string) || ""}
+              onChange={(url) => updateData("bgImage", url)}
+              cropValue={(data.bgImageCrop as ImageCrop) || null}
+              onCropChange={(crop) => updateData("bgImageCrop", crop)}
+            />
+          </Field>
         </div>
       );
 
@@ -562,6 +571,8 @@ function SectionFields({
             <ImagePicker
               value={(data.image as string) || ""}
               onChange={(url) => updateData("image", url)}
+              cropValue={(data.imageCrop as ImageCrop) || null}
+              onCropChange={(crop) => updateData("imageCrop", crop)}
             />
           </Field>
           {(data.image as string) && (
@@ -1562,6 +1573,13 @@ function SectionFields({
             />
             Enable lightbox
           </label>
+          <Field label="Images">
+            <ImageArrayEditor
+              images={(data.images as Array<{ src: string; alt: string; crop?: ImageCrop }>) || []}
+              onChange={(images) => updateData("images", images)}
+              showCrop
+            />
+          </Field>
         </div>
       );
 
@@ -1652,6 +1670,8 @@ function SectionFields({
             <ImagePicker
               value={(data.bgImage as string) || ""}
               onChange={(url) => updateData("bgImage", url)}
+              cropValue={(data.bgImageCrop as ImageCrop) || null}
+              onCropChange={(crop) => updateData("bgImageCrop", crop)}
             />
           </Field>
           <Field label="Autoplay (ms)">
@@ -1666,8 +1686,9 @@ function SectionFields({
           </Field>
           <Field label="Images">
             <ImageArrayEditor
-              images={(data.images as Array<{ src: string; alt: string }>) || []}
+              images={(data.images as Array<{ src: string; alt: string; crop?: ImageCrop }>) || []}
               onChange={(images) => updateData("images", images)}
+              showCrop
             />
           </Field>
           {/* CTA Buttons */}
@@ -1745,9 +1766,9 @@ function SectionFields({
           </Field>
           <Field label="Images">
             <ImageArrayEditor
-              images={(data.images as Array<{ src: string; alt: string; position?: string }>) || []}
+              images={(data.images as Array<{ src: string; alt: string; position?: string; crop?: ImageCrop }>) || []}
               onChange={(images) => updateData("images", images)}
-              showPosition
+              showCrop
             />
           </Field>
         </div>
@@ -2117,12 +2138,16 @@ function ImageArrayEditor({
   images,
   onChange,
   showPosition,
+  showCrop,
 }: {
-  images: Array<{ src: string; alt: string; position?: string }>;
-  onChange: (images: Array<{ src: string; alt: string; position?: string }>) => void;
+  images: Array<{ src: string; alt: string; position?: string; crop?: ImageCrop }>;
+  onChange: (images: Array<{ src: string; alt: string; position?: string; crop?: ImageCrop }>) => void;
   showPosition?: boolean;
+  showCrop?: boolean;
 }) {
-  const updateImage = (index: number, field: string, value: string) => {
+  const [cropModalIndex, setCropModalIndex] = useState<number | null>(null);
+
+  const updateImage = (index: number, field: string, value: unknown) => {
     const next = [...images];
     next[index] = { ...next[index], [field]: value };
     onChange(next);
@@ -2142,17 +2167,25 @@ function ImageArrayEditor({
         <div key={i} className="bg-gray-50 rounded-lg p-2 relative">
           <div className="flex items-start gap-2 min-w-0">
             {img.src && (
-              <img
-                src={img.src}
-                alt={img.alt}
-                className="w-16 h-12 object-cover rounded flex-shrink-0"
-                style={img.position ? { objectPosition: img.position } : undefined}
-              />
+              <div className="relative flex-shrink-0">
+                <img
+                  src={img.src}
+                  alt={img.alt}
+                  className="w-16 h-12 object-cover rounded"
+                  style={img.position ? { objectPosition: img.position } : undefined}
+                />
+                {img.crop && (
+                  <span className="absolute -top-1 -right-1 bg-teal text-white text-[7px] font-bold px-1 rounded">C</span>
+                )}
+              </div>
             )}
             <div className="flex-1 min-w-0 space-y-1">
               <ImagePicker
                 value={img.src}
-                onChange={(url) => updateImage(i, "src", url)}
+                onChange={(url) => {
+                  updateImage(i, "src", url);
+                  if (url !== img.src) updateImage(i, "crop", undefined);
+                }}
               />
               <input
                 type="text"
@@ -2161,11 +2194,19 @@ function ImageArrayEditor({
                 className="w-full p-1.5 border border-gray-200 rounded text-xs"
                 placeholder="Alt text"
               />
-              {showPosition && img.src && (
+              {showPosition && !showCrop && img.src && (
                 <PositionPicker
                   value={img.position || "center"}
                   onChange={(pos) => updateImage(i, "position", pos)}
                 />
+              )}
+              {showCrop && img.src && (
+                <button
+                  onClick={() => setCropModalIndex(i)}
+                  className="px-2.5 py-1 bg-gray-100 hover:bg-gray-200 rounded text-[10px] font-medium transition-colors"
+                >
+                  {img.crop ? "Edit Crop" : "Crop"}
+                </button>
               )}
             </div>
             <div className="flex flex-col gap-0.5">
@@ -2205,6 +2246,23 @@ function ImageArrayEditor({
       >
         + Add Image
       </button>
+
+      {cropModalIndex !== null && images[cropModalIndex]?.src && (
+        <ImageCropModal
+          open
+          imageSrc={images[cropModalIndex].src}
+          initialCrop={images[cropModalIndex].crop}
+          onAccept={(crop) => {
+            updateImage(cropModalIndex, "crop", crop);
+            setCropModalIndex(null);
+          }}
+          onClear={() => {
+            updateImage(cropModalIndex, "crop", undefined);
+            setCropModalIndex(null);
+          }}
+          onClose={() => setCropModalIndex(null)}
+        />
+      )}
     </div>
   );
 }
@@ -2256,7 +2314,7 @@ function HeroCarouselEditor({
   siteStyles: SiteStyles;
 }) {
   const [showJson, setShowJson] = useState(false);
-  const slides = (data.slides as Array<{ image: string; alt: string }>) || [];
+  const slides = (data.slides as Array<{ image: string; alt: string; crop?: ImageCrop }>) || [];
   const overlay = (data.overlay as Record<string, unknown>) || {};
   const primaryCta = (overlay.primaryCta as Record<string, unknown>) || {};
   const secondaryCta = (overlay.secondaryCta as Record<string, unknown>) || {};
@@ -2326,13 +2384,14 @@ function HeroCarouselEditor({
         <div className="p-3 border-t border-gray-100">
           <p className="text-[10px] text-gray-400 mb-2">Ideal: 1920x1080px or wider (16:9). Full-screen with overlay text.</p>
           <ImageArrayEditor
-            images={slides.map((s) => ({ src: s.image, alt: s.alt }))}
+            images={slides.map((s) => ({ src: s.image, alt: s.alt, crop: s.crop }))}
             onChange={(imgs) =>
               updateData(
                 "slides",
-                imgs.map((img) => ({ image: img.src, alt: img.alt }))
+                imgs.map((img) => ({ image: img.src, alt: img.alt, crop: img.crop }))
               )
             }
+            showCrop
           />
         </div>
       </details>
@@ -2646,7 +2705,12 @@ function EventCardsEditor({
               <input type="text" value={(ev.gradient as string) || ""} onChange={(e) => updateEvent(i, "gradient", e.target.value)} className="input-sm" placeholder="from-teal to-charcoal" />
             </Field>
             <Field label="Image">
-              <ImagePicker value={(ev.image as string) || ""} onChange={(url) => updateEvent(i, "image", url)} />
+              <ImagePicker
+                value={(ev.image as string) || ""}
+                onChange={(url) => updateEvent(i, "image", url)}
+                cropValue={(ev.imageCrop as ImageCrop) || null}
+                onCropChange={(crop) => updateEvent(i, "imageCrop", crop)}
+              />
             </Field>
             <Field label="Font Override">
               <input type="text" value={(ev.fontOverride as string) || ""} onChange={(e) => updateEvent(i, "fontOverride", e.target.value)} className="input-sm" placeholder="e.g. EB Garamond" />
@@ -3003,7 +3067,12 @@ function ColumnCardsEditor({
                 <input type="text" value={(card.bgColor as string) || ""} onChange={(e) => updateCard(i, "bgColor", e.target.value)} className="input-sm" placeholder="e.g. bg-sand, #hex" />
               </Field>
               <Field label="Card Image">
-                <ImagePicker value={(card.image as string) || ""} onChange={(url) => updateCard(i, "image", url)} />
+                <ImagePicker
+                  value={(card.image as string) || ""}
+                  onChange={(url) => updateCard(i, "image", url)}
+                  cropValue={(card.imageCrop as ImageCrop) || null}
+                  onCropChange={(crop) => updateCard(i, "imageCrop", crop)}
+                />
               </Field>
               {(card.image as string) && (
                 <Field label="Image Position">

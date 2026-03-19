@@ -1,9 +1,10 @@
 import SectionHeading from "@/components/SectionHeading";
 import BuildsCarousel from "@/components/BuildsCarousel";
 import Link from "next/link";
-import type { SectionSettings } from "@/lib/types";
+import type { SectionSettings, ImageCrop } from "@/lib/types";
 import { sectionSpacingStyles, sectionBgClass } from "@/lib/types";
 import { textStyleConfigToCSS, type TextStyleConfig } from "@/lib/styles";
+import CroppedImage from "@/components/CroppedImage";
 
 interface Props {
   data: Record<string, unknown>;
@@ -20,7 +21,7 @@ export default function ImageCarouselSection({ data, settings }: Props) {
     ? { title: d.heading, subtitle: d.subheading as string | undefined, light: true }
     : (d.heading as { title: string; subtitle?: string; light?: boolean } | undefined);
 
-  const images = (d.images as Array<{ src: string; alt: string }>) || [];
+  const images = (d.images as Array<{ src: string; alt: string; crop?: ImageCrop }>) || [];
   const ctaButtons = (d.ctaButtons as Array<{ text: string; href: string; variant: string; external?: boolean }>) || [];
   const autoplayInterval = d.autoplayInterval as number | undefined;
   const bgImage = (d.bgImage as string) || settings.bgImage;
@@ -32,9 +33,10 @@ export default function ImageCarouselSection({ data, settings }: Props) {
       className={`relative px-4 ${sectionBgClass(settings)} overflow-hidden ${settings.customClasses || ""}`}
     >
       {bgImage && (
-        <img
+        <CroppedImage
           src={bgImage}
           alt=""
+          crop={(d.bgImageCrop as ImageCrop) || null}
           className="absolute inset-0 w-full h-full object-cover"
           style={{ opacity: settings.bgImageOpacity ?? 1 }}
         />

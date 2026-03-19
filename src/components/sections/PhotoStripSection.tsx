@@ -1,5 +1,6 @@
 import type { PhotoStripData, SectionSettings } from "@/lib/types";
 import { sectionSpacingStyles, sectionBgClass } from "@/lib/types";
+import CroppedImage from "@/components/CroppedImage";
 
 interface Props {
   data: Record<string, unknown>;
@@ -18,11 +19,12 @@ export default function PhotoStripSection({ data, settings }: Props) {
       >
         {d.images.map((img, i) => (
           <div key={i} className="overflow-hidden" style={{ height: d.height || "200px" }}>
-            <img
+            <CroppedImage
               src={img.src}
               alt={img.alt || ""}
+              crop={img.crop}
               className="w-full h-full object-cover"
-              style={img.position ? { objectPosition: img.position } : undefined}
+              fallbackObjectPosition={img.position || "center"}
               loading="lazy"
             />
           </div>

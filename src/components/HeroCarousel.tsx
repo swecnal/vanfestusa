@@ -3,6 +3,9 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { type SiteStyles, type TextStyleConfig, EMPTY_SITE_STYLES, findButtonStyle, buttonStyleToCSS, textStyleConfigToCSS } from "@/lib/styles";
 import type { ParallaxIntensity } from "@/components/ParallaxImage";
+import type { ImageCrop } from "@/lib/types";
+import CroppedImage from "@/components/CroppedImage";
+import { isEffectiveCrop, cropToBackgroundStyles } from "@/lib/crop-utils";
 
 const PARALLAX_SPEED: Record<ParallaxIntensity, number> = {
   none: 0,
@@ -14,6 +17,7 @@ const PARALLAX_SPEED: Record<ParallaxIntensity, number> = {
 interface HeroSlide {
   image: string;
   alt: string;
+  crop?: ImageCrop;
 }
 
 interface EventOverlay {
@@ -103,16 +107,34 @@ export default function HeroCarousel({ slides, overlay, autoplayInterval = 5000,
             i === current ? "opacity-100" : "opacity-0"
           }`}
         >
-          <img
-            src={slide.image}
-            alt={slide.alt}
-            className="w-full h-full object-cover"
-            style={pSpeed > 0 ? {
-              transform: `translateY(${scrollOffset}px)`,
-              willChange: "transform",
-              height: `${100 + pSpeed * 100}%`,
-            } : undefined}
-          />
+          {isEffectiveCrop(slide.crop) ? (
+            <div
+              role="img"
+              aria-label={slide.alt}
+              className="w-full h-full"
+              style={{
+                backgroundImage: `url(${slide.image})`,
+                ...cropToBackgroundStyles(slide.crop),
+                backgroundRepeat: "no-repeat",
+                ...(pSpeed > 0 ? {
+                  transform: `translateY(${scrollOffset}px)`,
+                  willChange: "transform",
+                  height: `${100 + pSpeed * 100}%`,
+                } : {}),
+              }}
+            />
+          ) : (
+            <img
+              src={slide.image}
+              alt={slide.alt}
+              className="w-full h-full object-cover"
+              style={pSpeed > 0 ? {
+                transform: `translateY(${scrollOffset}px)`,
+                willChange: "transform",
+                height: `${100 + pSpeed * 100}%`,
+              } : undefined}
+            />
+          )}
         </div>
       ))}
 

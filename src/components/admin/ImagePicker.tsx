@@ -3,15 +3,20 @@
 import { useState, useRef } from "react";
 import { toast } from "sonner";
 import MediaPickerModal from "./MediaPickerModal";
+import ImageCropModal from "./ImageCropModal";
+import type { ImageCrop } from "@/lib/types";
 
 interface Props {
   value: string;
   onChange: (url: string) => void;
+  cropValue?: ImageCrop | null;
+  onCropChange?: (crop: ImageCrop | null) => void;
 }
 
-export default function ImagePicker({ value, onChange }: Props) {
+export default function ImagePicker({ value, onChange, cropValue, onCropChange }: Props) {
   const [uploading, setUploading] = useState(false);
   const [libraryOpen, setLibraryOpen] = useState(false);
+  const [cropOpen, setCropOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const handleUpload = async (file: File) => {
@@ -29,6 +34,7 @@ export default function ImagePicker({ value, onChange }: Props) {
         const { asset } = await res.json();
         if (asset?.public_url) {
           onChange(asset.public_url);
+          onCropChange?.(null); // clear crop when image changes
           toast.success("Image uploaded — remember to Save");
         } else {
           toast.error("Upload succeeded but no URL returned");
@@ -55,6 +61,11 @@ export default function ImagePicker({ value, onChange }: Props) {
               (e.target as HTMLImageElement).style.display = "none";
             }}
           />
+          {cropValue && (
+            <span className="absolute top-1.5 right-1.5 bg-teal/80 text-white text-[10px] font-semibold px-1.5 py-0.5 rounded">
+              Cropped
+            </span>
+          )}
           <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
             <button
               onClick={() => fileRef.current?.click()}
@@ -63,7 +74,10 @@ export default function ImagePicker({ value, onChange }: Props) {
               Replace
             </button>
             <button
-              onClick={() => onChange("")}
+              onClick={() => {
+                onChange("");
+                onCropChange?.(null);
+              }}
               className="bg-red-500 text-white text-xs font-semibold px-3 py-1.5 rounded-lg"
             >
               Remove
@@ -76,7 +90,10 @@ export default function ImagePicker({ value, onChange }: Props) {
         <input
           type="text"
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => {
+            onChange(e.target.value);
+            onCropChange?.(null);
+          }}
           className="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-xs min-w-0"
           placeholder="Image URL or upload"
         />
@@ -93,6 +110,14 @@ export default function ImagePicker({ value, onChange }: Props) {
         >
           Library
         </button>
+        {onCropChange && value && (
+          <button
+            onClick={() => setCropOpen(true)}
+            className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-lg text-xs font-medium transition-colors"
+          >
+            {cropValue ? "Edit Crop" : "Crop"}
+          </button>
+        )}
       </div>
 
       <input
@@ -112,9 +137,28 @@ export default function ImagePicker({ value, onChange }: Props) {
         onClose={() => setLibraryOpen(false)}
         onSelect={(url) => {
           onChange(url);
+          onCropChange?.(null);
           toast.success("Image selected — remember to Save");
         }}
       />
+
+      {onCropChange && (
+        <ImageCropModal
+          open={cropOpen}
+          imageSrc={value}
+          initialCrop={cropValue}
+          onAccept={(crop) => {
+            onCropChange(crop);
+            setCropOpen(false);
+            toast.success("Crop applied — remember to Save");
+          }}
+          onClear={() => {
+            onCropChange(null);
+            setCropOpen(false);
+          }}
+          onClose={() => setCropOpen(false)}
+        />
+      )}
     </div>
   );
 }

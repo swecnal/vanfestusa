@@ -2,6 +2,7 @@ import SectionHeading from "@/components/SectionHeading";
 import type { TwoColumnCardsData, SectionSettings } from "@/lib/types";
 import { sectionSpacingStyles, sectionBgClass } from "@/lib/types";
 import { type SiteStyles, type TextStyleConfig, EMPTY_SITE_STYLES, findButtonStyle, buttonStyleToCSS, textStyleConfigToCSS, resolveButtonStylesInHtml } from "@/lib/styles";
+import CroppedImage from "@/components/CroppedImage";
 
 interface Props {
   data: Record<string, unknown>;
@@ -27,21 +28,21 @@ function renderCard(card: TwoColumnCardsData["cards"][number], i: number, siteSt
     >
       {card.image && isBackground && (
         <>
-          <img src={card.image} alt="" className="absolute inset-0 w-full h-full object-cover" />
+          <CroppedImage src={card.image} alt="" crop={card.imageCrop} className="absolute inset-0 w-full h-full object-cover" />
           <div className="absolute inset-0 bg-black/50" />
         </>
       )}
       {card.image && (card.imagePosition === "full-width" || (!card.imagePosition && !isBackground && !isSmall)) && (
-        <img src={card.image} alt="" className="w-full h-48 object-cover" />
+        <CroppedImage src={card.image} alt="" crop={card.imageCrop} className="w-full h-48 object-cover" />
       )}
       {card.image && card.imagePosition === "small-center" && (
         <div className="flex justify-center pt-6">
-          <img src={card.image} alt="" className="w-20 h-20 object-cover rounded-lg" />
+          <CroppedImage src={card.image} alt="" crop={card.imageCrop} className="w-20 h-20 object-cover rounded-lg" />
         </div>
       )}
       <div className={`p-6 ${isBackground ? "relative z-10" : ""} ${isSmall && card.imagePosition !== "small-center" ? "flex gap-4" : ""}`}>
         {card.image && card.imagePosition === "small-left" && (
-          <img src={card.image} alt="" className="w-16 h-16 object-cover rounded-lg flex-shrink-0" />
+          <CroppedImage src={card.image} alt="" crop={card.imageCrop} className="w-16 h-16 object-cover rounded-lg flex-shrink-0" />
         )}
         <div className="flex-1">
           <h3
@@ -79,7 +80,7 @@ function renderCard(card: TwoColumnCardsData["cards"][number], i: number, siteSt
           })()}
         </div>
         {card.image && card.imagePosition === "small-right" && (
-          <img src={card.image} alt="" className="w-16 h-16 object-cover rounded-lg flex-shrink-0" />
+          <CroppedImage src={card.image} alt="" crop={card.imageCrop} className="w-16 h-16 object-cover rounded-lg flex-shrink-0" />
         )}
       </div>
     </div>

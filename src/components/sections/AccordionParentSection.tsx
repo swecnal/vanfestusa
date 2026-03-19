@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import type { AccordionParentData, SectionSettings, SectionType } from "@/lib/types";
 import { sectionSpacingStyles, sectionBgClass } from "@/lib/types";
 import { type SiteStyles, type TextStyleConfig, textStyleConfigToCSS, resolveButtonStylesInHtml, EMPTY_SITE_STYLES } from "@/lib/styles";
+import CroppedImage from "@/components/CroppedImage";
 import SectionRenderer from "./SectionRenderer";
 
 interface Props {
@@ -69,9 +70,10 @@ export default function AccordionParentSection({ data, settings, siteStyles = EM
             {/* Background image */}
             {isBackground && (
               <>
-                <img
-                  src={d.image}
+                <CroppedImage
+                  src={d.image!}
                   alt=""
+                  crop={d.imageCrop}
                   className="absolute inset-0 w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-charcoal/60" />
@@ -80,18 +82,20 @@ export default function AccordionParentSection({ data, settings, siteStyles = EM
 
             {/* Small image */}
             {hasImage && (imgPos === "small-left" || imgPos === "small-right") && (
-              <img
-                src={d.image}
+              <CroppedImage
+                src={d.image!}
                 alt=""
+                crop={d.imageCrop}
                 className="w-32 h-32 object-cover rounded-xl flex-shrink-0"
               />
             )}
 
             {/* Full-width image */}
             {hasImage && imgPos === "full-width" && (
-              <img
-                src={d.image}
+              <CroppedImage
+                src={d.image!}
                 alt=""
+                crop={d.imageCrop}
                 className="w-full h-48 object-cover rounded-xl mb-4"
               />
             )}

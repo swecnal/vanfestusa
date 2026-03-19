@@ -1,7 +1,7 @@
 import SectionHeading from "@/components/SectionHeading";
 import ParallaxImage from "@/components/ParallaxImage";
 import type { ParallaxIntensity } from "@/components/ParallaxImage";
-import type { HeroSimpleData, SectionSettings } from "@/lib/types";
+import type { HeroSimpleData, SectionSettings, ImageCrop } from "@/lib/types";
 import { textStyleConfigToCSS, type TextStyleConfig } from "@/lib/styles";
 
 interface Props {
@@ -30,6 +30,7 @@ export default function HeroSimpleSection({ data, settings }: Props) {
           alt=""
           intensity={parallax}
           className="absolute inset-0 w-full h-full object-cover"
+          crop={(data as Record<string, unknown>).bgImageCrop as ImageCrop | undefined}
         />
       )}
       <div className="relative mx-auto max-w-6xl">
