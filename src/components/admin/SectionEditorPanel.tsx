@@ -34,6 +34,7 @@ export default function SectionEditorPanel({ section, onSave, saving, isDirty, o
   const [settings, setSettings] = useState<Record<string, unknown>>(section.settings as unknown as Record<string, unknown>);
   const [siteStyles, setSiteStyles] = useState<SiteStyles>(EMPTY_SITE_STYLES);
   const [savedNavbars, setSavedNavbars] = useState<SavedNavbar[]>([]);
+  const [cloneOpen, setCloneOpen] = useState(false);
 
   useEffect(() => {
     setData(section.data);
@@ -441,16 +442,36 @@ export default function SectionEditorPanel({ section, onSave, saving, isDirty, o
         savedNavbars={savedNavbars}
       />
 
-      {/* Save button */}
+      {/* Save + Clone buttons */}
       <div className={stickyButtons ? "sticky bottom-0 bg-white pt-2 border-t border-gray-100 -mx-4 px-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]" : ""} style={stickyButtons ? { paddingBottom: "max(4px, env(safe-area-inset-bottom))" } : undefined}>
-        <button
-          onClick={handleSave}
-          disabled={saving || isDirty === false}
-          className="w-full bg-teal hover:bg-teal-dark text-white font-semibold py-2.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-        >
-          {saving ? "Saving..." : "Save Changes"}
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={handleSave}
+            disabled={saving || isDirty === false}
+            className="flex-1 bg-teal hover:bg-teal-dark text-white font-semibold py-2.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+          >
+            {saving ? "Saving..." : "Save Changes"}
+          </button>
+          <button
+            onClick={() => setCloneOpen(true)}
+            className="px-3 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg transition-colors text-xs font-semibold"
+            title="Clone to another page"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+          </button>
+        </div>
       </div>
+
+      {cloneOpen && (
+        <CloneToPageModal
+          sectionType={section.section_type}
+          data={data}
+          settings={settings}
+          onClose={() => setCloneOpen(false)}
+        />
+      )}
 
       <style jsx>{`
         .input-sm {
@@ -2240,6 +2261,101 @@ function PositionPicker({ value, onChange }: { value: string; onChange: (v: stri
             {opt.label}
           </button>
         ))}
+      </div>
+    </div>
+  );
+}
+
+function CloneToPageModal({
+  sectionType,
+  data,
+  settings,
+  onClose,
+}: {
+  sectionType: string;
+  data: Record<string, unknown>;
+  settings: Record<string, unknown>;
+  onClose: () => void;
+}) {
+  const [pages, setPages] = useState<Array<{ id: string; title: string; slug: string }>>([]);
+  const [targetPageId, setTargetPageId] = useState("");
+  const [cloning, setCloning] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/pages")
+      .then((r) => r.json())
+      .then((res) => {
+        setPages(res.pages || []);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  const handleClone = async () => {
+    if (!targetPageId) return;
+    setCloning(true);
+    try {
+      const res = await fetch(`/api/pages/${targetPageId}/sections`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ section_type: sectionType, data, settings }),
+      });
+      if (res.ok) {
+        const targetPage = pages.find((p) => p.id === targetPageId);
+        const { toast } = await import("sonner");
+        toast.success(`Cloned to "${targetPage?.title || "page"}"`);
+        onClose();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        const { toast } = await import("sonner");
+        toast.error(err.error || "Failed to clone");
+      }
+    } catch {
+      const { toast } = await import("sonner");
+      toast.error("Clone failed");
+    }
+    setCloning(false);
+  };
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40" onClick={onClose}>
+      <div className="bg-white rounded-xl shadow-2xl w-80 p-5 space-y-4" onClick={(e) => e.stopPropagation()}>
+        <h3 className="font-display font-bold text-base text-charcoal">Clone to Page</h3>
+        <p className="text-xs text-gray-500">
+          Clone this {SECTION_TYPE_LABELS[sectionType as SectionType] || sectionType} element to another page.
+        </p>
+        {loading ? (
+          <p className="text-xs text-gray-400">Loading pages...</p>
+        ) : (
+          <select
+            value={targetPageId}
+            onChange={(e) => setTargetPageId(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+          >
+            <option value="">Select a page...</option>
+            {pages.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.title} ({p.slug})
+              </option>
+            ))}
+          </select>
+        )}
+        <div className="flex gap-2 justify-end">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleClone}
+            disabled={!targetPageId || cloning}
+            className="px-4 py-2 bg-teal hover:bg-teal-dark text-white text-sm font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {cloning ? "Cloning..." : "Clone"}
+          </button>
+        </div>
       </div>
     </div>
   );
