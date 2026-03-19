@@ -22,6 +22,7 @@ export default function PhotoStripSection({ data, settings }: Props) {
               src={img.src}
               alt={img.alt || ""}
               className="w-full h-full object-cover"
+              style={img.position ? { objectPosition: img.position } : undefined}
               loading="lazy"
             />
           </div>

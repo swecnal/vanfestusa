@@ -548,7 +548,7 @@ export interface ImageCarouselData {
 }
 
 export interface PhotoStripData {
-  images: Array<{ src: string; alt: string }>;
+  images: Array<{ src: string; alt: string; position?: string }>;
   height?: string;
   columns?: number;
 }

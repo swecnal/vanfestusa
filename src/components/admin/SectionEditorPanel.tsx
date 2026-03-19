@@ -1703,7 +1703,8 @@ function SectionFields({
       );
     }
 
-    case "photo_strip":
+    case "photo_strip": {
+      const stripCols = (data.columns as number) || 4;
       return (
         <div className="space-y-3">
           <Field label={`Height: ${parseInt((data.height as string) || "200", 10)}px`}>
@@ -1717,23 +1718,41 @@ function SectionFields({
             />
           </Field>
           <Field label="Columns">
-            <input
-              type="number"
-              value={(data.columns as number) || 4}
-              onChange={(e) => updateData("columns", Number(e.target.value))}
-              className="input-sm"
-              min={1}
-              max={8}
-            />
+            <div className="flex gap-1 flex-wrap">
+              {Array.from({ length: stripCols }, (_, i) => i + 1).map((n) => (
+                <button
+                  key={n}
+                  onClick={() => updateData("columns", n)}
+                  className={`w-8 h-8 rounded-lg text-xs font-bold transition-colors ${
+                    n === stripCols
+                      ? "bg-teal text-white"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
+                >
+                  {n}
+                </button>
+              ))}
+              {stripCols < 6 && (
+                <button
+                  onClick={() => updateData("columns", stripCols + 1)}
+                  className="w-8 h-8 rounded-lg text-xs font-bold bg-gray-50 text-teal hover:bg-teal/10 border border-dashed border-gray-300 transition-colors"
+                  title="Add column"
+                >
+                  +
+                </button>
+              )}
+            </div>
           </Field>
           <Field label="Images">
             <ImageArrayEditor
-              images={(data.images as Array<{ src: string; alt: string }>) || []}
+              images={(data.images as Array<{ src: string; alt: string; position?: string }>) || []}
               onChange={(images) => updateData("images", images)}
+              showPosition
             />
           </Field>
         </div>
       );
+    }
 
     case "contact_form":
       return (
@@ -2097,11 +2116,13 @@ function ArrayEditor({
 function ImageArrayEditor({
   images,
   onChange,
+  showPosition,
 }: {
-  images: Array<{ src: string; alt: string }>;
-  onChange: (images: Array<{ src: string; alt: string }>) => void;
+  images: Array<{ src: string; alt: string; position?: string }>;
+  onChange: (images: Array<{ src: string; alt: string; position?: string }>) => void;
+  showPosition?: boolean;
 }) {
-  const updateImage = (index: number, field: "src" | "alt", value: string) => {
+  const updateImage = (index: number, field: string, value: string) => {
     const next = [...images];
     next[index] = { ...next[index], [field]: value };
     onChange(next);
@@ -2121,7 +2142,12 @@ function ImageArrayEditor({
         <div key={i} className="bg-gray-50 rounded-lg p-2 relative">
           <div className="flex items-start gap-2 min-w-0">
             {img.src && (
-              <img src={img.src} alt={img.alt} className="w-16 h-12 object-cover rounded flex-shrink-0" />
+              <img
+                src={img.src}
+                alt={img.alt}
+                className="w-16 h-12 object-cover rounded flex-shrink-0"
+                style={img.position ? { objectPosition: img.position } : undefined}
+              />
             )}
             <div className="flex-1 min-w-0 space-y-1">
               <ImagePicker
@@ -2135,6 +2161,12 @@ function ImageArrayEditor({
                 className="w-full p-1.5 border border-gray-200 rounded text-xs"
                 placeholder="Alt text"
               />
+              {showPosition && img.src && (
+                <PositionPicker
+                  value={img.position || "center"}
+                  onChange={(pos) => updateImage(i, "position", pos)}
+                />
+              )}
             </div>
             <div className="flex flex-col gap-0.5">
               <button
@@ -2173,6 +2205,42 @@ function ImageArrayEditor({
       >
         + Add Image
       </button>
+    </div>
+  );
+}
+
+const POSITION_OPTIONS = [
+  { value: "top left", label: "TL" },
+  { value: "top center", label: "T" },
+  { value: "top right", label: "TR" },
+  { value: "center left", label: "L" },
+  { value: "center", label: "C" },
+  { value: "center right", label: "R" },
+  { value: "bottom left", label: "BL" },
+  { value: "bottom center", label: "B" },
+  { value: "bottom right", label: "BR" },
+];
+
+function PositionPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  return (
+    <div className="flex items-center gap-1.5">
+      <span className="text-[9px] text-gray-400 flex-shrink-0">Focus</span>
+      <div className="grid grid-cols-3 gap-px bg-gray-200 rounded overflow-hidden">
+        {POSITION_OPTIONS.map((opt) => (
+          <button
+            key={opt.value}
+            onClick={() => onChange(opt.value)}
+            className={`w-5 h-4 text-[7px] font-bold transition-colors ${
+              value === opt.value
+                ? "bg-teal text-white"
+                : "bg-white text-gray-400 hover:bg-gray-100"
+            }`}
+            title={opt.value}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
