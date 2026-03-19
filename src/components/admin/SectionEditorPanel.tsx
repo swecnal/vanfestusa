@@ -1725,7 +1725,29 @@ function SectionFields({
     }
 
     case "photo_strip": {
-      const stripCols = (data.columns as number) || 4;
+      const stripImages = (data.images as Array<{ src: string; alt: string; position?: string; crop?: ImageCrop }>) || [];
+      const stripCols = (data.columns as number) || stripImages.length || 4;
+
+      const deleteColumn = (idx: number) => {
+        const next = stripImages.filter((_, i) => i !== idx);
+        updateData("images", next);
+        updateData("columns", Math.max(1, stripCols - 1));
+      };
+
+      const addColumn = () => {
+        const next = [...stripImages, { src: "", alt: "" }];
+        updateData("images", next);
+        updateData("columns", stripCols + 1);
+      };
+
+      const reorderColumns = (from: number, to: number) => {
+        if (to < 0 || to >= stripImages.length) return;
+        const next = [...stripImages];
+        const [moved] = next.splice(from, 1);
+        next.splice(to, 0, moved);
+        updateData("images", next);
+      };
+
       return (
         <div className="space-y-3">
           <Field label={`Height: ${parseInt((data.height as string) || "200", 10)}px`}>
@@ -1739,34 +1761,18 @@ function SectionFields({
             />
           </Field>
           <Field label="Columns">
-            <div className="flex gap-1 flex-wrap">
-              {Array.from({ length: stripCols }, (_, i) => i + 1).map((n) => (
-                <button
-                  key={n}
-                  onClick={() => updateData("columns", n)}
-                  className={`w-8 h-8 rounded-lg text-xs font-bold transition-colors ${
-                    n === stripCols
-                      ? "bg-teal text-white"
-                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  }`}
-                >
-                  {n}
-                </button>
-              ))}
-              {stripCols < 6 && (
-                <button
-                  onClick={() => updateData("columns", stripCols + 1)}
-                  className="w-8 h-8 rounded-lg text-xs font-bold bg-gray-50 text-teal hover:bg-teal/10 border border-dashed border-gray-300 transition-colors"
-                  title="Add column"
-                >
-                  +
-                </button>
-              )}
-            </div>
+            <PhotoStripColumns
+              count={stripCols}
+              images={stripImages}
+              onDelete={deleteColumn}
+              onReorder={reorderColumns}
+              onAdd={addColumn}
+              maxColumns={6}
+            />
           </Field>
           <Field label="Images">
             <ImageArrayEditor
-              images={(data.images as Array<{ src: string; alt: string; position?: string; crop?: ImageCrop }>) || []}
+              images={stripImages}
               onChange={(images) => updateData("images", images)}
               showCrop
             />
@@ -2262,6 +2268,128 @@ function ImageArrayEditor({
           }}
           onClose={() => setCropModalIndex(null)}
         />
+      )}
+    </div>
+  );
+}
+
+// ── Photo Strip Column Controls ──
+
+function PhotoStripColumns({
+  count,
+  images,
+  onDelete,
+  onReorder,
+  onAdd,
+  maxColumns,
+}: {
+  count: number;
+  images: Array<{ src: string; alt: string }>;
+  onDelete: (idx: number) => void;
+  onReorder: (from: number, to: number) => void;
+  onAdd: () => void;
+  maxColumns: number;
+}) {
+  const [dragIdx, setDragIdx] = useState<number | null>(null);
+  const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
+
+  const handleDragStart = (e: React.DragEvent, idx: number) => {
+    setDragIdx(idx);
+    e.dataTransfer.effectAllowed = "move";
+    // Needed for Firefox
+    e.dataTransfer.setData("text/plain", String(idx));
+  };
+
+  const handleDragOver = (e: React.DragEvent, idx: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    setDragOverIdx(idx);
+  };
+
+  const handleDrop = (e: React.DragEvent, toIdx: number) => {
+    e.preventDefault();
+    if (dragIdx !== null && dragIdx !== toIdx) {
+      onReorder(dragIdx, toIdx);
+    }
+    setDragIdx(null);
+    setDragOverIdx(null);
+  };
+
+  const handleDragEnd = () => {
+    setDragIdx(null);
+    setDragOverIdx(null);
+  };
+
+  return (
+    <div className="flex gap-1.5 flex-wrap items-center">
+      {Array.from({ length: count }, (_, i) => {
+        const hasImage = images[i]?.src;
+        const isDragging = dragIdx === i;
+        const isDragOver = dragOverIdx === i && dragIdx !== i;
+
+        return (
+          <div
+            key={i}
+            draggable
+            onDragStart={(e) => handleDragStart(e, i)}
+            onDragOver={(e) => handleDragOver(e, i)}
+            onDrop={(e) => handleDrop(e, i)}
+            onDragEnd={handleDragEnd}
+            className={`relative group w-9 h-9 rounded-lg text-xs font-bold transition-all cursor-grab active:cursor-grabbing ${
+              isDragging
+                ? "opacity-40 scale-95"
+                : isDragOver
+                  ? "ring-2 ring-teal ring-offset-1"
+                  : ""
+            } ${
+              hasImage
+                ? "bg-gray-200 text-gray-700 border border-gray-300"
+                : "bg-gray-100 text-gray-400 border border-dashed border-gray-300"
+            }`}
+            title={hasImage ? `Column ${i + 1} — drag to reorder` : `Column ${i + 1} (no image)`}
+          >
+            {/* Column number */}
+            <span className="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
+              {i + 1}
+            </span>
+
+            {/* Tiny image thumbnail */}
+            {hasImage && (
+              <img
+                src={images[i].src}
+                alt=""
+                className="absolute inset-0.5 rounded object-cover opacity-30 pointer-events-none"
+              />
+            )}
+
+            {/* Delete button on hover */}
+            {count > 1 && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete(i);
+                }}
+                className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-sm hover:bg-red-600 z-10"
+                title={`Delete column ${i + 1}`}
+              >
+                <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
+          </div>
+        );
+      })}
+
+      {/* Add column button */}
+      {count < maxColumns && (
+        <button
+          onClick={onAdd}
+          className="w-9 h-9 rounded-lg text-xs font-bold bg-gray-50 text-teal hover:bg-teal/10 border border-dashed border-gray-300 transition-colors"
+          title="Add column"
+        >
+          +
+        </button>
       )}
     </div>
   );
