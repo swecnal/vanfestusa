@@ -850,23 +850,30 @@ export default function PageEditorPage() {
     const body: Record<string, unknown> = { data };
     if (settings) body.settings = settings;
 
-    const res = await fetch(`/api/pages/${pageId}/sections/${sectionId}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
+    try {
+      const res = await fetch(`/api/pages/${pageId}/sections/${sectionId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
 
-    if (res.ok) {
-      const { section } = await res.json();
-      setSections((prev) => prev.map((s) => (s.id === section.id ? section : s)));
-      setMobileIframeKey((k) => k + 1);
-      toast.success("Saved");
-    } else {
-      setIsDirty(true); // Restore dirty flag on failure
+      if (res.ok) {
+        const { section } = await res.json();
+        setSections((prev) => prev.map((s) => (s.id === section.id ? section : s)));
+        setMobileIframeKey((k) => k + 1);
+        toast.success("Saved");
+      } else {
+        setIsDirty(true); // Restore dirty flag on failure
+        isDirtyRef.current = true;
+        toast.error("Failed to save");
+      }
+    } catch {
+      setIsDirty(true);
       isDirtyRef.current = true;
-      toast.error("Failed to save");
+      toast.error("Save failed — check your connection");
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
   };
 
   // Handle real-time editing changes
