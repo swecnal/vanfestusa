@@ -2119,11 +2119,11 @@ function ImageArrayEditor({
     <div className="space-y-2">
       {images.map((img, i) => (
         <div key={i} className="bg-gray-50 rounded-lg p-2 relative">
-          <div className="flex items-start gap-2">
+          <div className="flex items-start gap-2 min-w-0">
             {img.src && (
               <img src={img.src} alt={img.alt} className="w-16 h-12 object-cover rounded flex-shrink-0" />
             )}
-            <div className="flex-1 space-y-1">
+            <div className="flex-1 min-w-0 space-y-1">
               <ImagePicker
                 value={img.src}
                 onChange={(url) => updateImage(i, "src", url)}

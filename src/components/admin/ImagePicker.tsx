@@ -72,12 +72,12 @@ export default function ImagePicker({ value, onChange }: Props) {
         </div>
       )}
 
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-1.5">
         <input
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="flex-1 px-2 py-1.5 border border-gray-300 rounded-lg text-xs"
+          className="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-xs min-w-0"
           placeholder="Image URL or upload"
         />
         <button

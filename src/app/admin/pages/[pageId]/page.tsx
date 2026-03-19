@@ -709,8 +709,19 @@ export default function PageEditorPage() {
   const handleEditorChange = useCallback((data: Record<string, unknown>, settings: Record<string, unknown>) => {
     setEditingData(data);
     setEditingSettings(settings);
-    setIsDirty(true);
-    isDirtyRef.current = true;
+    // Only mark dirty if data actually differs from the saved section
+    const original = sections.find((s) => s.id === selectedSectionId);
+    if (original) {
+      const dataChanged = JSON.stringify(data) !== JSON.stringify(original.data);
+      const settingsChanged = JSON.stringify(settings) !== JSON.stringify(original.settings);
+      if (dataChanged || settingsChanged) {
+        setIsDirty(true);
+        isDirtyRef.current = true;
+      }
+    } else {
+      setIsDirty(true);
+      isDirtyRef.current = true;
+    }
     // Push live update to mobile preview iframe
     if (selectedSectionId && mobileIframeRef.current?.contentWindow) {
       mobileIframeRef.current.contentWindow.postMessage({
@@ -720,7 +731,7 @@ export default function PageEditorPage() {
         settings,
       }, "*");
     }
-  }, [selectedSectionId]);
+  }, [selectedSectionId, sections]);
 
   // Accordion groups on the page (for "move into accordion" feature)
   const accordionGroups = sections
@@ -1469,7 +1480,7 @@ export default function PageEditorPage() {
               </button>
             </div>
           </div>
-          <div className="flex-1 overflow-y-auto admin-scrollbar">
+          <div className="flex-1 overflow-y-auto overflow-x-hidden admin-scrollbar">
             <SectionEditorPanel
               section={selectedSection}
               onSave={(data, settings) => handleSaveSection(selectedSection.id, data, settings)}
@@ -1501,7 +1512,7 @@ export default function PageEditorPage() {
               </svg>
             </button>
           </div>
-          <div className="flex-1 overflow-y-auto admin-scrollbar" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
+          <div className="flex-1 overflow-y-auto overflow-x-hidden admin-scrollbar" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
             <SectionEditorPanel
               section={selectedSection}
               onSave={(data, settings) => handleSaveSection(selectedSection.id, data, settings)}
@@ -1554,7 +1565,7 @@ export default function PageEditorPage() {
               </button>
             </div>
           </div>
-          <div className="flex-1 overflow-y-auto admin-scrollbar">
+          <div className="flex-1 overflow-y-auto overflow-x-hidden admin-scrollbar">
             {globalEditTarget === "navbar" ? (
               <NavbarBuilder onSave={() => {
                 const iframe = mobileIframeRef.current;
@@ -1586,7 +1597,7 @@ export default function PageEditorPage() {
               </svg>
             </button>
           </div>
-          <div className="flex-1 overflow-y-auto admin-scrollbar" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
+          <div className="flex-1 overflow-y-auto overflow-x-hidden admin-scrollbar" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
             {globalEditTarget === "navbar" ? (
               <NavbarBuilder onSave={() => {
                 const iframe = mobileIframeRef.current;
