@@ -3141,9 +3141,17 @@ function ColumnCardsEditor({
                 <Field label={`Border Radius: ${(cs.borderRadius as string) || "16px"}`}>
                   <input type="range" min={0} max={32} value={parseInt((cs.borderRadius as string) || "16", 10)} onChange={(e) => updateCS("borderRadius", `${e.target.value}px`)} className="w-full" />
                 </Field>
-                <Field label="Min Height">
-                  <input type="text" value={(cs.minHeight as string) || ""} onChange={(e) => updateCS("minHeight", e.target.value)} className="input-sm" placeholder="auto" />
-                </Field>
+                <div className="grid grid-cols-3 gap-1.5">
+                  <Field label="Width">
+                    <input type="text" value={(cs.width as string) || ""} onChange={(e) => updateCS("width", e.target.value)} className="input-sm" placeholder="auto" />
+                  </Field>
+                  <Field label="Height">
+                    <input type="text" value={(cs.height as string) || ""} onChange={(e) => updateCS("height", e.target.value)} className="input-sm" placeholder="auto" />
+                  </Field>
+                  <Field label="Min Height">
+                    <input type="text" value={(cs.minHeight as string) || ""} onChange={(e) => updateCS("minHeight", e.target.value)} className="input-sm" placeholder="auto" />
+                  </Field>
+                </div>
                 <div>
                   <label className="block text-[10px] font-medium text-gray-500 mb-1">Padding</label>
                   <div className="flex gap-1 mb-1.5">
@@ -3329,9 +3337,17 @@ function ColumnCardsEditor({
                         <Field label="Border Radius">
                           <input type="text" value={(cs.borderRadius as string) || ""} onChange={(e) => updateCSCard("borderRadius", e.target.value)} className="input-sm" placeholder={(globalCS.borderRadius as string) || "16px"} />
                         </Field>
-                        <Field label="Min Height">
-                          <input type="text" value={(cs.minHeight as string) || ""} onChange={(e) => updateCSCard("minHeight", e.target.value)} className="input-sm" placeholder={(globalCS.minHeight as string) || "auto"} />
-                        </Field>
+                        <div className="grid grid-cols-3 gap-1.5">
+                          <Field label="Width">
+                            <input type="text" value={(cs.width as string) || ""} onChange={(e) => updateCSCard("width", e.target.value)} className="input-sm" placeholder={(globalCS.width as string) || "auto"} />
+                          </Field>
+                          <Field label="Height">
+                            <input type="text" value={(cs.height as string) || ""} onChange={(e) => updateCSCard("height", e.target.value)} className="input-sm" placeholder={(globalCS.height as string) || "auto"} />
+                          </Field>
+                          <Field label="Min Height">
+                            <input type="text" value={(cs.minHeight as string) || ""} onChange={(e) => updateCSCard("minHeight", e.target.value)} className="input-sm" placeholder={(globalCS.minHeight as string) || "auto"} />
+                          </Field>
+                        </div>
                         <div>
                           <label className="block text-[10px] font-medium text-gray-500 mb-1">Padding</label>
                           <div className="grid grid-cols-4 gap-1">

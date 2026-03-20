@@ -387,6 +387,8 @@ export interface TextBlockData {
 export interface CardSpacing {
   padding?: { top?: string; bottom?: string; left?: string; right?: string };
   margin?: { top?: string; bottom?: string; left?: string; right?: string };
+  width?: string;
+  height?: string;
   minHeight?: string;
   borderRadius?: string;
 }

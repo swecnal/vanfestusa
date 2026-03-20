@@ -35,6 +35,8 @@ function mergeSpacing(global?: CardSpacing, local?: CardSpacing): CardSpacing {
       left: local.margin?.left || global.margin?.left,
       right: local.margin?.right || global.margin?.right,
     },
+    width: local.width || global.width,
+    height: local.height || global.height,
     minHeight: local.minHeight || global.minHeight,
     borderRadius: local.borderRadius || global.borderRadius,
   };
@@ -48,10 +50,14 @@ function renderCard(card: TwoColumnCardsData["cards"][number], i: number, siteSt
   const mar = spacing.margin;
   const br = spacing.borderRadius;
   const mh = spacing.minHeight;
+  const cw = spacing.width;
+  const ch = spacing.height;
 
   const cardWrapperStyle: React.CSSProperties = {
     ...(br ? { borderRadius: br } : {}),
     ...(mh && mh !== "auto" ? { minHeight: mh } : {}),
+    ...(cw ? { width: cw } : {}),
+    ...(ch ? { height: ch } : {}),
     ...(mar?.top || mar?.bottom || mar?.left || mar?.right ? {
       marginTop: mar.top || undefined,
       marginBottom: mar.bottom || undefined,
