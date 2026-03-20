@@ -1775,6 +1775,9 @@ function SectionFields({
               maxColumns={6}
             />
           </Field>
+          <p className="text-[10px] text-gray-400 italic">
+            Ideal: {Math.round(1920 / Math.min(stripCols, 6))} &times; {parseInt((data.height as string) || "200", 10)}px per image
+          </p>
           <Field label="Images">
             <ImageArrayEditor
               images={stripImages}
