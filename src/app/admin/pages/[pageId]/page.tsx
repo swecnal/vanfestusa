@@ -1160,8 +1160,8 @@ export default function PageEditorPage() {
 
   // Click-to-toggle with unsaved changes guard
   const handleSelectSection = useCallback((id: string | null) => {
-    // If switching away from a dirty section, prompt
-    if ((isDirty || isDirtyRef.current) && selectedSectionId && id !== selectedSectionId) {
+    // If leaving or deselecting a dirty section, prompt
+    if ((isDirty || isDirtyRef.current) && selectedSectionId) {
       pendingSelectRef.current = id;
       setConfirmModal({
         open: true,
