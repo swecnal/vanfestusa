@@ -182,7 +182,7 @@ export const SPACING_PRESETS = {
   },
   margin: {
     none: { top: "0px", bottom: "0px", left: "0px", right: "0px" },
-    compact: { top: "0px", bottom: "0px", left: "0px", right: "0px" },
+    compact: { top: "8px", bottom: "8px", left: "0px", right: "0px" },
     comfortable: { top: "16px", bottom: "16px", left: "0px", right: "0px" },
     spacious: { top: "32px", bottom: "32px", left: "0px", right: "0px" },
   },
