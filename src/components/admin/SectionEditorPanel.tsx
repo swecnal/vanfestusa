@@ -3130,8 +3130,9 @@ function ColumnCardsEditor({
             const pad = (cs.padding as Record<string, string>) || {};
             const mar = (cs.margin as Record<string, string>) || {};
             const updateCS = (key: string, value: unknown) => updateData("cardStyle", { ...cs, [key]: value });
-            const updatePad = (side: string, val: string) => updateCS("padding", { ...pad, [side]: val });
-            const updateMar = (side: string, val: string) => updateCS("margin", { ...mar, [side]: val });
+            const updateCSMulti = (updates: Record<string, unknown>) => updateData("cardStyle", { ...cs, ...updates });
+            const updatePad = (side: string, val: string) => updateCSMulti({ padding: { ...pad, [side]: val }, paddingPreset: null });
+            const updateMar = (side: string, val: string) => updateCSMulti({ margin: { ...mar, [side]: val }, marginPreset: null });
             return (
               <>
                 <Field label={`Gap Between Cards: ${(cs.gap as string) || "24px"}`}>
@@ -3148,9 +3149,8 @@ function ColumnCardsEditor({
                   <div className="flex gap-1 mb-1.5">
                     {(["none", "compact", "comfortable", "spacious"] as const).map((preset) => {
                       const vals = SPACING_PRESETS.padding[preset];
-                      const isActive = pad.top === vals.top && pad.bottom === vals.bottom && pad.left === vals.left && pad.right === vals.right;
                       return (
-                        <button key={preset} onClick={() => updateCS("padding", { top: vals.top, bottom: vals.bottom, left: vals.left, right: vals.right })} className={`flex-1 text-[10px] py-1 rounded border transition-colors capitalize ${isActive ? "bg-teal/15 border-teal text-teal font-semibold" : "border-gray-200 text-gray-500 hover:border-gray-300"}`}>
+                        <button key={preset} onClick={() => updateCSMulti({ padding: { top: vals.top, bottom: vals.bottom, left: vals.left, right: vals.right }, paddingPreset: preset })} className={`flex-1 text-[10px] py-1 rounded border transition-colors capitalize ${(cs.paddingPreset as string) === preset ? "bg-teal/15 border-teal text-teal font-semibold" : "border-gray-200 text-gray-500 hover:border-gray-300"}`}>
                           {preset}
                         </button>
                       );
@@ -3170,9 +3170,8 @@ function ColumnCardsEditor({
                   <div className="flex gap-1 mb-1.5">
                     {(["none", "compact", "comfortable", "spacious"] as const).map((preset) => {
                       const vals = SPACING_PRESETS.margin[preset];
-                      const isActive = mar.top === vals.top && mar.bottom === vals.bottom && mar.left === vals.left && mar.right === vals.right;
                       return (
-                        <button key={preset} onClick={() => updateCS("margin", { top: vals.top, bottom: vals.bottom, left: vals.left, right: vals.right })} className={`flex-1 text-[10px] py-1 rounded border transition-colors capitalize ${isActive ? "bg-teal/15 border-teal text-teal font-semibold" : "border-gray-200 text-gray-500 hover:border-gray-300"}`}>
+                        <button key={preset} onClick={() => updateCSMulti({ margin: { top: vals.top, bottom: vals.bottom, left: vals.left, right: vals.right }, marginPreset: preset })} className={`flex-1 text-[10px] py-1 rounded border transition-colors capitalize ${(cs.marginPreset as string) === preset ? "bg-teal/15 border-teal text-teal font-semibold" : "border-gray-200 text-gray-500 hover:border-gray-300"}`}>
                           {preset}
                         </button>
                       );
