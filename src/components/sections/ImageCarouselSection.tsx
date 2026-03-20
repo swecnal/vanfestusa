@@ -37,6 +37,7 @@ export default function ImageCarouselSection({ data, settings }: Props) {
           src={bgImage}
           alt=""
           crop={(d.bgImageCrop as ImageCrop) || null}
+          imageFit={(d.bgImageFit as import("@/lib/types").ImageFit) || undefined}
           className="absolute inset-0 w-full h-full object-cover"
           style={{ opacity: settings.bgImageOpacity ?? 1 }}
         />

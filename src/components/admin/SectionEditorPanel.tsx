@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import type { Section, SectionType, BackgroundConfig, SavedNavbar, ImageCrop } from "@/lib/types";
-import ImageCropModal from "./ImageCropModal";
+import type { Section, SectionType, BackgroundConfig, SavedNavbar, ImageCrop, ImageFit } from "@/lib/types";
 import { SECTION_TYPE_LABELS, SPACING_PRESETS } from "@/lib/types";
 import RichTextEditor from "./RichTextEditor";
 import UrlInput from "./UrlInput";
@@ -530,6 +529,8 @@ function SectionFields({
               onChange={(url) => updateData("bgImage", url)}
               cropValue={(data.bgImageCrop as ImageCrop) || null}
               onCropChange={(crop) => updateData("bgImageCrop", crop)}
+              fitValue={(data.bgImageFit as ImageFit) || undefined}
+              onFitChange={(fit) => updateData("bgImageFit", fit)}
             />
           </Field>
         </div>
@@ -573,6 +574,8 @@ function SectionFields({
               onChange={(url) => updateData("image", url)}
               cropValue={(data.imageCrop as ImageCrop) || null}
               onCropChange={(crop) => updateData("imageCrop", crop)}
+              fitValue={(data.imageFit as ImageFit) || undefined}
+              onFitChange={(fit) => updateData("imageFit", fit)}
             />
           </Field>
           {(data.image as string) && (
@@ -1672,6 +1675,8 @@ function SectionFields({
               onChange={(url) => updateData("bgImage", url)}
               cropValue={(data.bgImageCrop as ImageCrop) || null}
               onCropChange={(crop) => updateData("bgImageCrop", crop)}
+              fitValue={(data.bgImageFit as ImageFit) || undefined}
+              onFitChange={(fit) => updateData("bgImageFit", fit)}
             />
           </Field>
           <Field label="Autoplay (ms)">
@@ -2140,19 +2145,23 @@ function ArrayEditor({
   );
 }
 
+const IMAGE_FIT_OPTIONS: { value: ImageFit; label: string }[] = [
+  { value: "cover", label: "Cover" },
+  { value: "contain", label: "Contain" },
+  { value: "fill", label: "Stretch" },
+];
+
 function ImageArrayEditor({
   images,
   onChange,
   showPosition,
   showCrop,
 }: {
-  images: Array<{ src: string; alt: string; position?: string; crop?: ImageCrop }>;
-  onChange: (images: Array<{ src: string; alt: string; position?: string; crop?: ImageCrop }>) => void;
+  images: Array<{ src: string; alt: string; position?: string; crop?: ImageCrop; imageFit?: ImageFit }>;
+  onChange: (images: Array<{ src: string; alt: string; position?: string; crop?: ImageCrop; imageFit?: ImageFit }>) => void;
   showPosition?: boolean;
   showCrop?: boolean;
 }) {
-  const [cropModalIndex, setCropModalIndex] = useState<number | null>(null);
-
   const updateImage = (index: number, field: string, value: unknown) => {
     const next = [...images];
     next[index] = { ...next[index], [field]: value };
@@ -2172,29 +2181,20 @@ function ImageArrayEditor({
       {images.map((img, i) => (
         <div key={i} className="bg-gray-50 rounded-lg p-2 relative">
           <div className="flex items-start gap-2 min-w-0">
-            {img.src && (
-              <div className="relative flex-shrink-0">
-                <img
-                  src={img.src}
-                  alt={img.alt}
-                  className="w-16 h-12 object-cover rounded"
-                  style={img.position ? { objectPosition: img.position } : undefined}
-                />
-                {img.crop && (
-                  <span className="absolute -top-1 -right-1 bg-teal text-white text-[7px] font-bold px-1 rounded">C</span>
-                )}
-              </div>
-            )}
             <div className="flex-1 min-w-0 space-y-1">
               <ImagePicker
                 value={img.src}
                 onChange={(url) => {
                   const next = [...images];
                   const updated = { ...next[i], src: url };
-                  if (url !== img.src) updated.crop = undefined;
+                  if (url !== img.src) { updated.crop = undefined; updated.imageFit = undefined; }
                   next[i] = updated;
                   onChange(next);
                 }}
+                cropValue={img.crop || null}
+                onCropChange={(crop) => updateImage(i, "crop", crop ?? undefined)}
+                fitValue={img.imageFit}
+                onFitChange={(fit) => updateImage(i, "imageFit", fit)}
               />
               <input
                 type="text"
@@ -2208,14 +2208,6 @@ function ImageArrayEditor({
                   value={img.position || "center"}
                   onChange={(pos) => updateImage(i, "position", pos)}
                 />
-              )}
-              {showCrop && img.src && (
-                <button
-                  onClick={() => setCropModalIndex(i)}
-                  className="px-2.5 py-1 bg-gray-100 hover:bg-gray-200 rounded text-[10px] font-medium transition-colors"
-                >
-                  {img.crop ? "Edit Crop" : "Crop"}
-                </button>
               )}
             </div>
             <div className="flex flex-col gap-0.5">
@@ -2255,23 +2247,6 @@ function ImageArrayEditor({
       >
         + Add Image
       </button>
-
-      {cropModalIndex !== null && images[cropModalIndex]?.src && (
-        <ImageCropModal
-          open
-          imageSrc={images[cropModalIndex].src}
-          initialCrop={images[cropModalIndex].crop}
-          onAccept={(crop) => {
-            updateImage(cropModalIndex, "crop", crop);
-            setCropModalIndex(null);
-          }}
-          onClear={() => {
-            updateImage(cropModalIndex, "crop", undefined);
-            setCropModalIndex(null);
-          }}
-          onClose={() => setCropModalIndex(null)}
-        />
-      )}
     </div>
   );
 }
@@ -2841,6 +2816,8 @@ function EventCardsEditor({
                 onChange={(url) => updateEvent(i, "image", url)}
                 cropValue={(ev.imageCrop as ImageCrop) || null}
                 onCropChange={(crop) => updateEvent(i, "imageCrop", crop)}
+                fitValue={(ev.imageFit as ImageFit) || undefined}
+                onFitChange={(fit) => updateEvent(i, "imageFit", fit)}
               />
             </Field>
             <Field label="Font Override">
@@ -2960,7 +2937,14 @@ function FeatureGridEditor({
               />
             </Field>
             <Field label="Icon Image (alternative to SVG)">
-              <ImagePicker value={(item.iconImage as string) || ""} onChange={(url) => updateItem(i, "iconImage", url)} />
+              <ImagePicker
+                value={(item.iconImage as string) || ""}
+                onChange={(url) => updateItem(i, "iconImage", url)}
+                cropValue={(item.iconImageCrop as ImageCrop) || null}
+                onCropChange={(crop) => updateItem(i, "iconImageCrop", crop)}
+                fitValue={(item.iconImageFit as ImageFit) || undefined}
+                onFitChange={(fit) => updateItem(i, "iconImageFit", fit)}
+              />
             </Field>
             <p className="text-[10px] text-gray-400 italic">Recommended: 64x64px. Icon image overrides SVG if both set.</p>
 
@@ -3203,6 +3187,8 @@ function ColumnCardsEditor({
                   onChange={(url) => updateCard(i, "image", url)}
                   cropValue={(card.imageCrop as ImageCrop) || null}
                   onCropChange={(crop) => updateCard(i, "imageCrop", crop)}
+                  fitValue={(card.imageFit as ImageFit) || undefined}
+                  onFitChange={(fit) => updateCard(i, "imageFit", fit)}
                 />
               </Field>
               {(card.image as string) && (

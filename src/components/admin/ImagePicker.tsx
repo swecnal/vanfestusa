@@ -4,16 +4,24 @@ import { useState, useRef } from "react";
 import { toast } from "sonner";
 import MediaPickerModal from "./MediaPickerModal";
 import ImageCropModal from "./ImageCropModal";
-import type { ImageCrop } from "@/lib/types";
+import type { ImageCrop, ImageFit } from "@/lib/types";
+
+const FIT_OPTIONS: { value: ImageFit; label: string }[] = [
+  { value: "cover", label: "Cover" },
+  { value: "contain", label: "Contain" },
+  { value: "fill", label: "Stretch" },
+];
 
 interface Props {
   value: string;
   onChange: (url: string) => void;
   cropValue?: ImageCrop | null;
   onCropChange?: (crop: ImageCrop | null) => void;
+  fitValue?: ImageFit;
+  onFitChange?: (fit: ImageFit) => void;
 }
 
-export default function ImagePicker({ value, onChange, cropValue, onCropChange }: Props) {
+export default function ImagePicker({ value, onChange, cropValue, onCropChange, fitValue, onFitChange }: Props) {
   const [uploading, setUploading] = useState(false);
   const [libraryOpen, setLibraryOpen] = useState(false);
   const [cropOpen, setCropOpen] = useState(false);
@@ -34,7 +42,7 @@ export default function ImagePicker({ value, onChange, cropValue, onCropChange }
         const { asset } = await res.json();
         if (asset?.public_url) {
           onChange(asset.public_url);
-          onCropChange?.(null); // clear crop when image changes
+          onCropChange?.(null);
           toast.success("Image uploaded — remember to Save");
         } else {
           toast.error("Upload succeeded but no URL returned");
@@ -87,16 +95,6 @@ export default function ImagePicker({ value, onChange, cropValue, onCropChange }
       )}
 
       <div className="flex flex-wrap gap-1.5">
-        <input
-          type="text"
-          value={value}
-          onChange={(e) => {
-            onChange(e.target.value);
-            onCropChange?.(null);
-          }}
-          className="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-xs min-w-0"
-          placeholder="Image URL or upload"
-        />
         <button
           onClick={() => fileRef.current?.click()}
           disabled={uploading}
@@ -117,6 +115,18 @@ export default function ImagePicker({ value, onChange, cropValue, onCropChange }
           >
             {cropValue ? "Edit Crop" : "Crop"}
           </button>
+        )}
+        {onFitChange && value && (
+          <select
+            value={fitValue || "cover"}
+            onChange={(e) => onFitChange(e.target.value as ImageFit)}
+            className="px-1.5 py-1.5 bg-white border border-gray-300 rounded-lg text-xs font-medium cursor-pointer"
+            title="Image fit mode"
+          >
+            {FIT_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>{o.label}</option>
+            ))}
+          </select>
         )}
       </div>
 

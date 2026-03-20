@@ -1,8 +1,8 @@
 "use client";
 
 import { useRef, useEffect, useState } from "react";
-import type { ImageCrop } from "@/lib/types";
-import { isEffectiveCrop, cropToBackgroundStyles } from "@/lib/crop-utils";
+import type { ImageCrop, ImageFit } from "@/lib/types";
+import { isEffectiveCrop } from "@/lib/crop-utils";
 
 export type ParallaxIntensity = "none" | "light" | "medium" | "strong";
 
@@ -19,14 +19,25 @@ interface Props {
   intensity?: ParallaxIntensity;
   className?: string;
   crop?: ImageCrop | null;
+  imageFit?: ImageFit;
 }
 
-export default function ParallaxImage({ src, alt, intensity = "none", className = "", crop }: Props) {
+function cropToViewBox(crop: ImageCrop): string {
+  const top = crop.y;
+  const right = 100 - crop.x - crop.width;
+  const bottom = 100 - crop.y - crop.height;
+  const left = crop.x;
+  return `inset(${top.toFixed(2)}% ${right.toFixed(2)}% ${bottom.toFixed(2)}% ${left.toFixed(2)}%)`;
+}
+
+export default function ParallaxImage({ src, alt, intensity = "none", className = "", crop, imageFit }: Props) {
   const ref = useRef<HTMLImageElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [offset, setOffset] = useState(0);
   const speed = SPEED_MAP[intensity] || 0;
   const hasCrop = isEffectiveCrop(crop);
+  const fit = imageFit || "cover";
+  const objectFit = fit === "fill" ? ("fill" as const) : fit;
 
   useEffect(() => {
     if (speed === 0) return;
@@ -47,54 +58,17 @@ export default function ParallaxImage({ src, alt, intensity = "none", className 
     return () => window.removeEventListener("scroll", handleScroll);
   }, [speed]);
 
-  // No parallax, no crop
-  if (speed === 0 && !hasCrop) {
-    return <img src={src} alt={alt} className={className} />;
+  const imgStyle: React.CSSProperties = {
+    objectFit,
+    ...(hasCrop && crop ? { objectViewBox: cropToViewBox(crop) } : {}),
+  } as React.CSSProperties;
+
+  // No parallax
+  if (speed === 0) {
+    return <img src={src} alt={alt} className={className} style={imgStyle} />;
   }
 
-  // No parallax but has crop — render as background-image div
-  if (speed === 0 && hasCrop && crop) {
-    const bgStyles = cropToBackgroundStyles(crop);
-    return (
-      <div
-        role="img"
-        aria-label={alt}
-        className={className}
-        style={{
-          backgroundImage: `url(${src})`,
-          backgroundSize: bgStyles.backgroundSize,
-          backgroundPosition: bgStyles.backgroundPosition,
-          backgroundRepeat: "no-repeat",
-        }}
-      />
-    );
-  }
-
-  // Parallax with crop — background-image div with transform
-  if (hasCrop && crop) {
-    const bgStyles = cropToBackgroundStyles(crop);
-    return (
-      <div ref={containerRef} className="absolute inset-0 overflow-hidden">
-        <div
-          role="img"
-          aria-label={alt}
-          className={className}
-          style={{
-            backgroundImage: `url(${src})`,
-            backgroundSize: bgStyles.backgroundSize,
-            backgroundPosition: bgStyles.backgroundPosition,
-            backgroundRepeat: "no-repeat",
-            transform: `translateY(${offset}px)`,
-            willChange: "transform",
-            height: `${100 + speed * 100}%`,
-            minHeight: `${100 + speed * 100}%`,
-          }}
-        />
-      </div>
-    );
-  }
-
-  // Parallax without crop — original behavior
+  // Parallax — wrap in overflow container with transform
   return (
     <div ref={containerRef} className="absolute inset-0 overflow-hidden">
       <img
@@ -103,11 +77,12 @@ export default function ParallaxImage({ src, alt, intensity = "none", className 
         alt={alt}
         className={className}
         style={{
+          ...imgStyle,
           transform: `translateY(${offset}px)`,
           willChange: "transform",
           height: `${100 + speed * 100}%`,
           minHeight: `${100 + speed * 100}%`,
-        }}
+        } as React.CSSProperties}
       />
     </div>
   );

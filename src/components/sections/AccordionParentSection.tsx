@@ -74,6 +74,7 @@ export default function AccordionParentSection({ data, settings, siteStyles = EM
                   src={d.image!}
                   alt=""
                   crop={d.imageCrop}
+                  imageFit={d.imageFit}
                   className="absolute inset-0 w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-charcoal/60" />
@@ -86,6 +87,7 @@ export default function AccordionParentSection({ data, settings, siteStyles = EM
                 src={d.image!}
                 alt=""
                 crop={d.imageCrop}
+                imageFit={d.imageFit}
                 className="w-32 h-32 object-cover rounded-xl flex-shrink-0"
               />
             )}
@@ -96,6 +98,7 @@ export default function AccordionParentSection({ data, settings, siteStyles = EM
                 src={d.image!}
                 alt=""
                 crop={d.imageCrop}
+                imageFit={d.imageFit}
                 className="w-full h-48 object-cover rounded-xl mb-4"
               />
             )}

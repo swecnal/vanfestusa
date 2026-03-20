@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
+import { createPortal } from "react-dom";
 import type { ImageCrop } from "@/lib/types";
 
 interface Props {
@@ -187,6 +188,7 @@ export default function ImageCropModal({ open, imageSrc, initialCrop, onAccept, 
   }, [open, onClose]);
 
   if (!open) return null;
+  if (typeof document === "undefined") return null;
 
   // Handle sizes
   const isTouch = typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches;
@@ -203,7 +205,7 @@ export default function ImageCropModal({ open, imageSrc, initialCrop, onAccept, 
     { mode: "w", style: { top: "50%", left: -(hs / 2), transform: "translateY(-50%)" }, cursor: "ew-resize" },
   ];
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-[9999] flex flex-col bg-[#1a1a2e]"
       onPointerMove={onPointerMove}
@@ -331,6 +333,7 @@ export default function ImageCropModal({ open, imageSrc, initialCrop, onAccept, 
       <div className="px-5 py-2 bg-[#16213e] border-t border-white/10 text-center shrink-0">
         <span className="text-white/30 text-xs">Drag to reposition · Drag handles to resize · Esc to cancel</span>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

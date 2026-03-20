@@ -23,6 +23,7 @@ export default function PhotoStripSection({ data, settings }: Props) {
               src={img.src}
               alt={img.alt || ""}
               crop={img.crop}
+              imageFit={img.imageFit}
               className="w-full h-full object-cover"
               fallbackObjectPosition={img.position || "center"}
               loading="lazy"

@@ -56,6 +56,7 @@ export default function EventCardsSection({ data, settings }: Props) {
                       src={ev.image}
                       alt=""
                       crop={ev.imageCrop}
+                      imageFit={ev.imageFit}
                       className="absolute inset-0 w-full h-full object-cover opacity-20 mix-blend-overlay"
                     />
                   )}

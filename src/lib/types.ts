@@ -95,7 +95,7 @@ export type SectionType =
   | "html_block"
   | "navbar";
 
-// ─── Image Crop ───
+// ─── Image Crop & Fit ───
 
 export interface ImageCrop {
   x: number;      // left edge as percentage 0–100
@@ -103,6 +103,9 @@ export interface ImageCrop {
   width: number;  // crop width as percentage 0–100
   height: number; // crop height as percentage 0–100
 }
+
+/** How an image fills its container */
+export type ImageFit = "cover" | "contain" | "fill";
 
 // ─── Background Config ───
 
@@ -343,7 +346,7 @@ export function buildMobileStyleBlock(sectionCssId: string, settings: SectionSet
 // ─── Section Data Shapes ───
 
 export interface HeroCarouselData {
-  slides: Array<{ image: string; alt: string; crop?: ImageCrop }>;
+  slides: Array<{ image: string; alt: string; crop?: ImageCrop; imageFit?: ImageFit }>;
   overlay: {
     label?: string;
     eventName: string;
@@ -368,6 +371,7 @@ export interface HeroSimpleData {
   light?: boolean;
   bgImage?: string;
   bgImageCrop?: ImageCrop;
+  bgImageFit?: ImageFit;
   titleStyle?: import("@/lib/styles").TextStyleConfig;
   subtitleStyle?: import("@/lib/styles").TextStyleConfig;
 }
@@ -393,6 +397,7 @@ export interface TwoColumnCardsData {
     icon?: string;
     image?: string;
     imageCrop?: ImageCrop;
+    imageFit?: ImageFit;
     imagePosition?: "small-left" | "small-right" | "small-center" | "full-width" | "background";
     titleStyle?: import("@/lib/styles").TextStyleConfig;
     subtitleStyle?: import("@/lib/styles").TextStyleConfig;
@@ -447,6 +452,7 @@ export interface EventCardsData {
     tag: string;
     image: string;
     imageCrop?: ImageCrop;
+    imageFit?: ImageFit;
     href: string;
     ticketUrl: string;
     fontOverride?: string;
@@ -563,7 +569,7 @@ export interface ImageCarouselData {
   heading?: { title: string; subtitle?: string; light?: boolean };
   headingStyle?: import("@/lib/styles").TextStyleConfig;
   subheadingStyle?: import("@/lib/styles").TextStyleConfig;
-  images: Array<{ src: string; alt: string; crop?: ImageCrop }>;
+  images: Array<{ src: string; alt: string; crop?: ImageCrop; imageFit?: ImageFit }>;
   bgImageCrop?: ImageCrop;
   autoplayInterval?: number;
   ctaButtons?: Array<{
@@ -575,7 +581,7 @@ export interface ImageCarouselData {
 }
 
 export interface PhotoStripData {
-  images: Array<{ src: string; alt: string; position?: string; crop?: ImageCrop }>;
+  images: Array<{ src: string; alt: string; position?: string; crop?: ImageCrop; imageFit?: ImageFit }>;
   height?: string;
   columns?: number;
 }
@@ -583,7 +589,7 @@ export interface PhotoStripData {
 export interface ImageGalleryData {
   heading?: string;
   headingStyle?: import("@/lib/styles").TextStyleConfig;
-  images: Array<{ src: string; alt: string; crop?: ImageCrop }>;
+  images: Array<{ src: string; alt: string; crop?: ImageCrop; imageFit?: ImageFit }>;
   columns?: 1 | 2 | 3 | 4;
   enableLightbox?: boolean;
 }
@@ -648,6 +654,7 @@ export interface AccordionParentData {
   title?: string;
   image?: string;
   imageCrop?: ImageCrop;
+  imageFit?: ImageFit;
   imagePosition?: "small-left" | "small-right" | "full-width" | "background";
   description?: string;
   titleStyle?: import("@/lib/styles").TextStyleConfig;

@@ -31,6 +31,7 @@ export default function HeroSimpleSection({ data, settings }: Props) {
           intensity={parallax}
           className="absolute inset-0 w-full h-full object-cover"
           crop={(data as Record<string, unknown>).bgImageCrop as ImageCrop | undefined}
+          imageFit={(data as Record<string, unknown>).bgImageFit as import("@/lib/types").ImageFit | undefined}
         />
       )}
       <div className="relative mx-auto max-w-6xl">

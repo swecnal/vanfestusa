@@ -44,6 +44,7 @@ export default function ImageGallerySection({ data, settings }: Props) {
                 src={img.src}
                 alt={img.alt || ""}
                 crop={img.crop}
+                imageFit={img.imageFit}
                 className="w-full object-cover group-hover:scale-105 transition-transform duration-300"
                 loading="lazy"
               />

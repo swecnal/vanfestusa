@@ -3,9 +3,8 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { type SiteStyles, type TextStyleConfig, EMPTY_SITE_STYLES, findButtonStyle, buttonStyleToCSS, textStyleConfigToCSS } from "@/lib/styles";
 import type { ParallaxIntensity } from "@/components/ParallaxImage";
-import type { ImageCrop } from "@/lib/types";
-import CroppedImage from "@/components/CroppedImage";
-import { isEffectiveCrop, cropToBackgroundStyles } from "@/lib/crop-utils";
+import type { ImageCrop, ImageFit } from "@/lib/types";
+import { isEffectiveCrop } from "@/lib/crop-utils";
 
 const PARALLAX_SPEED: Record<ParallaxIntensity, number> = {
   none: 0,
@@ -18,6 +17,15 @@ interface HeroSlide {
   image: string;
   alt: string;
   crop?: ImageCrop;
+  imageFit?: ImageFit;
+}
+
+function cropToViewBox(crop: ImageCrop): string {
+  const top = crop.y;
+  const right = 100 - crop.x - crop.width;
+  const bottom = 100 - crop.y - crop.height;
+  const left = crop.x;
+  return `inset(${top.toFixed(2)}% ${right.toFixed(2)}% ${bottom.toFixed(2)}% ${left.toFixed(2)}%)`;
 }
 
 interface EventOverlay {
@@ -107,34 +115,28 @@ export default function HeroCarousel({ slides, overlay, autoplayInterval = 5000,
             i === current ? "opacity-100" : "opacity-0"
           }`}
         >
-          {isEffectiveCrop(slide.crop) ? (
-            <div
-              role="img"
-              aria-label={slide.alt}
-              className="w-full h-full"
-              style={{
-                backgroundImage: `url(${slide.image})`,
-                ...cropToBackgroundStyles(slide.crop),
-                backgroundRepeat: "no-repeat",
-                ...(pSpeed > 0 ? {
-                  transform: `translateY(${scrollOffset}px)`,
-                  willChange: "transform",
-                  height: `${100 + pSpeed * 100}%`,
-                } : {}),
-              }}
-            />
-          ) : (
-            <img
-              src={slide.image}
-              alt={slide.alt}
-              className="w-full h-full object-cover"
-              style={pSpeed > 0 ? {
+          {(() => {
+            const fit = slide.imageFit || "cover";
+            const objectFit = fit === "fill" ? "fill" as const : fit;
+            const hasCrop = isEffectiveCrop(slide.crop);
+            const imgStyle: React.CSSProperties = {
+              objectFit,
+              ...(hasCrop && slide.crop ? { objectViewBox: cropToViewBox(slide.crop) } : {}),
+              ...(pSpeed > 0 ? {
                 transform: `translateY(${scrollOffset}px)`,
-                willChange: "transform",
+                willChange: "transform" as const,
                 height: `${100 + pSpeed * 100}%`,
-              } : undefined}
-            />
-          )}
+              } : {}),
+            };
+            return (
+              <img
+                src={slide.image}
+                alt={slide.alt}
+                className="w-full h-full object-cover"
+                style={imgStyle as React.CSSProperties}
+              />
+            );
+          })()}
         </div>
       ))}
 
