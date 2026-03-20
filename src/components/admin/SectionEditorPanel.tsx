@@ -2188,6 +2188,10 @@ function ImageArrayEditor({
               <ImagePicker
                 value={img.src}
                 onChange={(url) => {
+                  if (!url) {
+                    onChange(images.filter((_, idx) => idx !== i));
+                    return;
+                  }
                   const next = [...images];
                   const updated = { ...next[i], src: url };
                   if (url !== img.src) { updated.crop = undefined; updated.imageFit = undefined; }
