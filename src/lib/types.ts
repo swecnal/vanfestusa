@@ -382,6 +382,13 @@ export interface TextBlockData {
   prose?: boolean;
 }
 
+export interface CardSpacing {
+  padding?: { top?: string; bottom?: string; left?: string; right?: string };
+  margin?: { top?: string; bottom?: string; left?: string; right?: string };
+  minHeight?: string;
+  borderRadius?: string;
+}
+
 export interface TwoColumnCardsData {
   heading?: string;
   headingSubtitle?: string;
@@ -389,6 +396,7 @@ export interface TwoColumnCardsData {
   headingSubtitleStyle?: import("@/lib/styles").TextStyleConfig;
   columns?: 1 | 2 | 3 | 4;
   layout?: number[];
+  cardStyle?: CardSpacing & { gap?: string };
   cards: Array<{
     title: string;
     subtitle?: string;
@@ -403,6 +411,7 @@ export interface TwoColumnCardsData {
     subtitleStyle?: import("@/lib/styles").TextStyleConfig;
     bodyStyle?: import("@/lib/styles").TextStyleConfig;
     button?: { text: string; href: string; external?: boolean; styleId?: string };
+    cardStyle?: CardSpacing;
   }>;
   ctaButton?: { text: string; href: string; external?: boolean };
 }

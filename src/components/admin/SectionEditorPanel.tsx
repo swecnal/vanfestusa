@@ -3121,12 +3121,62 @@ function ColumnCardsEditor({
         </div>
       </details>
 
+      {/* Card Spacing (global defaults) */}
+      <details className="border border-gray-200 rounded-lg">
+        <summary className="px-3 py-2 text-xs font-semibold text-gray-500 cursor-pointer hover:bg-gray-50">Card Spacing &amp; Size</summary>
+        <div className="p-3 space-y-2 border-t border-gray-100">
+          {(() => {
+            const cs = (data.cardStyle as Record<string, unknown>) || {};
+            const pad = (cs.padding as Record<string, string>) || {};
+            const mar = (cs.margin as Record<string, string>) || {};
+            const updateCS = (key: string, value: unknown) => updateData("cardStyle", { ...cs, [key]: value });
+            const updatePad = (side: string, val: string) => updateCS("padding", { ...pad, [side]: val });
+            const updateMar = (side: string, val: string) => updateCS("margin", { ...mar, [side]: val });
+            return (
+              <>
+                <Field label={`Gap Between Cards: ${(cs.gap as string) || "24px"}`}>
+                  <input type="range" min={0} max={64} value={parseInt((cs.gap as string) || "24", 10)} onChange={(e) => updateCS("gap", `${e.target.value}px`)} className="w-full" />
+                </Field>
+                <Field label={`Border Radius: ${(cs.borderRadius as string) || "16px"}`}>
+                  <input type="range" min={0} max={32} value={parseInt((cs.borderRadius as string) || "16", 10)} onChange={(e) => updateCS("borderRadius", `${e.target.value}px`)} className="w-full" />
+                </Field>
+                <Field label="Min Height">
+                  <input type="text" value={(cs.minHeight as string) || ""} onChange={(e) => updateCS("minHeight", e.target.value)} className="input-sm" placeholder="auto" />
+                </Field>
+                <div>
+                  <label className="block text-[10px] font-medium text-gray-500 mb-1">Padding</label>
+                  <div className="grid grid-cols-4 gap-1">
+                    {(["top", "bottom", "left", "right"] as const).map((side) => (
+                      <div key={side}>
+                        <label className="text-[9px] uppercase text-gray-400">{side}</label>
+                        <input type="text" value={pad[side] || ""} onChange={(e) => updatePad(side, e.target.value)} className="w-full text-[11px] px-1.5 py-1 border border-gray-200 rounded" placeholder="24px" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-medium text-gray-500 mb-1">Margin</label>
+                  <div className="grid grid-cols-4 gap-1">
+                    {(["top", "bottom", "left", "right"] as const).map((side) => (
+                      <div key={side}>
+                        <label className="text-[9px] uppercase text-gray-400">{side}</label>
+                        <input type="text" value={mar[side] || ""} onChange={(e) => updateMar(side, e.target.value)} className="w-full text-[11px] px-1.5 py-1 border border-gray-200 rounded" placeholder="0px" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </>
+            );
+          })()}
+        </div>
+      </details>
+
       {/* Visual tile layout editor */}
       <div>
         <label className="block text-[11px] font-medium text-gray-600 mb-1.5">Card Layout</label>
-        <div className="space-y-1.5">
+        <div className="space-y-1.5 pt-2">
           {rowRanges.map((row, rowIdx) => (
-            <div key={rowIdx} className="flex gap-1">
+            <div key={rowIdx} className="flex gap-1 overflow-visible">
               {Array.from({ length: row.count }).map((_, tileIdx) => {
                 const cardIdx = row.start + tileIdx;
                 const card = cards[cardIdx];
@@ -3235,6 +3285,59 @@ function ColumnCardsEditor({
                   </select>
                 </Field>
               )}
+
+              {/* Per-card Spacing Override */}
+              <details className="border border-gray-100 rounded-lg">
+                <summary className="px-2 py-1.5 text-[10px] font-semibold text-gray-400 uppercase cursor-pointer hover:bg-gray-50">
+                  Spacing Override
+                </summary>
+                <div className="p-2 border-t border-gray-100 space-y-2">
+                  {(() => {
+                    const cs = (card.cardStyle as Record<string, unknown>) || {};
+                    const pad = (cs.padding as Record<string, string>) || {};
+                    const mar = (cs.margin as Record<string, string>) || {};
+                    const updateCSCard = (key: string, value: unknown) => updateCard(i, "cardStyle", { ...cs, [key]: value });
+                    const updatePadCard = (side: string, val: string) => updateCSCard("padding", { ...pad, [side]: val });
+                    const updateMarCard = (side: string, val: string) => updateCSCard("margin", { ...mar, [side]: val });
+                    const globalCS = (data.cardStyle as Record<string, unknown>) || {};
+                    const globalPad = (globalCS.padding as Record<string, string>) || {};
+                    const globalMar = (globalCS.margin as Record<string, string>) || {};
+                    return (
+                      <>
+                        <p className="text-[9px] text-gray-400 italic">Leave blank to use global defaults</p>
+                        <Field label="Border Radius">
+                          <input type="text" value={(cs.borderRadius as string) || ""} onChange={(e) => updateCSCard("borderRadius", e.target.value)} className="input-sm" placeholder={(globalCS.borderRadius as string) || "16px"} />
+                        </Field>
+                        <Field label="Min Height">
+                          <input type="text" value={(cs.minHeight as string) || ""} onChange={(e) => updateCSCard("minHeight", e.target.value)} className="input-sm" placeholder={(globalCS.minHeight as string) || "auto"} />
+                        </Field>
+                        <div>
+                          <label className="block text-[10px] font-medium text-gray-500 mb-1">Padding</label>
+                          <div className="grid grid-cols-4 gap-1">
+                            {(["top", "bottom", "left", "right"] as const).map((side) => (
+                              <div key={side}>
+                                <label className="text-[9px] uppercase text-gray-400">{side}</label>
+                                <input type="text" value={pad[side] || ""} onChange={(e) => updatePadCard(side, e.target.value)} className="w-full text-[11px] px-1.5 py-1 border border-gray-200 rounded" placeholder={globalPad[side] || "24px"} />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-medium text-gray-500 mb-1">Margin</label>
+                          <div className="grid grid-cols-4 gap-1">
+                            {(["top", "bottom", "left", "right"] as const).map((side) => (
+                              <div key={side}>
+                                <label className="text-[9px] uppercase text-gray-400">{side}</label>
+                                <input type="text" value={mar[side] || ""} onChange={(e) => updateMarCard(side, e.target.value)} className="w-full text-[11px] px-1.5 py-1 border border-gray-200 rounded" placeholder={globalMar[side] || "0px"} />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
+              </details>
 
               {/* Card Button */}
               <details className="border border-gray-100 rounded-lg">

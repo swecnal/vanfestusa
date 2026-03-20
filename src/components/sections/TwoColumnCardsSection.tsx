@@ -1,6 +1,6 @@
 import SectionHeading from "@/components/SectionHeading";
 import type { DividerStyle } from "@/components/SectionHeading";
-import type { TwoColumnCardsData, SectionSettings } from "@/lib/types";
+import type { TwoColumnCardsData, SectionSettings, CardSpacing } from "@/lib/types";
 import { sectionSpacingStyles, sectionBgClass } from "@/lib/types";
 import { type SiteStyles, type TextStyleConfig, EMPTY_SITE_STYLES, findButtonStyle, buttonStyleToCSS, textStyleConfigToCSS, resolveButtonStylesInHtml } from "@/lib/styles";
 import CroppedImage from "@/components/CroppedImage";
@@ -18,14 +18,62 @@ const GRID_COLS: Record<number, string> = {
   4: "grid-cols-1 md:grid-cols-2 lg:grid-cols-4",
 };
 
-function renderCard(card: TwoColumnCardsData["cards"][number], i: number, siteStyles: SiteStyles) {
+function mergeSpacing(global?: CardSpacing, local?: CardSpacing): CardSpacing {
+  if (!global && !local) return {};
+  if (!local) return global || {};
+  if (!global) return local;
+  return {
+    padding: {
+      top: local.padding?.top || global.padding?.top,
+      bottom: local.padding?.bottom || global.padding?.bottom,
+      left: local.padding?.left || global.padding?.left,
+      right: local.padding?.right || global.padding?.right,
+    },
+    margin: {
+      top: local.margin?.top || global.margin?.top,
+      bottom: local.margin?.bottom || global.margin?.bottom,
+      left: local.margin?.left || global.margin?.left,
+      right: local.margin?.right || global.margin?.right,
+    },
+    minHeight: local.minHeight || global.minHeight,
+    borderRadius: local.borderRadius || global.borderRadius,
+  };
+}
+
+function renderCard(card: TwoColumnCardsData["cards"][number], i: number, siteStyles: SiteStyles, spacing: CardSpacing) {
   const isBackground = card.imagePosition === "background";
   const isSmall = card.imagePosition?.startsWith("small-");
+
+  const pad = spacing.padding;
+  const mar = spacing.margin;
+  const br = spacing.borderRadius;
+  const mh = spacing.minHeight;
+
+  const cardWrapperStyle: React.CSSProperties = {
+    ...(br ? { borderRadius: br } : {}),
+    ...(mh && mh !== "auto" ? { minHeight: mh } : {}),
+    ...(mar?.top || mar?.bottom || mar?.left || mar?.right ? {
+      marginTop: mar.top || undefined,
+      marginBottom: mar.bottom || undefined,
+      marginLeft: mar.left || undefined,
+      marginRight: mar.right || undefined,
+    } : {}),
+  };
+
+  const contentPadStyle: React.CSSProperties = pad?.top || pad?.bottom || pad?.left || pad?.right ? {
+    paddingTop: pad.top || undefined,
+    paddingBottom: pad.bottom || undefined,
+    paddingLeft: pad.left || undefined,
+    paddingRight: pad.right || undefined,
+  } : {};
+
+  const hasPadOverride = !!(pad?.top || pad?.bottom || pad?.left || pad?.right);
 
   return (
     <div
       key={i}
-      className={`${card.bgColor || "bg-sand"} rounded-2xl overflow-hidden ${isBackground ? "relative" : ""}`}
+      className={`${card.bgColor || "bg-sand"} overflow-hidden ${isBackground ? "relative" : ""} ${br ? "" : "rounded-2xl"}`}
+      style={cardWrapperStyle}
     >
       {card.image && isBackground && (
         <>
@@ -41,7 +89,10 @@ function renderCard(card: TwoColumnCardsData["cards"][number], i: number, siteSt
           <CroppedImage src={card.image} alt="" crop={card.imageCrop} imageFit={card.imageFit} className="w-20 h-20 object-cover rounded-lg" />
         </div>
       )}
-      <div className={`p-6 ${isBackground ? "relative z-10" : ""} ${isSmall && card.imagePosition !== "small-center" ? "flex gap-4" : ""}`}>
+      <div
+        className={`${hasPadOverride ? "" : "p-6"} ${isBackground ? "relative z-10" : ""} ${isSmall && card.imagePosition !== "small-center" ? "flex gap-4" : ""}`}
+        style={contentPadStyle}
+      >
         {card.image && card.imagePosition === "small-left" && (
           <CroppedImage src={card.image} alt="" crop={card.imageCrop} imageFit={card.imageFit} className="w-16 h-16 object-cover rounded-lg flex-shrink-0" />
         )}
@@ -93,6 +144,8 @@ export default function TwoColumnCardsSection({ data, settings, siteStyles = EMP
   const cards = d.cards || [];
   const headingStyleConfig = (data as Record<string, unknown>).headingStyle as TextStyleConfig | undefined;
   const headingSubtitleStyleConfig = (data as Record<string, unknown>).headingSubtitleStyle as TextStyleConfig | undefined;
+  const globalCardStyle = d.cardStyle;
+  const gridGap = globalCardStyle?.gap || "24px";
 
   // Per-row layout or legacy uniform columns
   const layout = d.layout;
@@ -112,8 +165,8 @@ export default function TwoColumnCardsSection({ data, settings, siteStyles = EMP
                 const rowCards = cards.slice(cardIdx, cardIdx + rowCols);
                 cardIdx += rowCols;
                 return (
-                  <div key={rowIdx} className={`grid ${GRID_COLS[rowCols] || GRID_COLS[2]} gap-6`}>
-                    {rowCards.map((card, ci) => renderCard(card, rowIdx * 100 + ci, siteStyles))}
+                  <div key={rowIdx} className={`grid ${GRID_COLS[rowCols] || GRID_COLS[2]}`} style={{ gap: gridGap }}>
+                    {rowCards.map((card, ci) => renderCard(card, rowIdx * 100 + ci, siteStyles, mergeSpacing(globalCardStyle, card.cardStyle)))}
                   </div>
                 );
               });
@@ -121,8 +174,8 @@ export default function TwoColumnCardsSection({ data, settings, siteStyles = EMP
           </div>
         ) : (
           // Legacy uniform columns
-          <div className={`grid ${GRID_COLS[legacyCols] || GRID_COLS[2]} gap-6 text-left`}>
-            {cards.map((card, i) => renderCard(card, i, siteStyles))}
+          <div className={`grid ${GRID_COLS[legacyCols] || GRID_COLS[2]} text-left`} style={{ gap: gridGap }}>
+            {cards.map((card, i) => renderCard(card, i, siteStyles, mergeSpacing(globalCardStyle, card.cardStyle)))}
           </div>
         )}
       </div>
