@@ -175,11 +175,13 @@ export type SpacingPreset = "compact" | "comfortable" | "spacious";
 
 export const SPACING_PRESETS = {
   padding: {
+    none: { top: "0px", bottom: "0px", left: "0px", right: "0px" },
     compact: { top: "8px", bottom: "8px", left: "8px", right: "8px" },
     comfortable: { top: "32px", bottom: "32px", left: "16px", right: "16px" },
     spacious: { top: "64px", bottom: "64px", left: "32px", right: "32px" },
   },
   margin: {
+    none: { top: "0px", bottom: "0px", left: "0px", right: "0px" },
     compact: { top: "0px", bottom: "0px", left: "0px", right: "0px" },
     comfortable: { top: "16px", bottom: "16px", left: "0px", right: "0px" },
     spacious: { top: "32px", bottom: "32px", left: "0px", right: "0px" },

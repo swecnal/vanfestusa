@@ -97,7 +97,7 @@ export default function SectionEditorPanel({ section, onSave, saving, isDirty, o
           <div>
             <label className="block text-[11px] font-medium text-gray-600 mb-1">Padding</label>
             <div className="flex gap-1 mb-1.5">
-              {(["compact", "comfortable", "spacious"] as const).map((preset) => (
+              {(["none", "compact", "comfortable", "spacious"] as const).map((preset) => (
                 <button
                   key={preset}
                   onClick={() => {
@@ -149,7 +149,7 @@ export default function SectionEditorPanel({ section, onSave, saving, isDirty, o
           <div>
             <label className="block text-[11px] font-medium text-gray-600 mb-1">Margin</label>
             <div className="flex gap-1 mb-1.5">
-              {(["compact", "comfortable", "spacious"] as const).map((preset) => (
+              {(["none", "compact", "comfortable", "spacious"] as const).map((preset) => (
                 <button
                   key={preset}
                   onClick={() => {
@@ -295,7 +295,7 @@ export default function SectionEditorPanel({ section, onSave, saving, isDirty, o
               <div>
                 <label className="block text-[11px] font-medium text-gray-600 mb-1">Mobile Padding</label>
                 <div className="flex gap-1 mb-1.5">
-                  {(["compact", "comfortable", "spacious"] as const).map((preset) => (
+                  {(["none", "compact", "comfortable", "spacious"] as const).map((preset) => (
                     <button
                       key={preset}
                       onClick={() => {
@@ -347,7 +347,7 @@ export default function SectionEditorPanel({ section, onSave, saving, isDirty, o
               <div>
                 <label className="block text-[11px] font-medium text-gray-600 mb-1">Mobile Margin</label>
                 <div className="flex gap-1 mb-1.5">
-                  {(["compact", "comfortable", "spacious"] as const).map((preset) => (
+                  {(["none", "compact", "comfortable", "spacious"] as const).map((preset) => (
                     <button
                       key={preset}
                       onClick={() => {
@@ -3145,6 +3145,17 @@ function ColumnCardsEditor({
                 </Field>
                 <div>
                   <label className="block text-[10px] font-medium text-gray-500 mb-1">Padding</label>
+                  <div className="flex gap-1 mb-1.5">
+                    {(["none", "compact", "comfortable", "spacious"] as const).map((preset) => {
+                      const vals = SPACING_PRESETS.padding[preset];
+                      const isActive = pad.top === vals.top && pad.bottom === vals.bottom && pad.left === vals.left && pad.right === vals.right;
+                      return (
+                        <button key={preset} onClick={() => updateCS("padding", { top: vals.top, bottom: vals.bottom, left: vals.left, right: vals.right })} className={`flex-1 text-[10px] py-1 rounded border transition-colors capitalize ${isActive ? "bg-teal/15 border-teal text-teal font-semibold" : "border-gray-200 text-gray-500 hover:border-gray-300"}`}>
+                          {preset}
+                        </button>
+                      );
+                    })}
+                  </div>
                   <div className="grid grid-cols-4 gap-1">
                     {(["top", "bottom", "left", "right"] as const).map((side) => (
                       <div key={side}>
@@ -3156,6 +3167,17 @@ function ColumnCardsEditor({
                 </div>
                 <div>
                   <label className="block text-[10px] font-medium text-gray-500 mb-1">Margin</label>
+                  <div className="flex gap-1 mb-1.5">
+                    {(["none", "compact", "comfortable", "spacious"] as const).map((preset) => {
+                      const vals = SPACING_PRESETS.margin[preset];
+                      const isActive = mar.top === vals.top && mar.bottom === vals.bottom && mar.left === vals.left && mar.right === vals.right;
+                      return (
+                        <button key={preset} onClick={() => updateCS("margin", { top: vals.top, bottom: vals.bottom, left: vals.left, right: vals.right })} className={`flex-1 text-[10px] py-1 rounded border transition-colors capitalize ${isActive ? "bg-teal/15 border-teal text-teal font-semibold" : "border-gray-200 text-gray-500 hover:border-gray-300"}`}>
+                          {preset}
+                        </button>
+                      );
+                    })}
+                  </div>
                   <div className="grid grid-cols-4 gap-1">
                     {(["top", "bottom", "left", "right"] as const).map((side) => (
                       <div key={side}>
