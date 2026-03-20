@@ -3272,7 +3272,7 @@ function ColumnCardsEditor({
         const i = expandedCard;
         const card = cards[i];
         return (
-          <div className="border border-teal/30 rounded-lg bg-teal/5">
+          <div key={`card-editor-${i}`} className="border border-teal/30 rounded-lg bg-teal/5">
             <div className="px-3 py-2 text-xs font-semibold text-teal border-b border-teal/20 flex items-center justify-between">
               <span>Card {i + 1}: {(card.title as string)?.replace(/<[^>]*>/g, "").substring(0, 30) || "Untitled"}</span>
               <button onClick={() => setExpandedCard(null)} className="text-gray-400 hover:text-gray-600">
