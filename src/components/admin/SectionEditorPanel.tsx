@@ -3205,9 +3205,9 @@ function ColumnCardsEditor({
       </details>
 
       {/* Visual tile layout editor */}
-      <div>
+      <div className="overflow-visible">
         <label className="block text-[11px] font-medium text-gray-600 mb-1.5">Card Layout</label>
-        <div className="space-y-1.5 pt-2">
+        <div className="space-y-1.5 pt-2 overflow-visible">
           {rowRanges.map((row, rowIdx) => (
             <div key={rowIdx} className="flex gap-1 overflow-visible">
               {Array.from({ length: row.count }).map((_, tileIdx) => {
@@ -3218,7 +3218,7 @@ function ColumnCardsEditor({
                   <button
                     key={tileIdx}
                     onClick={() => setExpandedCard(isExpanded ? null : cardIdx)}
-                    className={`relative flex-1 h-10 rounded border text-[9px] font-medium transition-all truncate px-1 ${
+                    className={`relative overflow-visible flex-1 h-10 rounded border text-[9px] font-medium transition-all truncate px-1 ${
                       isExpanded
                         ? "bg-teal/15 border-teal text-teal ring-1 ring-teal/30"
                         : "bg-white border-gray-200 text-gray-500 hover:border-gray-300 hover:bg-gray-50"
