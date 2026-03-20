@@ -3231,7 +3231,7 @@ function ColumnCardsEditor({
                     {/* Red X delete button */}
                     <span
                       onClick={(e) => { e.stopPropagation(); removeCard(cardIdx); }}
-                      className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-[8px] leading-none cursor-pointer shadow-sm"
+                      className="absolute -top-1.5 right-0.5 z-10 w-4 h-4 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-[8px] leading-none cursor-pointer shadow-sm"
                       title="Remove card"
                     >
                       ✕
