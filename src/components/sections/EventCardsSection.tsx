@@ -21,6 +21,7 @@ const GRID_COLS: Record<number, string> = {
 
 export default function EventCardsSection({ data, settings }: Props) {
   const d = data as unknown as EventCardsData;
+  const events = d.events || [];
   const headingTitleStyle = (data as Record<string, unknown>).headingTitleStyle as TextStyleConfig | undefined;
   const headingSubtitleStyle = (data as Record<string, unknown>).headingSubtitleStyle as TextStyleConfig | undefined;
   const cols = d.columns || 2;
@@ -37,7 +38,7 @@ export default function EventCardsSection({ data, settings }: Props) {
           <SectionHeading title={d.heading.title} subtitle={d.heading.subtitle} titleStyle={headingTitleStyle ? textStyleConfigToCSS(headingTitleStyle) : undefined} subtitleStyle={headingSubtitleStyle ? textStyleConfigToCSS(headingSubtitleStyle) : undefined} />
         )}
         <div className={`grid ${GRID_COLS[cols] || GRID_COLS[2]} gap-8`}>
-          {d.events.map((ev, i) => {
+          {events.map((ev, i) => {
             const isFeatureCard = isFeatured && i === featuredIdx;
 
             return (

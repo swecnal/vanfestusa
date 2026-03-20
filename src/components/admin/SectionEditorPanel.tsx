@@ -3091,6 +3091,36 @@ function ColumnCardsEditor({
         <RichTextEditor content={(data.headingSubtitle as string) || ""} onChange={(html) => updateData("headingSubtitle", html)} siteStyles={siteStyles} />
       </Field>
 
+      {/* Divider line style */}
+      <details className="border border-gray-200 rounded-lg">
+        <summary className="px-3 py-2 text-xs font-semibold text-gray-500 cursor-pointer hover:bg-gray-50">Divider Line</summary>
+        <div className="p-3 space-y-2 border-t border-gray-100">
+          {(() => {
+            const ds = (data.dividerStyle as Record<string, unknown>) || {};
+            const updateDiv = (key: string, value: unknown) => updateData("dividerStyle", { ...ds, [key]: value });
+            return (
+              <>
+                <Field label="Color">
+                  <div className="flex gap-2 items-center">
+                    <input type="color" value={(ds.color as string) || "#09B593"} onChange={(e) => updateDiv("color", e.target.value)} className="w-8 h-8 rounded cursor-pointer border border-gray-200" />
+                    <input type="text" value={(ds.color as string) || "#09B593"} onChange={(e) => updateDiv("color", e.target.value)} className="input-sm flex-1" placeholder="#09B593" />
+                  </div>
+                </Field>
+                <Field label={`Width: ${(ds.width as number) ?? 80}px`}>
+                  <input type="range" min={0} max={300} value={(ds.width as number) ?? 80} onChange={(e) => updateDiv("width", Number(e.target.value))} className="w-full" />
+                </Field>
+                <Field label={`Thickness: ${(ds.height as number) ?? 4}px`}>
+                  <input type="range" min={1} max={12} value={(ds.height as number) ?? 4} onChange={(e) => updateDiv("height", Number(e.target.value))} className="w-full" />
+                </Field>
+                <Field label={`Opacity: ${Math.round(((ds.opacity as number) ?? 1) * 100)}%`}>
+                  <input type="range" min={0} max={100} value={Math.round(((ds.opacity as number) ?? 1) * 100)} onChange={(e) => updateDiv("opacity", Number(e.target.value) / 100)} className="w-full" />
+                </Field>
+              </>
+            );
+          })()}
+        </div>
+      </details>
+
       {/* Visual tile layout editor */}
       <div>
         <label className="block text-[11px] font-medium text-gray-600 mb-1.5">Card Layout</label>

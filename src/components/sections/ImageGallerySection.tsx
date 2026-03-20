@@ -14,6 +14,7 @@ interface Props {
 
 export default function ImageGallerySection({ data, settings }: Props) {
   const d = data as unknown as ImageGalleryData;
+  const images = d.images || [];
   const headingStyle = (data as Record<string, unknown>).headingStyle as TextStyleConfig | undefined;
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
@@ -34,7 +35,7 @@ export default function ImageGallerySection({ data, settings }: Props) {
           <h2 className="font-display font-black text-3xl text-charcoal mb-8 text-center" style={headingStyle ? textStyleConfigToCSS(headingStyle) : undefined} dangerouslySetInnerHTML={{ __html: d.heading || "" }} />
         )}
         <div className={`${colClass} gap-4`}>
-          {d.images.map((img, i) => (
+          {images.map((img, i) => (
             <div
               key={i}
               className="break-inside-avoid mb-4 rounded-xl overflow-hidden cursor-pointer group"
@@ -53,11 +54,11 @@ export default function ImageGallerySection({ data, settings }: Props) {
         </div>
         {lightboxIndex !== null && d.enableLightbox !== false && (
           <Lightbox
-            images={d.images.map((img) => ({ src: img.src, alt: img.alt || "" }))}
+            images={images.map((img) => ({ src: img.src, alt: img.alt || "" }))}
             currentIndex={lightboxIndex}
             onClose={() => setLightboxIndex(null)}
-            onPrev={() => setLightboxIndex((prev) => (prev !== null && prev > 0 ? prev - 1 : d.images.length - 1))}
-            onNext={() => setLightboxIndex((prev) => (prev !== null && prev < d.images.length - 1 ? prev + 1 : 0))}
+            onPrev={() => setLightboxIndex((prev) => (prev !== null && prev > 0 ? prev - 1 : images.length - 1))}
+            onNext={() => setLightboxIndex((prev) => (prev !== null && prev < images.length - 1 ? prev + 1 : 0))}
           />
         )}
       </div>

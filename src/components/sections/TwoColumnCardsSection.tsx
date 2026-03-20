@@ -1,4 +1,5 @@
 import SectionHeading from "@/components/SectionHeading";
+import type { DividerStyle } from "@/components/SectionHeading";
 import type { TwoColumnCardsData, SectionSettings } from "@/lib/types";
 import { sectionSpacingStyles, sectionBgClass } from "@/lib/types";
 import { type SiteStyles, type TextStyleConfig, EMPTY_SITE_STYLES, findButtonStyle, buttonStyleToCSS, textStyleConfigToCSS, resolveButtonStylesInHtml } from "@/lib/styles";
@@ -89,6 +90,7 @@ function renderCard(card: TwoColumnCardsData["cards"][number], i: number, siteSt
 
 export default function TwoColumnCardsSection({ data, settings, siteStyles = EMPTY_SITE_STYLES }: Props) {
   const d = data as unknown as TwoColumnCardsData;
+  const cards = d.cards || [];
   const headingStyleConfig = (data as Record<string, unknown>).headingStyle as TextStyleConfig | undefined;
   const headingSubtitleStyleConfig = (data as Record<string, unknown>).headingSubtitleStyle as TextStyleConfig | undefined;
 
@@ -99,7 +101,7 @@ export default function TwoColumnCardsSection({ data, settings, siteStyles = EMP
   return (
     <section style={sectionSpacingStyles(settings)} className={`px-4 ${sectionBgClass(settings)} ${settings.customClasses || ""}`}>
       <div className={`mx-auto ${settings.maxWidth || "max-w-4xl"} text-center`}>
-        {d.heading && <SectionHeading title={d.heading} subtitle={d.headingSubtitle} titleStyle={headingStyleConfig ? textStyleConfigToCSS(headingStyleConfig) : undefined} subtitleStyle={headingSubtitleStyleConfig ? textStyleConfigToCSS(headingSubtitleStyleConfig) : undefined} />}
+        {(d.heading || d.headingSubtitle) && <SectionHeading title={d.heading} subtitle={d.headingSubtitle} titleStyle={headingStyleConfig ? textStyleConfigToCSS(headingStyleConfig) : undefined} subtitleStyle={headingSubtitleStyleConfig ? textStyleConfigToCSS(headingSubtitleStyleConfig) : undefined} dividerStyle={(data as Record<string, unknown>).dividerStyle as DividerStyle | undefined} />}
 
         {layout ? (
           // Per-row layout mode
@@ -107,7 +109,7 @@ export default function TwoColumnCardsSection({ data, settings, siteStyles = EMP
             {(() => {
               let cardIdx = 0;
               return layout.map((rowCols, rowIdx) => {
-                const rowCards = d.cards.slice(cardIdx, cardIdx + rowCols);
+                const rowCards = cards.slice(cardIdx, cardIdx + rowCols);
                 cardIdx += rowCols;
                 return (
                   <div key={rowIdx} className={`grid ${GRID_COLS[rowCols] || GRID_COLS[2]} gap-6`}>
@@ -120,7 +122,7 @@ export default function TwoColumnCardsSection({ data, settings, siteStyles = EMP
         ) : (
           // Legacy uniform columns
           <div className={`grid ${GRID_COLS[legacyCols] || GRID_COLS[2]} gap-6 text-left`}>
-            {d.cards.map((card, i) => renderCard(card, i, siteStyles))}
+            {cards.map((card, i) => renderCard(card, i, siteStyles))}
           </div>
         )}
       </div>

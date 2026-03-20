@@ -15,6 +15,7 @@ interface Props {
 
 export default function AccordionParentSection({ data, settings, siteStyles = EMPTY_SITE_STYLES }: Props) {
   const d = data as unknown as AccordionParentData;
+  const children = d.children || [];
   const questionStyle = (data as Record<string, unknown>).questionStyle as TextStyleConfig | undefined;
   const answerStyle = (data as Record<string, unknown>).answerStyle as TextStyleConfig | undefined;
   const [openItems, setOpenItems] = useState<Set<number>>(new Set());
@@ -22,8 +23,8 @@ export default function AccordionParentSection({ data, settings, siteStyles = EM
   const refs = useRef<(HTMLDivElement | null)[]>([]);
 
   useEffect(() => {
-    refs.current = refs.current.slice(0, d.children.length);
-  }, [d.children.length]);
+    refs.current = refs.current.slice(0, children.length);
+  }, [children.length]);
 
   const toggleItem = (i: number) => {
     setOpenItems((prev) => {
@@ -38,7 +39,7 @@ export default function AccordionParentSection({ data, settings, siteStyles = EM
     if (allOpen) {
       setOpenItems(new Set());
     } else {
-      setOpenItems(new Set(d.children.map((_, i) => i)));
+      setOpenItems(new Set(children.map((_, i) => i)));
     }
     setAllOpen(!allOpen);
   };
@@ -127,7 +128,7 @@ export default function AccordionParentSection({ data, settings, siteStyles = EM
         )}
 
         {/* Expand/Collapse all */}
-        {d.showExpandAll && d.children.length > 1 && (
+        {d.showExpandAll && children.length > 1 && (
           <div className="flex justify-end mb-4">
             <button
               onClick={toggleAll}
@@ -140,7 +141,7 @@ export default function AccordionParentSection({ data, settings, siteStyles = EM
 
         {/* Accordion items */}
         <div className="space-y-3">
-          {d.children.map((child, i) => (
+          {children.map((child, i) => (
             <div key={i} className="border border-charcoal/10 rounded-xl overflow-hidden">
               <button
                 onClick={() => toggleItem(i)}
