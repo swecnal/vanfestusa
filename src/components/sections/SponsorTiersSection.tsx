@@ -13,6 +13,7 @@ interface Props {
 export default function SponsorTiersSection({ data, settings }: Props) {
   const d = data as unknown as SponsorTiersData;
   const headingStyle = (data as Record<string, unknown>).headingStyle as TextStyleConfig | undefined;
+  const expandAllStyle = (data as Record<string, unknown>).expandAllStyle as TextStyleConfig | undefined;
   const [openTiers, setOpenTiers] = useState<Set<number>>(new Set());
   const [outerOpen, setOuterOpen] = useState(false);
 
@@ -45,7 +46,8 @@ export default function SponsorTiersSection({ data, settings }: Props) {
         <div className="flex justify-end mb-1">
           <button
             onClick={toggleAll}
-            className={`text-${accentColor} text-sm font-semibold hover:opacity-70 transition-opacity`}
+            className={`hover:opacity-70 transition-opacity ${expandAllStyle && Object.keys(expandAllStyle).length > 0 ? "" : `text-${accentColor} text-sm font-semibold`}`}
+            style={expandAllStyle && Object.keys(expandAllStyle).length > 0 ? textStyleConfigToCSS(expandAllStyle) : undefined}
           >
             {allExpanded ? "Collapse All" : "Expand All"}
           </button>

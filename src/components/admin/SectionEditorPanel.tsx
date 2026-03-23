@@ -1863,6 +1863,12 @@ function SectionFields({
               placeholder="#hex or color name"
             />
           </Field>
+          <TextStyleEditor
+            label="Expand/Collapse All Style"
+            value={(data.expandAllStyle as TextStyleConfig) || {}}
+            onChange={(s) => updateData("expandAllStyle", s)}
+            defaults={{ fontSize: "14px", fontWeight: "600", color: "accent color" }}
+          />
           <details className="border border-gray-200 rounded-lg">
             <summary className="px-3 py-2 text-xs font-semibold text-gray-500 cursor-pointer">
               Tiers (JSON)
