@@ -26,11 +26,30 @@ export default function SponsorTiersSection({ data, settings }: Props) {
   };
 
   const accentColor = d.accentColor || "teal";
+  const allExpanded = d.tiers.length > 0 && d.tiers.every((_, i) => openTiers.has(i));
+
+  const toggleAll = () => {
+    if (allExpanded) {
+      setOpenTiers(new Set());
+    } else {
+      setOpenTiers(new Set(d.tiers.map((_, i) => i)));
+    }
+  };
 
   const tiersContent = (
     <div className="space-y-3">
       {d.introText && (
         <div className="text-charcoal/70 text-sm leading-relaxed mb-6 site-html-content" dangerouslySetInnerHTML={{ __html: d.introText || "" }} />
+      )}
+      {d.tiers.length > 1 && (
+        <div className="flex justify-end mb-1">
+          <button
+            onClick={toggleAll}
+            className={`text-${accentColor} text-sm font-semibold hover:opacity-70 transition-opacity`}
+          >
+            {allExpanded ? "Collapse All" : "Expand All"}
+          </button>
+        </div>
       )}
       {d.tiers.map((tier, i) => (
         <div key={i} className="border border-charcoal/10 rounded-xl overflow-hidden">
