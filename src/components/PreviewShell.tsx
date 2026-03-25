@@ -204,8 +204,29 @@ export default function PreviewShell({
       </div>
       )}
 
-      {/* Sections */}
-      {sections.map((section) => (
+      {/* Navbar sections always render first */}
+      {sections.filter((s) => s.section_type === "navbar").map((section) => (
+        <div key={section.id} className="relative">
+          <SectionRenderer section={section} siteStyles={siteStyles} navbars={navbars} />
+          {hoveredId === section.id && selectedId !== section.id && (
+            <div className="absolute inset-0 z-20 pointer-events-none ring-1 ring-gray-400 ring-inset">
+              <span className="absolute top-1 left-1 text-[8px] uppercase tracking-wider font-semibold px-1.5 py-0.5 rounded bg-charcoal/70 text-white">
+                {section.section_type.replace(/_/g, " ")}
+              </span>
+            </div>
+          )}
+          {selectedId === section.id && (
+            <div className="absolute inset-0 z-20 pointer-events-none ring-2 ring-teal ring-inset shadow-lg shadow-teal/10">
+              <span className="absolute top-1 left-1 text-[8px] uppercase tracking-wider font-semibold px-1.5 py-0.5 rounded bg-teal text-white">
+                {section.section_type.replace(/_/g, " ")}
+              </span>
+            </div>
+          )}
+        </div>
+      ))}
+
+      {/* Content sections */}
+      {sections.filter((s) => s.section_type !== "navbar").map((section) => (
         <div key={section.id} className="relative">
           <SectionRenderer section={section} siteStyles={siteStyles} navbars={navbars} />
 

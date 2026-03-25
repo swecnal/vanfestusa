@@ -83,14 +83,18 @@ export default async function DynamicPage({ params }: PageProps) {
 
   const sections = (page.sections as Section[]).filter((s) => s.is_visible);
   const { siteStyles, navbars } = await getSiteStylesAndNavbars();
-  const hasNavbarSection = sections.some((s) => s.section_type === "navbar");
+  const navbarSections = sections.filter((s) => s.section_type === "navbar");
+  const contentSections = sections.filter((s) => s.section_type !== "navbar");
 
   return (
     <>
-      {hasNavbarSection && (
+      {navbarSections.length > 0 && (
         <style dangerouslySetInnerHTML={{ __html: "#layout-navbar{display:none!important}" }} />
       )}
-      {sections.map((section) => (
+      {navbarSections.map((section) => (
+        <SectionRenderer key={section.id} section={section} siteStyles={siteStyles} navbars={navbars} />
+      ))}
+      {contentSections.map((section) => (
         <SectionRenderer key={section.id} section={section} siteStyles={siteStyles} navbars={navbars} />
       ))}
     </>
