@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useCallback } from "react";
 import type { BackgroundConfig, ImageCrop } from "@/lib/types";
 import ImagePicker from "./ImagePicker";
 
@@ -28,9 +28,16 @@ export default function BackgroundEditor({ value, onChange }: Props) {
   const config = value || { type: "none" as const };
   const solidColorRef = useRef<HTMLInputElement>(null);
 
-  const update = (patch: Partial<BackgroundConfig>) => {
-    onChange({ ...config, ...patch });
-  };
+  // Use a ref to track the latest config to avoid stale closure issues
+  // when multiple update() calls happen before React re-renders
+  const latestConfig = useRef(config);
+  latestConfig.current = config;
+
+  const update = useCallback((patch: Partial<BackgroundConfig>) => {
+    const merged = { ...latestConfig.current, ...patch };
+    latestConfig.current = merged;
+    onChange(merged);
+  }, [onChange]);
 
   const updateGradientColor = (index: number, patch: Partial<{ color: string; opacity: number }>) => {
     const colors = [...(config.gradientColors || [{ color: "#ffffff", opacity: 100 }, { color: "#000000", opacity: 100 }])];
