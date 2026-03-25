@@ -44,6 +44,7 @@ const ELEMENT_CATEGORIES: ElementCategory[] = [
     items: [
       { type: "cta_section", label: "CTA Section" },
       { type: "contact_form", label: "Contact Form" },
+      { type: "form_builder", label: "Form Builder" },
     ],
   },
   {

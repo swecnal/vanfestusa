@@ -24,6 +24,7 @@ import VehicleStreamSection from "./VehicleStreamSection";
 import AccordionParentSection from "./AccordionParentSection";
 import CustomColumnsSection from "./CustomColumnsSection";
 import ContactFormSection from "./ContactFormSection";
+import FormBuilderSection from "./FormBuilderSection";
 import HtmlBlockSection from "./HtmlBlockSection";
 
 interface Props {
@@ -92,6 +93,8 @@ export default function SectionRenderer({ section, siteStyles = EMPTY_SITE_STYLE
         return <CustomColumnsSection data={data} settings={settings} siteStyles={siteStyles} />;
       case "contact_form":
         return <ContactFormSection data={data} settings={settings} />;
+      case "form_builder":
+        return <FormBuilderSection data={data} settings={settings} sectionId={section.id} />;
       case "html_block":
         return <HtmlBlockSection data={data} />;
       case "navbar": {

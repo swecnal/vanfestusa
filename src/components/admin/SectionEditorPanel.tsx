@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import type { Section, SectionType, BackgroundConfig, SavedNavbar, ImageCrop, ImageFit } from "@/lib/types";
+import type { Section, SectionType, BackgroundConfig, SavedNavbar, ImageCrop, ImageFit, FormBuilderField, FormFieldType } from "@/lib/types";
 import { SECTION_TYPE_LABELS, SPACING_PRESETS } from "@/lib/types";
 import RichTextEditor from "./RichTextEditor";
 import UrlInput from "./UrlInput";
@@ -1808,6 +1808,147 @@ function SectionFields({
           </Field>
         </div>
       );
+
+    case "form_builder": {
+      const fbFields = (data.fields as FormBuilderField[]) || [];
+      const fbAction = (data.submitAction as { type: string; toEmail: string; subject: string }) || { type: "email", toEmail: "", subject: "" };
+
+      const updateField = (index: number, key: string, value: unknown) => {
+        const updated = fbFields.map((f, i) => i === index ? { ...f, [key]: value } : f);
+        updateData("fields", updated);
+      };
+      const removeField = (index: number) => {
+        updateData("fields", fbFields.filter((_, i) => i !== index));
+      };
+      const addField = () => {
+        const id = `f${Date.now()}`;
+        updateData("fields", [...fbFields, { id, label: "", name: "", placeholder: "", type: "short_text", required: false, options: [] }]);
+      };
+      const moveField = (from: number, to: number) => {
+        if (to < 0 || to >= fbFields.length) return;
+        const arr = [...fbFields];
+        const [item] = arr.splice(from, 1);
+        arr.splice(to, 0, item);
+        updateData("fields", arr);
+      };
+      const updateAction = (key: string, value: string) => {
+        updateData("submitAction", { ...fbAction, [key]: value });
+      };
+
+      return (
+        <div className="space-y-3">
+          <Field label="Heading">
+            <RichTextEditor content={(data.heading as string) || ""} onChange={(html) => updateData("heading", html)} siteStyles={siteStyles} />
+          </Field>
+          <TextStyleEditor
+            label="Heading Style"
+            value={(data.headingStyle as TextStyleConfig) || {}}
+            onChange={(s) => updateData("headingStyle", s)}
+            defaults={{ fontSize: "30px", fontWeight: "900", fontFamily: "Gothic A1" }}
+          />
+          <Field label="Description">
+            <RichTextEditor content={(data.description as string) || ""} onChange={(html) => updateData("description", html)} siteStyles={siteStyles} />
+          </Field>
+
+          {/* Fields */}
+          <div className="border-t border-gray-200 pt-3 mt-3">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-semibold text-gray-700">Fields ({fbFields.length})</p>
+              <button onClick={addField} className="text-teal hover:text-teal-dark text-xs font-semibold">+ Field</button>
+            </div>
+            <div className="space-y-2">
+              {fbFields.map((field, i) => (
+                <details key={field.id} className="border border-gray-200 rounded-lg overflow-hidden">
+                  <summary className="px-3 py-2 text-sm font-medium text-gray-700 cursor-pointer hover:bg-gray-50 flex items-center gap-2">
+                    <span className="text-gray-400 text-xs w-5">{i + 1}.</span>
+                    <span className="flex-1 truncate">{field.label || "Untitled Field"}</span>
+                    <span className="text-[9px] uppercase tracking-wider font-semibold px-1.5 py-0.5 rounded bg-gray-100 text-gray-500 flex-shrink-0">
+                      {field.type.replace("_", " ")}
+                    </span>
+                    <span className="flex gap-0.5">
+                      <button onClick={(e) => { e.preventDefault(); moveField(i, i - 1); }} disabled={i === 0} className="text-gray-400 hover:text-gray-600 disabled:opacity-20 p-0.5">
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" /></svg>
+                      </button>
+                      <button onClick={(e) => { e.preventDefault(); moveField(i, i + 1); }} disabled={i === fbFields.length - 1} className="text-gray-400 hover:text-gray-600 disabled:opacity-20 p-0.5">
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                      </button>
+                      <button onClick={(e) => { e.preventDefault(); removeField(i); }} className="text-red-400 hover:text-red-600 p-0.5">
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                      </button>
+                    </span>
+                  </summary>
+                  <div className="p-3 border-t border-gray-100 space-y-2">
+                    <Field label="Label">
+                      <input type="text" value={field.label} onChange={(e) => updateField(i, "label", e.target.value)} className="input-sm" placeholder="Field label" />
+                    </Field>
+                    <Field label="Field Name">
+                      <input type="text" value={field.name} onChange={(e) => updateField(i, "name", e.target.value)} className="input-sm" placeholder="field_name (no spaces)" />
+                    </Field>
+                    <Field label="Placeholder">
+                      <input type="text" value={field.placeholder} onChange={(e) => updateField(i, "placeholder", e.target.value)} className="input-sm" placeholder="Placeholder text" />
+                    </Field>
+                    <Field label="Type">
+                      <select value={field.type} onChange={(e) => updateField(i, "type", e.target.value as FormFieldType)} className="input-sm">
+                        <option value="short_text">Short Text</option>
+                        <option value="long_text">Long Text</option>
+                        <option value="dropdown">Dropdown</option>
+                        <option value="checkboxes">Checkboxes</option>
+                        <option value="radio">Radio Buttons</option>
+                      </select>
+                    </Field>
+                    <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
+                      <input type="checkbox" checked={field.required} onChange={(e) => updateField(i, "required", e.target.checked)} className="accent-teal" />
+                      Required
+                    </label>
+                    {(field.type === "dropdown" || field.type === "checkboxes" || field.type === "radio") && (
+                      <Field label="Options (one per line)">
+                        <textarea
+                          value={(field.options || []).join("\n")}
+                          onChange={(e) => updateField(i, "options", e.target.value.split("\n"))}
+                          className="w-full p-2 border border-gray-200 rounded text-xs font-mono"
+                          rows={4}
+                          placeholder={"Option 1\nOption 2\nOption 3"}
+                        />
+                      </Field>
+                    )}
+                  </div>
+                </details>
+              ))}
+            </div>
+          </div>
+
+          {/* Settings */}
+          <div className="border-t border-gray-200 pt-3 mt-3 space-y-3">
+            <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
+              <input type="checkbox" checked={(data.recaptcha as boolean) || false} onChange={(e) => updateData("recaptcha", e.target.checked)} className="accent-teal" />
+              Add reCAPTCHA (&quot;I am a human&quot; checkbox)
+            </label>
+            <Field label="Submit Button Text">
+              <input type="text" value={(data.submitButtonText as string) || ""} onChange={(e) => updateData("submitButtonText", e.target.value)} className="input-sm" placeholder="Submit" />
+            </Field>
+            <Field label="Success Message">
+              <input type="text" value={(data.successMessage as string) || ""} onChange={(e) => updateData("successMessage", e.target.value)} className="input-sm" placeholder="Thank you!" />
+            </Field>
+          </div>
+
+          {/* Submit Action */}
+          <div className="border-t border-gray-200 pt-3 mt-3 space-y-3">
+            <p className="text-xs font-semibold text-gray-700">Submit Action</p>
+            <Field label="Action Type">
+              <select value={fbAction.type} className="input-sm" disabled>
+                <option value="email">Email</option>
+              </select>
+            </Field>
+            <Field label="To Email">
+              <input type="email" value={fbAction.toEmail} onChange={(e) => updateAction("toEmail", e.target.value)} className="input-sm" placeholder="you@example.com" />
+            </Field>
+            <Field label="Subject Line">
+              <input type="text" value={fbAction.subject} onChange={(e) => updateAction("subject", e.target.value)} className="input-sm" placeholder="New Form Submission" />
+            </Field>
+          </div>
+        </div>
+      );
+    }
 
     case "schedule_accordion":
       return (

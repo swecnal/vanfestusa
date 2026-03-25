@@ -92,6 +92,7 @@ export type SectionType =
   | "accordion_parent"
   | "custom_columns"
   | "contact_form"
+  | "form_builder"
   | "html_block"
   | "navbar";
 
@@ -714,6 +715,33 @@ export interface ContactFormData {
   socialLinks?: Array<{ platform: string; url: string; label: string }>;
 }
 
+export type FormFieldType = "short_text" | "long_text" | "dropdown" | "checkboxes" | "radio";
+
+export interface FormBuilderField {
+  id: string;
+  label: string;
+  name: string;
+  placeholder: string;
+  type: FormFieldType;
+  required: boolean;
+  options: string[];
+}
+
+export interface FormBuilderData {
+  heading?: string;
+  headingStyle?: import("@/lib/styles").TextStyleConfig;
+  description?: string;
+  fields: FormBuilderField[];
+  recaptcha: boolean;
+  submitButtonText: string;
+  successMessage: string;
+  submitAction: {
+    type: "email";
+    toEmail: string;
+    subject: string;
+  };
+}
+
 export interface HtmlBlockData {
   html: string;
   sandboxed?: boolean;
@@ -923,6 +951,7 @@ export const SECTION_TYPE_LABELS: Record<SectionType, string> = {
   vehicle_convoy: "Vehicle Convoy",
   vehicle_stream: "Vehicle Stream",
   contact_form: "Contact Form",
+  form_builder: "Form Builder",
   html_block: "HTML Block",
   navbar: "Navbar",
 };

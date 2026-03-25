@@ -129,6 +129,19 @@ export const SECTION_DEFAULTS: Record<SectionType, Record<string, unknown>> = {
       { icon: "phone", title: "Phone", value: "805.826.3378", href: "tel:8058263378" },
     ],
   },
+  form_builder: {
+    heading: "",
+    description: "",
+    fields: [
+      { id: "f1", label: "Name", name: "name", placeholder: "Your name", type: "short_text", required: true, options: [] },
+      { id: "f2", label: "Email", name: "email", placeholder: "Your email", type: "short_text", required: true, options: [] },
+      { id: "f3", label: "Message", name: "message", placeholder: "Your message", type: "long_text", required: true, options: [] },
+    ],
+    recaptcha: false,
+    submitButtonText: "Submit",
+    successMessage: "Thank you! Your submission has been received.",
+    submitAction: { type: "email", toEmail: "", subject: "New Form Submission" },
+  },
   html_block: {
     html: "<div>Custom HTML</div>",
   },
