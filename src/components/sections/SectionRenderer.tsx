@@ -107,6 +107,9 @@ export default function SectionRenderer({ section, siteStyles = EMPTY_SITE_STYLE
 
   if (!content) return null;
 
+  // Navbar sections manage their own positioning (fixed, z-50) — don't wrap them
+  if (section_type === "navbar") return content;
+
   // Mobile CSS override style block
   const mobileCSS = settings.mobileMode === "custom" ? buildMobileStyleBlock(sectionCssId, settings) : "";
 
