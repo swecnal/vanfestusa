@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { toast } from "sonner";
 import MediaPickerModal from "./MediaPickerModal";
 import ImageCropModal from "./ImageCropModal";
@@ -25,7 +25,13 @@ export default function ImagePicker({ value, onChange, cropValue, onCropChange, 
   const [uploading, setUploading] = useState(false);
   const [libraryOpen, setLibraryOpen] = useState(false);
   const [cropOpen, setCropOpen] = useState(false);
+  const [imgError, setImgError] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  // Reset error state when the URL changes
+  useEffect(() => {
+    setImgError(false);
+  }, [value]);
 
   const handleUpload = async (file: File) => {
     setUploading(true);
@@ -61,14 +67,19 @@ export default function ImagePicker({ value, onChange, cropValue, onCropChange, 
     <div className="space-y-2">
       {value && (
         <div className="relative group rounded-lg overflow-hidden border border-gray-200">
-          <img
-            src={value}
-            alt=""
-            className="w-full h-32 object-cover"
-            onError={(e) => {
-              (e.target as HTMLImageElement).style.display = "none";
-            }}
-          />
+          {!imgError ? (
+            <img
+              key={value}
+              src={value}
+              alt=""
+              className="w-full h-32 object-cover"
+              onError={() => setImgError(true)}
+            />
+          ) : (
+            <div className="w-full h-32 flex items-center justify-center bg-gray-100 text-gray-400 text-xs">
+              Failed to load preview
+            </div>
+          )}
           {cropValue && (
             <span className="absolute top-1.5 right-1.5 bg-teal/80 text-white text-[10px] font-semibold px-1.5 py-0.5 rounded">
               Cropped

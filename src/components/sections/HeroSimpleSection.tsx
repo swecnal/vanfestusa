@@ -29,12 +29,12 @@ export default function HeroSimpleSection({ data, settings }: Props) {
           src={d.bgImage}
           alt=""
           intensity={parallax}
-          className="absolute inset-0 w-full h-full object-cover"
+          className="absolute inset-0 z-0 w-full h-full object-cover"
           crop={(data as Record<string, unknown>).bgImageCrop as ImageCrop | undefined}
           imageFit={(data as Record<string, unknown>).bgImageFit as import("@/lib/types").ImageFit | undefined}
         />
       )}
-      <div className="relative mx-auto max-w-6xl">
+      <div className="relative z-[1] mx-auto max-w-6xl">
         <SectionHeading
           title={d.title}
           subtitle={d.subtitle}
