@@ -1240,9 +1240,34 @@ export default function PageEditorPage() {
   const currentNavbarId = (currentNavbarSection?.data as Record<string, unknown>)?.navbarId as string | undefined;
   const defaultNavbar = savedNavbars.find((n) => n.isDefault);
 
-  const handleNavbarChange = async (navbarId: string) => {
+  const applyNavbarToPage = async (targetPageId: string, navId: string) => {
+    // Fetch the target page's sections to check for existing navbar
+    const secRes = await fetch(`/api/pages/${targetPageId}/sections`);
+    if (!secRes.ok) return;
+    const { sections: pageSections } = await secRes.json();
+    const existingNavbar = (pageSections as Section[]).find((s) => s.section_type === "navbar");
+
+    if (navId === "default") {
+      if (existingNavbar) {
+        await fetch(`/api/pages/${targetPageId}/sections/${existingNavbar.id}`, { method: "DELETE" });
+      }
+    } else if (existingNavbar) {
+      await fetch(`/api/pages/${targetPageId}/sections/${existingNavbar.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ data: { navbarId: navId } }),
+      });
+    } else {
+      await fetch(`/api/pages/${targetPageId}/sections`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ section_type: "navbar", sort_order: 0, data: { navbarId: navId } }),
+      });
+    }
+  };
+
+  const applyNavbarToCurrentPage = async (navbarId: string) => {
     if (navbarId === "default") {
-      // Remove navbar section if one exists
       if (currentNavbarSection) {
         await fetch(`/api/pages/${pageId}/sections/${currentNavbarSection.id}`, { method: "DELETE" });
         setSections((prev) => prev.filter((s) => s.id !== currentNavbarSection.id));
@@ -1250,7 +1275,6 @@ export default function PageEditorPage() {
       }
     } else {
       if (currentNavbarSection) {
-        // Update existing navbar section
         const res = await fetch(`/api/pages/${pageId}/sections/${currentNavbarSection.id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -1263,15 +1287,10 @@ export default function PageEditorPage() {
           toast.success("Navbar updated");
         }
       } else {
-        // Create a new navbar section at sort_order 0
         const res = await fetch(`/api/pages/${pageId}/sections`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            section_type: "navbar",
-            sort_order: 0,
-            data: { navbarId },
-          }),
+          body: JSON.stringify({ section_type: "navbar", sort_order: 0, data: { navbarId } }),
         });
         if (res.ok) {
           const { section } = await res.json();
@@ -1279,6 +1298,44 @@ export default function PageEditorPage() {
           toast.success("Navbar assigned");
         }
       }
+    }
+  };
+
+  const handleNavbarChange = async (navbarId: string) => {
+    if (!page) return;
+
+    // Check for child pages
+    const pagesRes = await fetch("/api/pages");
+    const { pages: allPages } = await pagesRes.json();
+    const childPages = (allPages as Array<{ id: string; slug: string; title: string }>)
+      .filter((p) => p.slug !== page.slug && p.slug.startsWith(page.slug + "/"));
+
+    if (childPages.length > 0) {
+      const navName = navbarId === "default"
+        ? (defaultNavbar?.name || "Default")
+        : savedNavbars.find((n) => n.id === navbarId)?.name || "Selected";
+
+      setConfirmModal({
+        open: true,
+        title: "Apply to child pages?",
+        message: `This page has ${childPages.length} child page${childPages.length > 1 ? "s" : ""}. Apply "${navName}" navbar to all of them too?`,
+        confirmLabel: "Yes, apply to all",
+        cancelLabel: "Cancel",
+        altLabel: "This page only",
+        onConfirm: async () => {
+          setConfirmModal((prev) => ({ ...prev, open: false }));
+          await applyNavbarToCurrentPage(navbarId);
+          // Apply to all child pages
+          await Promise.all(childPages.map((cp) => applyNavbarToPage(cp.id, navbarId)));
+          toast.success(`Navbar applied to ${childPages.length} child page${childPages.length > 1 ? "s" : ""}`);
+        },
+        onAlt: async () => {
+          setConfirmModal((prev) => ({ ...prev, open: false }));
+          await applyNavbarToCurrentPage(navbarId);
+        },
+      });
+    } else {
+      await applyNavbarToCurrentPage(navbarId);
     }
   };
 

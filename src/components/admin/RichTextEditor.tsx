@@ -620,10 +620,7 @@ export default function RichTextEditor({ content, onChange, siteStyles = EMPTY_S
 
         <div className="w-px h-5 bg-gray-200 mx-0.5" />
 
-        <input
-          type="number"
-          min={8}
-          max={120}
+        <select
           value={parseInt(editor.getAttributes("textStyle").fontSize || "0", 10) || ""}
           onChange={(e) => {
             const val = e.target.value;
@@ -633,10 +630,15 @@ export default function RichTextEditor({ content, onChange, siteStyles = EMPTY_S
               editor.chain().focus().setMark("textStyle", { fontSize: null }).run();
             }
           }}
-          className="w-10 text-[10px] px-1 py-0.5 border border-gray-300 rounded bg-white h-6 text-center tabular-nums"
-          placeholder="px"
-          title="Font size (px)"
-        />
+          className="text-[10px] px-0.5 py-0.5 border border-gray-300 rounded bg-white h-6"
+          style={{ maxWidth: "52px" }}
+          title="Font size"
+        >
+          <option value="">px</option>
+          {[8, 9, 10, 11, 12, 14, 16, 18, 20, 24, 28, 32, 36, 42, 48, 56, 64, 72, 96].map((s) => (
+            <option key={s} value={s}>{s}px</option>
+          ))}
+        </select>
 
         <select
           value={editor.getAttributes("paragraph").lineHeight || editor.getAttributes("heading").lineHeight || ""}
@@ -719,7 +721,7 @@ export default function RichTextEditor({ content, onChange, siteStyles = EMPTY_S
             <svg className="w-2.5 h-2.5 ml-0.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
           </button>
           {colorOpen && (
-            <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-50 p-2.5">
+            <div className="absolute top-full right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-50 p-2.5">
               {COLOR_GRID.map((row, ri) => (
                 <div key={ri} className="flex gap-0.5 mb-0.5">
                   {row.map((hex) => (
@@ -774,7 +776,7 @@ export default function RichTextEditor({ content, onChange, siteStyles = EMPTY_S
             <span className="text-[9px] font-bold leading-none" style={{ textShadow: "1px 1px 1px rgba(0,0,0,0.5)" }}>S</span>
           </ToolbarButton>
           {shadowOpen && (
-            <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-50 w-52 p-2.5 space-y-2" onClick={(e) => e.stopPropagation()}>
+            <div className="absolute top-full right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-50 w-52 p-2.5 space-y-2" onClick={(e) => e.stopPropagation()}>
               <div className="flex items-center justify-between">
                 <label className="text-[9px] font-semibold text-gray-600 uppercase">Text Shadow</label>
                 <button
@@ -832,7 +834,7 @@ export default function RichTextEditor({ content, onChange, siteStyles = EMPTY_S
             <span className="text-[9px] font-bold leading-none" style={{ WebkitTextStroke: "0.7px currentColor" }}>O</span>
           </ToolbarButton>
           {strokeOpen && (
-            <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-50 w-52 p-2.5 space-y-2" onClick={(e) => e.stopPropagation()}>
+            <div className="absolute top-full right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-50 w-52 p-2.5 space-y-2" onClick={(e) => e.stopPropagation()}>
               <div className="flex items-center justify-between">
                 <label className="text-[9px] font-semibold text-gray-600 uppercase">Text Outline</label>
                 <button
