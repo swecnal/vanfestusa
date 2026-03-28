@@ -225,7 +225,7 @@ function SortableLiveSection({
 
       {/* Live section render */}
       <div className={`${!section.is_visible ? "opacity-30" : ""} ${isVisibilityMismatch ? "opacity-20" : ""}`}>
-        <SectionRenderer section={displaySection} siteStyles={siteStyles} navbars={navbars} />
+        <SectionRenderer section={displaySection} siteStyles={siteStyles} navbars={navbars} embedded />
       </div>
 
       {/* Visibility mismatch badge */}

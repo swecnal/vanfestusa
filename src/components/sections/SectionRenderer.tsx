@@ -31,6 +31,8 @@ interface Props {
   section: Section;
   siteStyles?: SiteStyles;
   navbars?: SavedNavbar[];
+  /** When true, navbar sections render inline (relative) instead of fixed */
+  embedded?: boolean;
 }
 
 function deviceVisibilityClass(dv?: string): string {
@@ -39,7 +41,7 @@ function deviceVisibilityClass(dv?: string): string {
   return "";
 }
 
-export default function SectionRenderer({ section, siteStyles = EMPTY_SITE_STYLES, navbars }: Props) {
+export default function SectionRenderer({ section, siteStyles = EMPTY_SITE_STYLES, navbars, embedded }: Props) {
   if (!section.is_visible) return null;
 
   const { section_type, data, settings } = section;
@@ -101,7 +103,7 @@ export default function SectionRenderer({ section, siteStyles = EMPTY_SITE_STYLE
         const navbarId = (data as Record<string, unknown>)?.navbarId as string;
         const navConfig = navbars?.find((n) => n.id === navbarId)?.config;
         if (!navConfig) return null;
-        return <Navbar builderConfig={navConfig} />;
+        return <Navbar builderConfig={navConfig} embedded={embedded} />;
       }
       default:
         return null;

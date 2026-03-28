@@ -207,7 +207,7 @@ export default function PreviewShell({
       {/* Navbar sections always render first */}
       {sections.filter((s) => s.section_type === "navbar").map((section) => (
         <div key={section.id} className="relative">
-          <SectionRenderer section={section} siteStyles={siteStyles} navbars={navbars} />
+          <SectionRenderer section={section} siteStyles={siteStyles} navbars={navbars} embedded />
           {hoveredId === section.id && selectedId !== section.id && (
             <div className="absolute inset-0 z-20 pointer-events-none ring-1 ring-gray-400 ring-inset">
               <span className="absolute top-1 left-1 text-[8px] uppercase tracking-wider font-semibold px-1.5 py-0.5 rounded bg-charcoal/70 text-white">
@@ -228,7 +228,7 @@ export default function PreviewShell({
       {/* Content sections */}
       {sections.filter((s) => s.section_type !== "navbar").map((section) => (
         <div key={section.id} className="relative">
-          <SectionRenderer section={section} siteStyles={siteStyles} navbars={navbars} />
+          <SectionRenderer section={section} siteStyles={siteStyles} navbars={navbars} embedded />
 
           {/* Hover outline */}
           {hoveredId === section.id && selectedId !== section.id && (
