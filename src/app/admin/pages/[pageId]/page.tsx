@@ -1577,9 +1577,9 @@ export default function PageEditorPage() {
             </div>
           ) : (
             <div>
-              {/* Render navbar sections pinned at top of preview (non-draggable) */}
+              {/* Render navbar sections pinned at top of preview (non-draggable, above hero) */}
               {sections.filter((s) => s.section_type === "navbar").map((section) => (
-                <div key={section.id} onClick={() => handleSelectSection(section.id)} className={`cursor-pointer ${selectedSectionId === section.id ? "ring-2 ring-teal" : ""}`}>
+                <div key={section.id} onClick={() => handleSelectSection(section.id)} className={`relative z-10 cursor-pointer ${selectedSectionId === section.id ? "ring-2 ring-teal" : ""}`}>
                   <SectionRenderer section={selectedSectionId === section.id && editingData ? { ...section, data: editingData, settings: editingSettings || section.settings } : section} siteStyles={siteStyles} navbars={savedNavbars} embedded />
                 </div>
               ))}

@@ -17,13 +17,14 @@ export default function FaqAccordionSection({ data, settings, siteStyles = EMPTY
   const headingStyle = (data as Record<string, unknown>).headingStyle as TextStyleConfig | undefined;
   const questionStyle = (data as Record<string, unknown>).questionStyle as TextStyleConfig | undefined;
   const answerStyle = (data as Record<string, unknown>).answerStyle as TextStyleConfig | undefined;
+  const items = d.items || [];
   const [openItems, setOpenItems] = useState<Set<number>>(new Set());
   const [allOpen, setAllOpen] = useState(false);
   const refs = useRef<(HTMLDivElement | null)[]>([]);
 
   useEffect(() => {
-    refs.current = refs.current.slice(0, d.items.length);
-  }, [d.items.length]);
+    refs.current = refs.current.slice(0, items.length);
+  }, [items.length]);
 
   const toggleItem = (i: number) => {
     setOpenItems((prev) => {
@@ -38,7 +39,7 @@ export default function FaqAccordionSection({ data, settings, siteStyles = EMPTY
     if (allOpen) {
       setOpenItems(new Set());
     } else {
-      setOpenItems(new Set(d.items.map((_, i) => i)));
+      setOpenItems(new Set(items.map((_, i) => i)));
     }
     setAllOpen(!allOpen);
   };
@@ -64,7 +65,7 @@ export default function FaqAccordionSection({ data, settings, siteStyles = EMPTY
           </div>
         )}
         <div className="space-y-3">
-          {d.items.map((item, i) => (
+          {items.map((item, i) => (
             <div key={i} className="border border-charcoal/10 rounded-xl overflow-hidden">
               <button
                 onClick={() => toggleItem(i)}
