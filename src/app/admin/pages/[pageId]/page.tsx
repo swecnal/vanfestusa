@@ -1577,6 +1577,12 @@ export default function PageEditorPage() {
             </div>
           ) : (
             <div>
+              {/* Render navbar sections pinned at top of preview (non-draggable) */}
+              {sections.filter((s) => s.section_type === "navbar").map((section) => (
+                <div key={section.id} onClick={() => handleSelectSection(section.id)} className={`cursor-pointer ${selectedSectionId === section.id ? "ring-2 ring-teal" : ""}`}>
+                  <SectionRenderer section={selectedSectionId === section.id && editingData ? { ...section, data: editingData, settings: editingSettings || section.settings } : section} siteStyles={siteStyles} navbars={savedNavbars} embedded />
+                </div>
+              ))}
               <DropZone index={0} onDrop={handleAddSectionAtIndex} isActive={externalDragActive} />
               <DndContext
                 sensors={sensors}
@@ -1585,10 +1591,10 @@ export default function PageEditorPage() {
                 onDragEnd={handleDragEnd}
               >
                 <SortableContext
-                  items={sections.map((s) => s.id)}
+                  items={sections.filter((s) => s.section_type !== "navbar").map((s) => s.id)}
                   strategy={verticalListSortingStrategy}
                 >
-                  {sections.map((section, idx) => {
+                  {sections.filter((s) => s.section_type !== "navbar").map((section, idx) => {
                     const dragSection = activeDragId ? sections.find((s) => s.id === activeDragId) : null;
                     return (
                       <div key={section.id}>
