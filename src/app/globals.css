@@ -131,6 +131,20 @@
   margin: 1em 0;
 }
 
+/* Vertical alignment wrappers */
+[data-valign="center"] {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100%;
+}
+[data-valign="bottom"] {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  height: 100%;
+}
+
 /* Admin themed scrollbar */
 .admin-scrollbar {
   scrollbar-width: thin;

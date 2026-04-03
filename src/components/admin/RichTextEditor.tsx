@@ -9,6 +9,8 @@ import { TextAlign } from "@tiptap/extension-text-align";
 import { Link } from "@tiptap/extension-link";
 import { Highlight } from "@tiptap/extension-highlight";
 import { Underline as UnderlineExt } from "@tiptap/extension-underline";
+import { Subscript } from "@tiptap/extension-subscript";
+import { Superscript } from "@tiptap/extension-superscript";
 import { useEffect, useRef, useState, useCallback } from "react";
 import type { SiteStyles, ButtonStyle } from "@/lib/styles";
 import { buttonStyleToCSS, buttonStyleToCSSString, findButtonStyle, EMPTY_SITE_STYLES } from "@/lib/styles";
@@ -19,6 +21,21 @@ interface Props {
   siteStyles?: SiteStyles;
   onSiteStylesChange?: () => void; // callback to refresh siteStyles after saving a new one
   minimal?: boolean; // hide font/color/shadow/stroke/heading/align — show only bold/italic/underline/strike/lists/link
+}
+
+/* ─── Vertical alignment wrapper helpers ─── */
+type VAlign = "top" | "center" | "bottom";
+const VALIGN_RE = /^<div data-valign="(top|center|bottom)">([\s\S]*)<\/div>$/;
+
+function parseValign(html: string): { valign: VAlign; inner: string } {
+  const m = html.match(VALIGN_RE);
+  if (m) return { valign: m[1] as VAlign, inner: m[2] };
+  return { valign: "top", inner: html };
+}
+
+function wrapValign(inner: string, valign: VAlign): string {
+  if (valign === "top") return inner;
+  return `<div data-valign="${valign}">${inner}</div>`;
 }
 
 /* ─── Custom FontSize extension ─── */
@@ -264,6 +281,9 @@ function defaultCustomStyle(): ButtonStyle {
 
 export default function RichTextEditor({ content, onChange, siteStyles = EMPTY_SITE_STYLES, onSiteStylesChange, minimal }: Props) {
   const isInternalUpdate = useRef(false);
+  const { valign: initValign, inner: initInner } = parseValign(content);
+  const [valign, setValign] = useState<VAlign>(initValign);
+  const valignRef = useRef<VAlign>(initValign);
   const customColorRef = useRef<HTMLInputElement>(null);
   const [linkUrl, setLinkUrl] = useState("");
   const [showLinkInput, setShowLinkInput] = useState(false);
@@ -324,6 +344,8 @@ export default function RichTextEditor({ content, onChange, siteStyles = EMPTY_S
       TextShadowExt,
       TextStrokeExt,
       UnderlineExt,
+      Subscript,
+      Superscript,
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       CustomLink.configure({
         openOnClick: false,
@@ -332,7 +354,6 @@ export default function RichTextEditor({ content, onChange, siteStyles = EMPTY_S
       Highlight.configure({ multicolor: true }),
       TabHandler,
     ],
-    content,
     editorProps: {
       handleClick: (view, pos, event) => {
         const anchor = (event.target as HTMLElement).closest("a");
@@ -355,11 +376,12 @@ export default function RichTextEditor({ content, onChange, siteStyles = EMPTY_S
         },
       },
     },
+    content: initInner,
     onUpdate: ({ editor: ed }) => {
       isInternalUpdate.current = true;
-      const html = ed.getHTML();
-      onChange(html);
-      checkForLightText(html);
+      const raw = ed.getHTML();
+      onChange(wrapValign(raw, valignRef.current));
+      checkForLightText(raw);
     },
   });
 
@@ -368,10 +390,15 @@ export default function RichTextEditor({ content, onChange, siteStyles = EMPTY_S
       isInternalUpdate.current = false;
       return;
     }
-    if (editor && content !== editor.getHTML()) {
-      editor.commands.setContent(content);
+    const { valign: newValign, inner } = parseValign(content);
+    if (newValign !== valignRef.current) {
+      valignRef.current = newValign;
+      setValign(newValign);
     }
-    checkForLightText(content);
+    if (editor && inner !== editor.getHTML()) {
+      editor.commands.setContent(inner);
+    }
+    checkForLightText(inner);
   }, [content, editor, checkForLightText]);
 
   /* ─── Intercept clicks on links inside the editor ─── */
@@ -617,6 +644,12 @@ export default function RichTextEditor({ content, onChange, siteStyles = EMPTY_S
         <ToolbarButton active={editor.isActive("strike")} onClick={() => editor.chain().focus().toggleStrike().run()} title="Strikethrough">
           <s>S</s>
         </ToolbarButton>
+        <ToolbarButton active={editor.isActive("subscript")} onClick={() => editor.chain().focus().toggleSubscript().run()} title="Subscript">
+          <span className="leading-none">X<sub className="text-[7px]">2</sub></span>
+        </ToolbarButton>
+        <ToolbarButton active={editor.isActive("superscript")} onClick={() => editor.chain().focus().toggleSuperscript().run()} title="Superscript">
+          <span className="leading-none">X<sup className="text-[7px]">2</sup></span>
+        </ToolbarButton>
 
         <div className="w-px h-5 bg-gray-200 mx-0.5" />
 
@@ -701,6 +734,30 @@ export default function RichTextEditor({ content, onChange, siteStyles = EMPTY_S
               {align === "left" && <path d="M3 4h18v2H3V4zm0 4h12v2H3V8zm0 4h18v2H3v-2zm0 4h12v2H3v-2zm0 4h18v2H3v-2z" />}
               {align === "center" && <path d="M3 4h18v2H3V4zm3 4h12v2H6V8zm-3 4h18v2H3v-2zm3 4h12v2H6v-2zm-3 4h18v2H3v-2z" />}
               {align === "right" && <path d="M3 4h18v2H3V4zm6 4h12v2H9V8zm-6 4h18v2H3v-2zm6 4h12v2H9v-2zm-6 4h18v2H3v-2z" />}
+            </svg>
+          </ToolbarButton>
+        ))}
+
+        {/* Vertical Alignment */}
+        <div className="w-px h-5 bg-gray-200 mx-0.5" />
+        {(["top", "center", "bottom"] as const).map((va) => (
+          <ToolbarButton
+            key={`va-${va}`}
+            active={valign === va}
+            onClick={() => {
+              valignRef.current = va;
+              setValign(va);
+              if (editor) {
+                isInternalUpdate.current = true;
+                onChange(wrapValign(editor.getHTML(), va));
+              }
+            }}
+            title={`Vertical align ${va}`}
+          >
+            <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+              {va === "top" && <><rect x="4" y="3" width="16" height="2" rx="1" /><path d="M12 7l-4 4h3v7h2v-7h3l-4-4z" /></>}
+              {va === "center" && <><rect x="4" y="11" width="16" height="2" rx="1" /><path d="M12 7l-3 3h2v0h2V10h2l-3-3zm0 10l-3-3h2v0h2v0h2l-3 3z" /></>}
+              {va === "bottom" && <><rect x="4" y="19" width="16" height="2" rx="1" /><path d="M12 17l4-4h-3V6h-2v7H8l4 4z" /></>}
             </svg>
           </ToolbarButton>
         ))}
