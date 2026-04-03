@@ -2786,43 +2786,183 @@ function TextBlockEditor({
   const [mode, setMode] = useState<"visual" | "html">("visual");
   const html = (data.html as string) || "";
   const alignment = (data.alignment as string) || "left";
+  const layout = (data.layout as string) || "single";
+  const columns = (data.columns as Array<{ html: string }>) || [];
+
+  const setLayout = (newLayout: string) => {
+    updateData("layout", newLayout);
+    if (newLayout === "columns" && columns.length === 0) {
+      // Initialize with 2 columns, migrating existing content to first column
+      updateData("columns", [{ html }, { html: "" }]);
+    }
+  };
+
+  const updateColumn = (index: number, newHtml: string) => {
+    const next = [...columns];
+    next[index] = { html: newHtml };
+    updateData("columns", next);
+  };
+
+  const addColumn = () => {
+    updateData("columns", [...columns, { html: "" }]);
+  };
+
+  const removeColumn = (index: number) => {
+    if (columns.length <= 1) return;
+    updateData("columns", columns.filter((_, i) => i !== index));
+  };
 
   return (
     <div className="space-y-3">
-      {/* Mode tabs */}
+      {/* Layout toggle */}
       <div className="flex rounded-lg border border-gray-200 overflow-hidden">
-        {(["visual", "html"] as const).map((m) => (
+        {(["single", "columns"] as const).map((l) => (
           <button
-            key={m}
-            onClick={() => setMode(m)}
+            key={l}
+            onClick={() => setLayout(l)}
             className={`flex-1 px-3 py-1.5 text-xs font-semibold transition-colors ${
-              mode === m
+              layout === l
                 ? "bg-teal text-white"
                 : "bg-gray-50 text-gray-500 hover:bg-gray-100"
             }`}
           >
-            {m === "visual" ? "Editor" : "HTML"}
+            {l === "single" ? "Single Block" : "Columns"}
           </button>
         ))}
       </div>
 
-      {mode === "visual" && (
-        <RichTextEditor
-          content={html}
-          onChange={(newHtml) => updateData("html", newHtml)}
-          siteStyles={siteStyles}
-          onSiteStylesChange={onSiteStylesChange}
-        />
-      )}
+      {layout === "columns" ? (
+        <>
+          {/* Column count selector */}
+          <div>
+            <label className="block text-[11px] font-medium text-gray-600 mb-1.5">Columns</label>
+            <div className="flex gap-1.5">
+              {columns.map((_, i) => (
+                <button
+                  key={i}
+                  className="w-10 h-10 rounded-lg border border-gray-200 text-sm font-semibold text-gray-500 bg-teal/10 border-teal text-teal"
+                  title={`Column ${i + 1}`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+              {columns.length < 6 && (
+                <button
+                  onClick={addColumn}
+                  className="w-10 h-10 rounded-lg border-2 border-dashed border-gray-200 text-teal hover:border-teal/40 hover:bg-teal/5 flex items-center justify-center transition-all"
+                  title="Add column"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                  </svg>
+                </button>
+              )}
+            </div>
+          </div>
 
-      {mode === "html" && (
-        <textarea
-          value={html}
-          onChange={(e) => updateData("html", e.target.value)}
-          className="w-full p-3 border border-gray-200 rounded-lg font-mono text-xs leading-relaxed"
-          rows={12}
-          spellCheck={false}
-        />
+          {/* Column gap */}
+          <Field label="Column Gap">
+            <input
+              type="text"
+              value={(data.columnGap as string) || ""}
+              onChange={(e) => updateData("columnGap", e.target.value)}
+              className="input-sm"
+              placeholder="2rem"
+            />
+          </Field>
+
+          {/* Per-column editors */}
+          {columns.map((col, i) => (
+            <details key={i} className="border border-gray-200 rounded-lg" open={i === 0}>
+              <summary className="px-3 py-2 text-xs font-semibold text-gray-600 cursor-pointer hover:bg-gray-50 flex items-center justify-between">
+                <span>Column {i + 1}</span>
+                {columns.length > 1 && (
+                  <button
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); removeColumn(i); }}
+                    className="bg-red-500 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center shadow-sm"
+                    title="Remove column"
+                  >
+                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
+              </summary>
+              <div className="p-3 border-t border-gray-100 space-y-2">
+                {/* Mode tabs per column */}
+                <div className="flex rounded-lg border border-gray-200 overflow-hidden">
+                  {(["visual", "html"] as const).map((m) => (
+                    <button
+                      key={m}
+                      onClick={() => setMode(m)}
+                      className={`flex-1 px-2 py-1 text-[10px] font-semibold transition-colors ${
+                        mode === m
+                          ? "bg-teal text-white"
+                          : "bg-gray-50 text-gray-500 hover:bg-gray-100"
+                      }`}
+                    >
+                      {m === "visual" ? "Editor" : "HTML"}
+                    </button>
+                  ))}
+                </div>
+                {mode === "visual" ? (
+                  <RichTextEditor
+                    content={col.html || ""}
+                    onChange={(newHtml) => updateColumn(i, newHtml)}
+                    siteStyles={siteStyles}
+                    onSiteStylesChange={onSiteStylesChange}
+                  />
+                ) : (
+                  <textarea
+                    value={col.html || ""}
+                    onChange={(e) => updateColumn(i, e.target.value)}
+                    className="w-full p-2 border border-gray-200 rounded-lg font-mono text-xs leading-relaxed"
+                    rows={6}
+                    spellCheck={false}
+                  />
+                )}
+              </div>
+            </details>
+          ))}
+        </>
+      ) : (
+        <>
+          {/* Mode tabs */}
+          <div className="flex rounded-lg border border-gray-200 overflow-hidden">
+            {(["visual", "html"] as const).map((m) => (
+              <button
+                key={m}
+                onClick={() => setMode(m)}
+                className={`flex-1 px-3 py-1.5 text-xs font-semibold transition-colors ${
+                  mode === m
+                    ? "bg-teal text-white"
+                    : "bg-gray-50 text-gray-500 hover:bg-gray-100"
+                }`}
+              >
+                {m === "visual" ? "Editor" : "HTML"}
+              </button>
+            ))}
+          </div>
+
+          {mode === "visual" && (
+            <RichTextEditor
+              content={html}
+              onChange={(newHtml) => updateData("html", newHtml)}
+              siteStyles={siteStyles}
+              onSiteStylesChange={onSiteStylesChange}
+            />
+          )}
+
+          {mode === "html" && (
+            <textarea
+              value={html}
+              onChange={(e) => updateData("html", e.target.value)}
+              className="w-full p-3 border border-gray-200 rounded-lg font-mono text-xs leading-relaxed"
+              rows={12}
+              spellCheck={false}
+            />
+          )}
+        </>
       )}
 
       <Field label="Alignment">

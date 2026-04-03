@@ -383,6 +383,10 @@ export interface TextBlockData {
   html: string;
   alignment?: "left" | "center" | "right";
   prose?: boolean;
+  /** Column mode: when set, columns[] is used instead of html */
+  layout?: "single" | "columns";
+  columns?: { html: string }[];
+  columnGap?: string;
 }
 
 export interface CardSpacing {
