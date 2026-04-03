@@ -606,7 +606,7 @@ export default function RichTextEditor({ content, onChange, siteStyles = EMPTY_S
   return (
     <div ref={wrapperRef} className="relative border border-gray-300 rounded-lg overflow-visible">
       {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-0.5 p-1.5 bg-gray-50 border-b border-gray-200 rounded-t-lg">
+      <div className="relative z-10 flex flex-wrap items-center gap-0.5 p-1.5 bg-gray-50 border-b border-gray-200 rounded-t-lg">
         {!minimal && (
           <>
             {/* Font family */}
