@@ -124,6 +124,20 @@ export default function SectionRenderer({ section, siteStyles = EMPTY_SITE_STYLE
   const isImageBg = bgConfig?.type === "image" && bgConfig.imageUrl;
   const imageOpacity = (bgConfig?.imageOpacity ?? 100) / 100;
 
+  // Check if image has a non-trivial crop
+  const crop = bgConfig?.imageCrop;
+  const isCropped = isImageBg && crop && !(crop.x === 0 && crop.y === 0 && crop.width === 100 && crop.height === 100);
+  const sizing = bgConfig?.imageSizing || "cover";
+
+  // Map sizing option to object-fit value
+  const objectFitMap: Record<string, string> = {
+    cover: "cover",
+    contain: "contain",
+    stretch: "fill",
+    tile: "cover",
+    full: "cover",
+  };
+
   // Always wrap for section ID + visibility + mobile overrides
   return (
     <div
@@ -132,12 +146,24 @@ export default function SectionRenderer({ section, siteStyles = EMPTY_SITE_STYLE
       style={hasBg && !isImageBg ? bgStyles : undefined}
     >
       {mobileCSS && <style dangerouslySetInnerHTML={{ __html: mobileCSS }} />}
-      {isImageBg && (
+      {isImageBg && isCropped && crop ? (
+        /* Cropped image: use <img> with object-view-box so crop + sizing both work */
+        <img
+          src={bgConfig.imageUrl}
+          alt=""
+          className="absolute inset-0 w-full h-full"
+          style={{
+            opacity: imageOpacity,
+            objectFit: objectFitMap[sizing] as React.CSSProperties["objectFit"],
+            objectViewBox: `inset(${crop.y}% ${100 - crop.x - crop.width}% ${100 - crop.y - crop.height}% ${crop.x}%)`,
+          }}
+        />
+      ) : isImageBg ? (
         <div
           className="absolute inset-0"
           style={{ ...bgStyles, opacity: imageOpacity }}
         />
-      )}
+      ) : null}
       {/* Color overlay on top of bg image, behind content */}
       {isImageBg && bgConfig?.overlayColor && (bgConfig.overlayOpacity ?? 0) > 0 && (
         <div

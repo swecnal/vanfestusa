@@ -251,14 +251,10 @@ export function backgroundConfigStyles(config?: BackgroundConfig): React.CSSProp
     const crop = config.imageCrop;
     const hasCrop = crop && !(crop.x === 0 && crop.y === 0 && crop.width === 100 && crop.height === 100);
 
-    if (hasCrop && crop) {
-      // Crop overrides sizing — compute background-size/position from crop region
-      return {
-        backgroundImage: `url(${config.imageUrl})`,
-        backgroundSize: `${10000 / crop.width}% ${10000 / crop.height}%`,
-        backgroundPosition: `${crop.width < 100 ? (crop.x * 100) / (100 - crop.width) : 0}% ${crop.height < 100 ? (crop.y * 100) / (100 - crop.height) : 0}%`,
-        backgroundRepeat: "no-repeat",
-      };
+    if (hasCrop) {
+      // When cropped, SectionRenderer renders an <img> with object-view-box
+      // instead of background-image. Return empty — the img handles everything.
+      return {};
     }
 
     const base: React.CSSProperties = {
