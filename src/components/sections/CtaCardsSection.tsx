@@ -13,6 +13,19 @@ export default function CtaCardsSection({ data, settings }: Props) {
   const d = data as unknown as CtaCardsData;
   const headingStyle = (data as Record<string, unknown>).headingStyle as TextStyleConfig | undefined;
   const cols = d.columns || 3;
+  const cards = d.cards || [];
+
+  const gridClass =
+    cols === 1
+      ? "grid grid-cols-1"
+      : cols === 2
+        ? "grid grid-cols-1 sm:grid-cols-2"
+        : "grid grid-cols-1 sm:grid-cols-3";
+
+  const gridStyle: React.CSSProperties =
+    cols === 1
+      ? { maxWidth: d.singleCardMaxWidth || "32rem", marginLeft: "auto", marginRight: "auto" }
+      : {};
 
   return (
     <section
@@ -23,12 +36,8 @@ export default function CtaCardsSection({ data, settings }: Props) {
         {d.heading && (
           <SectionHeading title={d.heading.title} subtitle={d.heading.subtitle} titleStyle={headingStyle ? textStyleConfigToCSS(headingStyle) : undefined} />
         )}
-        <div
-          className={`grid grid-cols-1 ${
-            cols === 2 ? "sm:grid-cols-2" : "sm:grid-cols-3"
-          } gap-6`}
-        >
-          {d.cards.map((card, i) => (
+        <div className={`${gridClass} gap-6`} style={gridStyle}>
+          {cards.map((card, i) => (
             <Link
               key={i}
               href={card.href}

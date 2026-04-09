@@ -484,7 +484,8 @@ export interface CtaCardsData {
     href: string;
     image?: string;
   }>;
-  columns?: 2 | 3;
+  columns?: 1 | 2 | 3;
+  singleCardMaxWidth?: string;
 }
 
 export interface CtaSectionData {

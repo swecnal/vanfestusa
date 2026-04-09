@@ -1608,10 +1608,22 @@ function SectionFields({
               onChange={(e) => updateData("columns", Number(e.target.value))}
               className="input-sm"
             >
+              <option value="1">1</option>
               <option value="2">2</option>
               <option value="3">3</option>
             </select>
           </Field>
+          {Number(data.columns || 3) === 1 && (
+            <Field label="Single Card Max Width">
+              <input
+                type="text"
+                value={(data.singleCardMaxWidth as string) || ""}
+                onChange={(e) => updateData("singleCardMaxWidth", e.target.value)}
+                className="input-sm"
+                placeholder="32rem (e.g. 80%, 500px, 32rem)"
+              />
+            </Field>
+          )}
           <Field label="Cards">
             <ArrayEditor
               items={(data.cards as Array<Record<string, string>>) || []}
