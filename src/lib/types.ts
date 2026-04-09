@@ -485,7 +485,8 @@ export interface CtaCardsData {
     image?: string;
   }>;
   columns?: 1 | 2 | 3;
-  singleCardMaxWidth?: string;
+  /** Width of the cards row as a percentage of the section (10–100) */
+  widthPercent?: number;
 }
 
 export interface CtaSectionData {

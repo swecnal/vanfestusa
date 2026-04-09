@@ -14,6 +14,7 @@ export default function CtaCardsSection({ data, settings }: Props) {
   const headingStyle = (data as Record<string, unknown>).headingStyle as TextStyleConfig | undefined;
   const cols = d.columns || 3;
   const cards = d.cards || [];
+  const widthPercent = d.widthPercent ?? (cols === 1 ? 50 : 100);
 
   const gridClass =
     cols === 1
@@ -22,10 +23,11 @@ export default function CtaCardsSection({ data, settings }: Props) {
         ? "grid grid-cols-1 sm:grid-cols-2"
         : "grid grid-cols-1 sm:grid-cols-3";
 
-  const gridStyle: React.CSSProperties =
-    cols === 1
-      ? { maxWidth: d.singleCardMaxWidth || "32rem", marginLeft: "auto", marginRight: "auto" }
-      : {};
+  const gridStyle: React.CSSProperties = {
+    width: `${widthPercent}%`,
+    marginLeft: "auto",
+    marginRight: "auto",
+  };
 
   return (
     <section

@@ -1613,17 +1613,17 @@ function SectionFields({
               <option value="3">3</option>
             </select>
           </Field>
-          {Number(data.columns || 3) === 1 && (
-            <Field label="Single Card Max Width">
-              <input
-                type="text"
-                value={(data.singleCardMaxWidth as string) || ""}
-                onChange={(e) => updateData("singleCardMaxWidth", e.target.value)}
-                className="input-sm"
-                placeholder="32rem (e.g. 80%, 500px, 32rem)"
-              />
-            </Field>
-          )}
+          <Field label={`Width: ${(data.widthPercent as number) ?? (Number(data.columns || 3) === 1 ? 50 : 100)}%`}>
+            <input
+              type="range"
+              min={10}
+              max={100}
+              step={1}
+              value={(data.widthPercent as number) ?? (Number(data.columns || 3) === 1 ? 50 : 100)}
+              onChange={(e) => updateData("widthPercent", Number(e.target.value))}
+              className="w-full accent-teal"
+            />
+          </Field>
           <Field label="Cards">
             <ArrayEditor
               items={(data.cards as Array<Record<string, string>>) || []}
