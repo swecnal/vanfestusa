@@ -1605,7 +1605,19 @@ function SectionFields({
           <Field label="Columns">
             <select
               value={String(data.columns || 3)}
-              onChange={(e) => updateData("columns", Number(e.target.value))}
+              onChange={(e) => {
+                const newCols = Number(e.target.value);
+                const currentCards = (data.cards as Array<Record<string, string>>) || [];
+                // Auto-fill empty cards if needed so each column has a slot
+                if (currentCards.length < newCols) {
+                  const filled = [...currentCards];
+                  while (filled.length < newCols) {
+                    filled.push({ title: "", description: "", href: "" });
+                  }
+                  updateData("cards", filled);
+                }
+                updateData("columns", newCols);
+              }}
               className="input-sm"
             >
               <option value="1">1</option>
