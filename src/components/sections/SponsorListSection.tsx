@@ -72,13 +72,9 @@ export default function SponsorListSection({ data, settings }: Props) {
       <div className={`mx-auto ${settings.maxWidth || "max-w-5xl"}`}>
         {d.heading && (
           <div className="text-center mb-10">
-            <h2 className={`font-display font-black text-3xl sm:text-4xl mb-3 ${d.heading.light ? "text-white" : "text-charcoal"}`}>
-              {d.heading.title}
-            </h2>
+            <h2 className={`font-display font-black text-3xl sm:text-4xl mb-3 ${d.heading.light ? "text-white" : "text-charcoal"}`} dangerouslySetInnerHTML={{ __html: d.heading.title }} />
             {d.heading.subtitle && (
-              <p className={`text-lg ${d.heading.light ? "text-white/60" : "text-charcoal/60"}`}>
-                {d.heading.subtitle}
-              </p>
+              <p className={`text-lg ${d.heading.light ? "text-white/60" : "text-charcoal/60"}`} dangerouslySetInnerHTML={{ __html: d.heading.subtitle }} />
             )}
           </div>
         )}
