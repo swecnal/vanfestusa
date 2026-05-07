@@ -9,8 +9,12 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://vanfestusa.com"),
   title: "VanFest | The ULTIMATE vanlife experience!",
   description: "Miles - Moments - Music - Memories",
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     title: "VanFest | The ULTIMATE vanlife experience!",
     description: "Miles - Moments - Music - Memories",

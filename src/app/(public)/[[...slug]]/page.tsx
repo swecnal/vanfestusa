@@ -40,9 +40,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   if (!page) return {};
 
+  // Canonical: the bare path with no trailing slash for non-root pages
+  const canonical = pageSlug === "/" ? "/" : pageSlug.replace(/\/$/, "");
+
   return {
     title: page.title,
     description: page.description || undefined,
+    alternates: { canonical },
   };
 }
 
