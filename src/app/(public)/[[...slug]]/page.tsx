@@ -33,10 +33,53 @@ async function getPage(slug: string) {
   return { ...page, sections: sections || [] };
 }
 
+async function getPageById(id: string) {
+  const supabase = getSupabaseServer();
+
+  const { data: page } = await supabase
+    .from("pages")
+    .select("*")
+    .eq("id", id)
+    .eq("is_published", true)
+    .single();
+
+  if (!page) return null;
+
+  const { data: sections } = await supabase
+    .from("sections")
+    .select("*")
+    .eq("page_id", page.id)
+    .order("sort_order", { ascending: true });
+
+  return { ...page, sections: sections || [] };
+}
+
+async function getHomepageOverrideId(): Promise<string | null> {
+  try {
+    const supabase = getSupabaseServer();
+    const { data } = await supabase
+      .from("global_settings")
+      .select("value")
+      .eq("key", "site_behavior")
+      .single();
+    const sb = data?.value as { homepage_page_id?: string } | null;
+    return sb?.homepage_page_id || null;
+  } catch {
+    return null;
+  }
+}
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const pageSlug = "/" + (slug?.join("/") || "");
-  const page = await getPage(pageSlug);
+
+  // At root, check for homepage override
+  let page = null;
+  if (pageSlug === "/") {
+    const overrideId = await getHomepageOverrideId();
+    if (overrideId) page = await getPageById(overrideId);
+  }
+  if (!page) page = await getPage(pageSlug);
 
   if (!page) return {};
 
@@ -81,7 +124,14 @@ async function getSiteStylesAndNavbars(): Promise<{ siteStyles: SiteStyles; navb
 export default async function DynamicPage({ params }: PageProps) {
   const { slug } = await params;
   const pageSlug = "/" + (slug?.join("/") || "");
-  const page = await getPage(pageSlug);
+
+  // At root, check for homepage override
+  let page = null;
+  if (pageSlug === "/") {
+    const overrideId = await getHomepageOverrideId();
+    if (overrideId) page = await getPageById(overrideId);
+  }
+  if (!page) page = await getPage(pageSlug);
 
   if (!page) notFound();
 

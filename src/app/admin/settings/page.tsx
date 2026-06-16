@@ -3,11 +3,19 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
+interface PageRef {
+  id: string;
+  slug: string;
+  title: string;
+  is_published: boolean;
+}
+
 export default function SettingsPage() {
   const [settings, setSettings] = useState<Record<string, unknown>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editPaneMode, setEditPaneMode] = useState<"floating" | "static">("floating");
+  const [pages, setPages] = useState<PageRef[]>([]);
 
   useEffect(() => {
     // Read editor pane mode from localStorage
@@ -23,6 +31,13 @@ export default function SettingsPage() {
         setLoading(false);
       })
       .catch(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/pages")
+      .then((r) => r.json())
+      .then((data) => setPages((data.pages || []) as PageRef[]))
+      .catch(() => {});
   }, []);
 
   const handleSave = async () => {
@@ -151,6 +166,55 @@ export default function SettingsPage() {
               }
               className="settings-input"
             />
+          </SettingsField>
+        </SettingsCard>
+
+        {/* Site Behavior */}
+        <SettingsCard title="Site Behavior">
+          <SettingsField label="Homepage Override">
+            <select
+              value={((settings.site_behavior as Record<string, unknown>)?.homepage_page_id as string) || ""}
+              onChange={(e) =>
+                updateSetting("site_behavior", {
+                  ...(settings.site_behavior as Record<string, unknown>),
+                  homepage_page_id: e.target.value || null,
+                })
+              }
+              className="settings-input"
+            >
+              <option value="">Use page with slug "/" (default)</option>
+              {pages
+                .filter((p) => p.is_published)
+                .map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.title} — {p.slug}
+                  </option>
+                ))}
+            </select>
+            <p className="text-xs text-gray-400 mt-1">
+              The selected page will load when visitors go to your root URL.
+            </p>
+          </SettingsField>
+          <SettingsField label="Hide Site Navbar">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={Boolean((settings.site_behavior as Record<string, unknown>)?.hide_navbar)}
+                onChange={(e) =>
+                  updateSetting("site_behavior", {
+                    ...(settings.site_behavior as Record<string, unknown>),
+                    hide_navbar: e.target.checked,
+                  })
+                }
+                className="accent-teal w-4 h-4"
+              />
+              <span className="text-sm text-charcoal">
+                Disable the global navbar on every page
+              </span>
+            </label>
+            <p className="text-xs text-gray-400 mt-1">
+              Per-page navbar sections still render.
+            </p>
           </SettingsField>
         </SettingsCard>
 

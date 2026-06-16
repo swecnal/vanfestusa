@@ -11,14 +11,16 @@ async function getGlobalSettings() {
     const { data: rows } = await supabase
       .from("global_settings")
       .select("key, value")
-      .in("key", ["navbar_config", "footer_config", "vehicle_stream_config", "footer_builder_config", "navbar_builder_config"]);
+      .in("key", ["navbar_config", "footer_config", "vehicle_stream_config", "footer_builder_config", "navbar_builder_config", "site_behavior"]);
 
-    if (!rows) return { navbarConfig: null, footerConfig: null, vehicleStreamConfig: null, footerBuilderConfig: null, navbarBuilderConfig: null };
+    if (!rows) return { navbarConfig: null, footerConfig: null, vehicleStreamConfig: null, footerBuilderConfig: null, navbarBuilderConfig: null, hideNavbar: false };
 
     const map: Record<string, unknown> = {};
     for (const row of rows) {
       map[row.key] = row.value;
     }
+
+    const siteBehavior = map.site_behavior as { hide_navbar?: boolean } | null;
 
     return {
       navbarConfig: map.navbar_config || null,
@@ -26,9 +28,10 @@ async function getGlobalSettings() {
       vehicleStreamConfig: map.vehicle_stream_config || null,
       footerBuilderConfig: (map.footer_builder_config as FooterBuilderConfig) || null,
       navbarBuilderConfig: (map.navbar_builder_config as NavbarBuilderConfig) || null,
+      hideNavbar: Boolean(siteBehavior?.hide_navbar),
     };
   } catch {
-    return { navbarConfig: null, footerConfig: null, vehicleStreamConfig: null, footerBuilderConfig: null, navbarBuilderConfig: null };
+    return { navbarConfig: null, footerConfig: null, vehicleStreamConfig: null, footerBuilderConfig: null, navbarBuilderConfig: null, hideNavbar: false };
   }
 }
 
@@ -37,17 +40,19 @@ export default async function PublicLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { navbarConfig, footerConfig, vehicleStreamConfig, footerBuilderConfig, navbarBuilderConfig } = await getGlobalSettings();
+  const { navbarConfig, footerConfig, vehicleStreamConfig, footerBuilderConfig, navbarBuilderConfig, hideNavbar } = await getGlobalSettings();
 
   // If v2 footer builder config exists, the divider is managed within the footer builder
   const showStandaloneDivider = !footerBuilderConfig?.version;
 
   return (
     <>
-      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-      <div id="layout-navbar">
-        <Navbar config={navbarConfig as any} builderConfig={navbarBuilderConfig} />
-      </div>
+      {!hideNavbar && (
+        /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+        <div id="layout-navbar">
+          <Navbar config={navbarConfig as any} builderConfig={navbarBuilderConfig} />
+        </div>
+      )}
       <main>{children}</main>
       {showStandaloneDivider && (
         <FooterDivider config={vehicleStreamConfig as VehicleStreamConfig | null} />
