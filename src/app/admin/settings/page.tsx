@@ -216,6 +216,46 @@ export default function SettingsPage() {
               Per-page navbar sections still render.
             </p>
           </SettingsField>
+          <SettingsField label="Permanent Popup">
+            <label className="flex items-center gap-2 cursor-pointer mb-2">
+              <input
+                type="checkbox"
+                checked={Boolean((settings.site_behavior as Record<string, unknown>)?.popup_enabled)}
+                onChange={(e) =>
+                  updateSetting("site_behavior", {
+                    ...(settings.site_behavior as Record<string, unknown>),
+                    popup_enabled: e.target.checked,
+                  })
+                }
+                className="accent-teal w-4 h-4"
+              />
+              <span className="text-sm text-charcoal">
+                Enable a permanent popup over every page
+              </span>
+            </label>
+            <select
+              value={((settings.site_behavior as Record<string, unknown>)?.popup_page_id as string) || ""}
+              onChange={(e) =>
+                updateSetting("site_behavior", {
+                  ...(settings.site_behavior as Record<string, unknown>),
+                  popup_page_id: e.target.value || null,
+                })
+              }
+              className="settings-input"
+              disabled={!((settings.site_behavior as Record<string, unknown>)?.popup_enabled)}
+            >
+              <option value="">— Select popup content page —</option>
+              {pages.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.title} — {p.slug}{p.is_published ? "" : " (draft)"}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-gray-400 mt-1">
+              Build the popup like any page — pick which page renders inside the modal.
+              When enabled, background clicks and scrolling are disabled.
+            </p>
+          </SettingsField>
         </SettingsCard>
 
         {/* Editor Preferences */}
