@@ -11,6 +11,8 @@ import { Highlight } from "@tiptap/extension-highlight";
 import { Underline as UnderlineExt } from "@tiptap/extension-underline";
 import { Subscript } from "@tiptap/extension-subscript";
 import { Superscript } from "@tiptap/extension-superscript";
+import { Image as TiptapImage } from "@tiptap/extension-image";
+import MediaPickerModal from "@/components/admin/MediaPickerModal";
 import { useEffect, useRef, useState, useCallback } from "react";
 import type { SiteStyles, ButtonStyle } from "@/lib/styles";
 import { buttonStyleToCSS, buttonStyleToCSSString, findButtonStyle, EMPTY_SITE_STYLES } from "@/lib/styles";
@@ -287,6 +289,27 @@ export default function RichTextEditor({ content, onChange, siteStyles = EMPTY_S
   const customColorRef = useRef<HTMLInputElement>(null);
   const [linkUrl, setLinkUrl] = useState("");
   const [showLinkInput, setShowLinkInput] = useState(false);
+  const [imagePickerOpen, setImagePickerOpen] = useState(false);
+  const imageUploadInputRef = useRef<HTMLInputElement>(null);
+  const [imageUploading, setImageUploading] = useState(false);
+
+  /* ─── Upload a File to Supabase storage and return public URL ─── */
+  const uploadImageFile = useCallback(async (file: File): Promise<string | null> => {
+    if (!file.type.startsWith("image/")) return null;
+    setImageUploading(true);
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      const res = await fetch("/api/media/upload", { method: "POST", body: form });
+      if (!res.ok) return null;
+      const { asset } = await res.json();
+      return asset?.public_url || null;
+    } catch {
+      return null;
+    } finally {
+      setImageUploading(false);
+    }
+  }, []);
 
   /* ─── Link popover state ─── */
   const [linkPopover, setLinkPopover] = useState<{ top: number; left: number } | null>(null);
@@ -346,6 +369,11 @@ export default function RichTextEditor({ content, onChange, siteStyles = EMPTY_S
       UnderlineExt,
       Subscript,
       Superscript,
+      TiptapImage.configure({
+        inline: false,
+        allowBase64: false,
+        HTMLAttributes: { class: "site-html-content-img" },
+      }),
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       CustomLink.configure({
         openOnClick: false,
@@ -374,6 +402,44 @@ export default function RichTextEditor({ content, onChange, siteStyles = EMPTY_S
           }
           return false;
         },
+      },
+      handlePaste: (view, event) => {
+        const items = event.clipboardData?.items;
+        if (!items) return false;
+        for (let i = 0; i < items.length; i++) {
+          const item = items[i];
+          if (item.type.startsWith("image/")) {
+            const file = item.getAsFile();
+            if (!file) continue;
+            event.preventDefault();
+            uploadImageFile(file).then((url) => {
+              if (!url) return;
+              const node = view.state.schema.nodes.image?.create({ src: url });
+              if (node) {
+                const tr = view.state.tr.replaceSelectionWith(node);
+                view.dispatch(tr);
+              }
+            });
+            return true;
+          }
+        }
+        return false;
+      },
+      handleDrop: (view, event) => {
+        const dt = (event as DragEvent).dataTransfer;
+        if (!dt || !dt.files || dt.files.length === 0) return false;
+        const file = Array.from(dt.files).find((f) => f.type.startsWith("image/"));
+        if (!file) return false;
+        event.preventDefault();
+        uploadImageFile(file).then((url) => {
+          if (!url) return;
+          const node = view.state.schema.nodes.image?.create({ src: url });
+          if (node) {
+            const tr = view.state.tr.replaceSelectionWith(node);
+            view.dispatch(tr);
+          }
+        });
+        return true;
       },
     },
     content: initInner,
@@ -942,6 +1008,17 @@ export default function RichTextEditor({ content, onChange, siteStyles = EMPTY_S
           </svg>
         </ToolbarButton>
 
+        {/* Image insert */}
+        <ToolbarButton
+          active={imageUploading}
+          onClick={() => setImagePickerOpen(true)}
+          title={imageUploading ? "Uploading…" : "Insert image"}
+        >
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+        </ToolbarButton>
+
         {/* Add Button — inserts a new button with first available style */}
         <ToolbarButton
           active={false}
@@ -1266,6 +1343,30 @@ export default function RichTextEditor({ content, onChange, siteStyles = EMPTY_S
           Text editor background changed to grey to maintain text visibility.
         </p>
       )}
+      <input
+        ref={imageUploadInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={async (e) => {
+          const file = e.target.files?.[0];
+          if (!file) return;
+          const url = await uploadImageFile(file);
+          if (url && editor) {
+            editor.chain().focus().setImage({ src: url }).run();
+          }
+          if (imageUploadInputRef.current) imageUploadInputRef.current.value = "";
+        }}
+      />
+      <MediaPickerModal
+        open={imagePickerOpen}
+        onClose={() => setImagePickerOpen(false)}
+        onSelect={(url) => {
+          if (editor) editor.chain().focus().setImage({ src: url }).run();
+          setImagePickerOpen(false);
+        }}
+        accept="image/*"
+      />
     </div>
   );
 }

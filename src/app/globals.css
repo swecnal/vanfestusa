@@ -130,6 +130,12 @@
   border-top: 1px solid #e5e7eb;
   margin: 1em 0;
 }
+.site-html-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+  margin: 0.75em 0;
+}
 
 /* Vertical alignment wrappers */
 [data-valign="center"] {

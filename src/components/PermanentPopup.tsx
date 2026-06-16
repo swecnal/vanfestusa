@@ -24,15 +24,15 @@ export default function PermanentPopup({ children }: Props) {
 
   return (
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm"
+      className="fixed inset-0 z-[9999] bg-black/70 backdrop-blur-sm overflow-y-auto"
       role="dialog"
       aria-modal="true"
+      onWheel={(e) => e.stopPropagation()}
+      onTouchMove={(e) => e.stopPropagation()}
     >
-      <div className="relative w-full h-full overflow-y-auto">
-        <div className="min-h-full flex items-center justify-center p-4 sm:p-8">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl my-auto overflow-hidden">
-            {children}
-          </div>
+      <div className="min-h-full flex items-center justify-center p-4 sm:p-8">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl">
+          {children}
         </div>
       </div>
     </div>
