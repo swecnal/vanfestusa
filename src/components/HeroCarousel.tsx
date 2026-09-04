@@ -52,12 +52,66 @@ interface HeroCarouselProps {
   parallax?: ParallaxIntensity;
 }
 
+type HeroCtaData = { text: string; href?: string; external?: boolean; styleId?: string };
+
+/**
+ * Renders a hero CTA. A button with no href stays visible but is not clickable:
+ * an <a href=""> would resolve to the current page and reload it on click, so an
+ * empty destination renders a <span> instead. Opening in a new tab follows the
+ * `external` flag exactly, matching the editor's checkbox.
+ */
+function HeroCta({
+  cta,
+  siteStyles,
+  styledClassName,
+  fallbackClassName,
+  elementRef,
+}: {
+  cta: HeroCtaData;
+  siteStyles: SiteStyles;
+  styledClassName: string;
+  fallbackClassName: string;
+  elementRef?: React.Ref<HTMLElement>;
+}) {
+  const style = cta.styleId ? findButtonStyle(cta.styleId, siteStyles) : null;
+  const className = style ? styledClassName : fallbackClassName;
+  const css = style ? buttonStyleToCSS(style) : undefined;
+  const href = (cta.href || "").trim();
+
+  if (!href) {
+    return (
+      <span
+        ref={elementRef as React.Ref<HTMLSpanElement>}
+        className={`${className} cursor-default`}
+        style={css}
+        role="presentation"
+        aria-disabled="true"
+      >
+        {cta.text}
+      </span>
+    );
+  }
+
+  return (
+    <a
+      ref={elementRef as React.Ref<HTMLAnchorElement>}
+      href={href}
+      target={cta.external ? "_blank" : undefined}
+      rel={cta.external ? "noopener noreferrer" : undefined}
+      className={className}
+      style={css}
+    >
+      {cta.text}
+    </a>
+  );
+}
+
 const textShadow = "0 2px 12px rgba(0,0,0,0.9), 0 0 40px rgba(0,0,0,0.6), 0 4px 20px rgba(0,0,0,0.5)";
 
 export default function HeroCarousel({ slides, overlay, autoplayInterval = 5000, siteStyles = EMPTY_SITE_STYLES, parallax = "none" }: HeroCarouselProps) {
   const [current, setCurrent] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const heroCTARef = useRef<HTMLAnchorElement>(null);
+  const heroCTARef = useRef<HTMLElement>(null);
   const [scrollOffset, setScrollOffset] = useState(0);
   const pSpeed = PARALLAX_SPEED[parallax] || 0;
 
@@ -144,8 +198,8 @@ export default function HeroCarousel({ slides, overlay, autoplayInterval = 5000,
       <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-black/80" />
 
       {/* Event overlay content */}
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div className="text-center text-white px-6 sm:px-10 md:px-14 py-10 md:py-14 max-w-4xl bg-white/15 backdrop-blur-[2px] rounded-3xl border border-white/20">
+      <div className="absolute inset-0 flex items-center justify-center px-4 sm:px-6 md:px-10 py-12">
+        <div className="text-center text-white px-6 sm:px-10 md:px-14 py-10 md:py-14 w-auto max-w-full bg-white/15 backdrop-blur-[2px] rounded-3xl border border-white/20">
           {(overlay.label || !overlay.label) && (
             <p
               className="font-display font-semibold tracking-[0.3em] uppercase text-sm md:text-base mb-4"
@@ -154,8 +208,9 @@ export default function HeroCarousel({ slides, overlay, autoplayInterval = 5000,
             />
           )}
           <h1
-            className="font-accent font-bold text-4xl sm:text-5xl md:text-7xl lg:text-8xl mb-4 leading-tight whitespace-nowrap"
+            className="font-accent font-bold mb-4 leading-tight text-balance break-words"
             style={{
+              fontSize: "clamp(2.25rem, 6vw, 6rem)",
               textShadow: `${textShadow}, 0 0 60px rgba(9,181,147,0.3)`,
               fontFamily: "'EB Garamond', serif",
               WebkitTextStroke: "1px rgba(255,255,255,0.1)",
@@ -210,39 +265,23 @@ export default function HeroCarousel({ slides, overlay, autoplayInterval = 5000,
             )}
           </div>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            {overlay.primaryCta && (() => {
-              const style = overlay.primaryCta.styleId
-                ? findButtonStyle(overlay.primaryCta.styleId, siteStyles)
-                : null;
-              return (
-                <a
-                  ref={heroCTARef}
-                  href={overlay.primaryCta.href}
-                  target={overlay.primaryCta.external !== false ? "_blank" : undefined}
-                  rel={overlay.primaryCta.external !== false ? "noopener noreferrer" : undefined}
-                  className={style ? "transition-all hover:scale-105" : "bg-teal hover:bg-teal-dark text-white font-bold px-10 py-4 rounded-xl text-xl shadow-[0_0_30px_rgba(9,181,147,0.5)] hover:shadow-[0_0_50px_rgba(9,181,147,0.7)] transition-all hover:scale-105 animate-pulse-subtle animate-bounce-attention"}
-                  style={style ? buttonStyleToCSS(style) : undefined}
-                >
-                  {overlay.primaryCta.text}
-                </a>
-              );
-            })()}
-            {overlay.secondaryCta && (() => {
-              const style = overlay.secondaryCta.styleId
-                ? findButtonStyle(overlay.secondaryCta.styleId, siteStyles)
-                : null;
-              return (
-                <a
-                  href={overlay.secondaryCta.href}
-                  target={overlay.secondaryCta.external ? "_blank" : undefined}
-                  rel={overlay.secondaryCta.external ? "noopener noreferrer" : undefined}
-                  className={style ? "transition-all" : "border-2 border-white/40 hover:border-white text-white font-bold px-8 py-3 rounded-xl text-lg transition-all hover:bg-white/10"}
-                  style={style ? buttonStyleToCSS(style) : undefined}
-                >
-                  {overlay.secondaryCta.text}
-                </a>
-              );
-            })()}
+            {overlay.primaryCta && (
+              <HeroCta
+                cta={overlay.primaryCta}
+                siteStyles={siteStyles}
+                elementRef={heroCTARef}
+                styledClassName="transition-all hover:scale-105"
+                fallbackClassName="bg-teal hover:bg-teal-dark text-white font-bold px-10 py-4 rounded-xl text-xl shadow-[0_0_30px_rgba(9,181,147,0.5)] hover:shadow-[0_0_50px_rgba(9,181,147,0.7)] transition-all hover:scale-105 animate-pulse-subtle animate-bounce-attention"
+              />
+            )}
+            {overlay.secondaryCta && (
+              <HeroCta
+                cta={overlay.secondaryCta}
+                siteStyles={siteStyles}
+                styledClassName="transition-all"
+                fallbackClassName="border-2 border-white/40 hover:border-white text-white font-bold px-8 py-3 rounded-xl text-lg transition-all hover:bg-white/10"
+              />
+            )}
           </div>
         </div>
       </div>
