@@ -2607,20 +2607,6 @@ function HeroCarouselEditor({
     updateData("overlay", { ...overlay, [key]: value });
   };
 
-  const updatePrimaryCta = (key: string, value: unknown) => {
-    updateData("overlay", {
-      ...overlay,
-      primaryCta: { ...primaryCta, [key]: value },
-    });
-  };
-
-  const updateSecondaryCta = (key: string, value: unknown) => {
-    updateData("overlay", {
-      ...overlay,
-      secondaryCta: { ...secondaryCta, [key]: value },
-    });
-  };
-
   if (showJson) {
     return (
       <div className="space-y-3">
@@ -2761,7 +2747,7 @@ function HeroCarouselEditor({
         <div className="p-3 border-t border-gray-100">
           <ButtonFieldEditor
             value={primaryCta as ButtonFieldData}
-            onChange={(updated) => updateData("primaryCta", { ...primaryCta, ...updated })}
+            onChange={(updated) => updateOverlay("primaryCta", { ...primaryCta, ...updated })}
             siteStyles={siteStyles}
           />
         </div>
@@ -2775,7 +2761,7 @@ function HeroCarouselEditor({
         <div className="p-3 border-t border-gray-100">
           <ButtonFieldEditor
             value={secondaryCta as ButtonFieldData}
-            onChange={(updated) => updateData("secondaryCta", { ...secondaryCta, ...updated })}
+            onChange={(updated) => updateOverlay("secondaryCta", { ...secondaryCta, ...updated })}
             siteStyles={siteStyles}
           />
         </div>
