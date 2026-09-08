@@ -3017,6 +3017,16 @@ function EventCardsEditor({
     updateData("events", next);
   };
 
+  // Applies several fields in a single write. Calling updateEvent repeatedly
+  // in one handler does not work: each call rebuilds the whole events array
+  // from the same render's `events`, so the last write wins and the earlier
+  // ones are silently discarded.
+  const updateEventFields = (index: number, patch: Record<string, unknown>) => {
+    const next = [...events];
+    next[index] = { ...next[index], ...patch };
+    updateData("events", next);
+  };
+
   return (
     <div className="space-y-3">
       <Field label="Heading Title">
@@ -3105,7 +3115,7 @@ function EventCardsEditor({
               <div className="p-2 border-t border-gray-100">
                 <ButtonFieldEditor
                   value={{ text: (ev.ticketBtnText as string) || "Get Tickets", href: (ev.ticketUrl as string) || "", styleId: (ev.ticketStyleId as string) || undefined, marginTop: (ev.ticketMarginTop as string) || undefined, marginBottom: (ev.ticketMarginBottom as string) || undefined, customStyle: (ev.ticketCustomStyle as ButtonStyle) || undefined, external: true } as ButtonFieldData}
-                  onChange={(updated) => { updateEvent(i, "ticketUrl", updated.href); updateEvent(i, "ticketBtnText", updated.text); updateEvent(i, "ticketStyleId", updated.styleId); updateEvent(i, "ticketMarginTop", updated.marginTop); updateEvent(i, "ticketMarginBottom", updated.marginBottom); updateEvent(i, "ticketCustomStyle", updated.customStyle); }}
+                  onChange={(updated) => updateEventFields(i, { ticketUrl: updated.href, ticketBtnText: updated.text, ticketStyleId: updated.styleId, ticketMarginTop: updated.marginTop, ticketMarginBottom: updated.marginBottom, ticketCustomStyle: updated.customStyle })}
                   siteStyles={siteStyles}
                   showExternal={false}
                 />
